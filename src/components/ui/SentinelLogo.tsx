@@ -1,14 +1,14 @@
 import React from 'react';
-import logoImage from '@/assets/sentinel-logo.png';
+import logoImage from '@/assets/genysis-logo.png';
 
-interface SentinelLogoProps {
+interface GenysisLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showWordmark?: boolean;
   className?: string;
   imageOnly?: boolean;
 }
 
-export const SentinelLogo: React.FC<SentinelLogoProps> = ({
+export const GenysisLogo: React.FC<GenysisLogoProps> = ({
   size = 'md',
   showWordmark = true,
   className = '',
@@ -22,30 +22,30 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
   };
 
   const textSizes = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-    xl: 'text-2xl'
+    sm: 'text-xs tracking-[0.12em]',
+    md: 'text-sm tracking-[0.14em]',
+    lg: 'text-lg tracking-[0.14em]',
+    xl: 'text-2xl tracking-[0.16em]'
   };
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Sentinel Emblem with Cyber Glow */}
+      {/* Genysis Emblem with Cyber Orange Glow */}
       <div className={`${iconSizes[size]} shrink-0 relative flex items-center justify-center`}>
         <img
           src={logoImage}
-          alt="Sentinel"
-          className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,87,34,0.35)] transition-transform duration-200 group-hover:scale-105"
+          alt="Genysis"
+          className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(249,115,22,0.45)] transition-transform duration-200 group-hover:scale-105"
         />
       </div>
 
-      {/* Sentinel Wordmark */}
+      {/* Genysis Wordmark */}
       {showWordmark && !imageOnly && (
         <div className="flex items-center gap-1.5 leading-none">
-          <span className={`font-black tracking-tight text-white font-sans ${textSizes[size]}`}>
-            SENTINEL
+          <span className={`font-black uppercase text-white font-sans ${textSizes[size]}`}>
+            GENYSIS
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#FF5722]/20 text-[#FF5722] border border-[#FF5722]/40 uppercase tracking-widest shadow-sm">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#F97316]/15 text-[#F97316] border border-[#F97316]/30 uppercase tracking-widest shadow-sm">
             AI
           </span>
         </div>
@@ -53,3 +53,6 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
     </div>
   );
 };
+
+// Backwards-compatibility alias so existing components don't break
+export const SentinelLogo = GenysisLogo;

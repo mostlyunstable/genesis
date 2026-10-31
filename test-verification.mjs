@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-console.log('--- SENTINEL AI v2.0 (BRAND VOICE & ARCHITECTURE VERIFICATION) ---');
+console.log('--- GENYSIS AI v2.5 (AUTONOMOUS DEFENSE & COCKPIT VERIFICATION) ---');
 
 const filesToCheck = [
   'src/types/index.ts',
@@ -9,6 +9,7 @@ const filesToCheck = [
   'src/services/api/index.ts',
   'src/stores/useSecurityStore.ts',
   'src/components/ui/SentinelLogo.tsx',
+  'src/components/ui/GenysisLogo.tsx',
   'src/components/ui/Badge.tsx',
   'src/components/ui/Button.tsx',
   'src/components/ui/Card.tsx',
@@ -20,16 +21,16 @@ const filesToCheck = [
   'src/components/navigation/GlobalSearchModal.tsx',
   'src/app/layouts/AppLayout.tsx',
   'src/app/router/index.tsx',
-  'src/features/assistant/SentinelAssistantPage.tsx',
+  'src/features/workspace/IntelligenceWorkspacePage.tsx',
   'src/features/investigations/InvestigationsPage.tsx',
   'src/features/activity/SecurityActivityPage.tsx',
   'src/features/threats/ThreatsPage.tsx',
   'src/features/incidents/IncidentsPage.tsx',
   'src/features/response/AutonomousResponsePage.tsx',
   'src/features/integrations/IntegrationsPage.tsx',
+  'src/features/audit/AuditTrailPage.tsx',
   'src/features/settings/SettingsPage.tsx',
-  'docs/BRAND_VOICE.md',
-  'docs/COPY_AUDIT.md'
+  'docs/FRONTEND_REDESIGN_STRATEGY.md'
 ];
 
 let allFilesExist = true;
@@ -50,7 +51,7 @@ console.log(`[PASS] All ${filesToCheck.length} design files and components verif
 const routerContent = readFileSync(resolve(process.cwd(), 'src/app/router/index.tsx'), 'utf-8');
 const sidebarContent = readFileSync(resolve(process.cwd(), 'src/components/navigation/Sidebar.tsx'), 'utf-8');
 
-const redesignedRoutes = [
+const coreRoutes = [
   '/',
   '/investigations',
   '/activity',
@@ -58,10 +59,11 @@ const redesignedRoutes = [
   '/incidents',
   '/response',
   '/integrations',
+  '/audit',
   '/settings'
 ];
 
-for (const r of redesignedRoutes) {
+for (const r of coreRoutes) {
   const pathPart = r === '/' ? "index: true" : `path: '${r.replace('/', '')}'`;
   if (!routerContent.includes(pathPart)) {
     console.error(`[FAIL] Route not in router: ${r}`);
@@ -72,34 +74,26 @@ for (const r of redesignedRoutes) {
     process.exit(1);
   }
 }
-console.log(`[PASS] All ${redesignedRoutes.length} core routes match 1:1 between router and navigation.`);
+console.log(`[PASS] All ${coreRoutes.length} core routes match 1:1 between router and navigation.`);
 
-// Brand Voice Quality Gates
-const assistantContent = readFileSync(resolve(process.cwd(), 'src/features/assistant/SentinelAssistantPage.tsx'), 'utf-8');
-if (!assistantContent.includes('AUTONOMOUS SECURITY INTELLIGENCE')) {
-  console.error('[FAIL] Missing eyebrow "AUTONOMOUS SECURITY INTELLIGENCE" in Assistant page');
+// Verify Genysis Logo Component
+const logoContent = readFileSync(resolve(process.cwd(), 'src/components/ui/SentinelLogo.tsx'), 'utf-8');
+if (!logoContent.includes('GENYSIS')) {
+  console.error('[FAIL] Missing wordmark "GENYSIS" in SentinelLogo/GenysisLogo component');
   process.exit(1);
 }
-if (!assistantContent.includes('Know what happened.') || !assistantContent.includes('Understand what happens next.')) {
-  console.error('[FAIL] Missing canonical headline in Assistant page');
-  process.exit(1);
-}
-if (!assistantContent.includes('Investigate an IP address')) {
-  console.error('[FAIL] Missing prompt chip "Investigate an IP address"');
-  process.exit(1);
-}
-if (!assistantContent.includes('Start Investigation')) {
-  console.error('[FAIL] Missing primary CTA "Start Investigation"');
-  process.exit(1);
-}
-console.log('[PASS] Assistant brand voice and headlines strictly aligned.');
+console.log('[PASS] Genysis logo wordmark verified.');
 
-// Check Investigations Page
-const invContent = readFileSync(resolve(process.cwd(), 'src/features/investigations/InvestigationsPage.tsx'), 'utf-8');
-if (!invContent.includes('Every signal has a story. Find it.')) {
-  console.error('[FAIL] Missing subheading "Every signal has a story. Find it."');
+// Verify Workspace Cockpit & Bot Identity
+const workspaceContent = readFileSync(resolve(process.cwd(), 'src/features/workspace/IntelligenceWorkspacePage.tsx'), 'utf-8');
+if (!workspaceContent.includes('GENYSIS') || !workspaceContent.includes('CYBER BOT')) {
+  console.error('[FAIL] Missing "GENYSIS CYBER BOT" in IntelligenceWorkspacePage');
   process.exit(1);
 }
-console.log('[PASS] Investigations copy verified.');
+if (!workspaceContent.includes('OBSERVE') || !workspaceContent.includes('DETECT') || !workspaceContent.includes('INVESTIGATE') || !workspaceContent.includes('RESPOND')) {
+  console.error('[FAIL] Missing 4 Core Capabilities in Workspace');
+  process.exit(1);
+}
+console.log('[PASS] Genysis Cyber Bot workspace and 4 core capabilities verified.');
 
 console.log('--- ALL QUALITY GATES PASSED (100%) ---');

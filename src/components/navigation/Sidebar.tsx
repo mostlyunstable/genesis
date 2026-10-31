@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
-  Sparkles, 
   Search, 
   Activity, 
   ShieldAlert, 
@@ -11,7 +10,8 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  Radio
+  Radio,
+  FileText
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SentinelLogo } from '@/components/ui/SentinelLogo';
@@ -37,48 +37,49 @@ export const Sidebar: React.FC = () => {
 
   const navigationSections: NavSection[] = [
     {
-      title: 'PRIMARY',
+      title: 'OPERATIONS',
       items: [
-        { name: 'Assistant', path: '/', icon: Sparkles },
+        { name: 'Workspace', path: '/', icon: Activity },
         { 
           name: 'Investigations', 
           path: '/investigations', 
           icon: Search,
           badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined
         },
-        { name: 'Activity', path: '/activity', icon: Activity }
+        { name: 'Activity Stream', path: '/activity', icon: Radio }
       ]
     },
     {
-      title: 'SECURITY',
+      title: 'INTELLIGENCE & DEFENSE',
       items: [
         { 
-          name: 'Threats', 
+          name: 'Threats & Intel', 
           path: '/threats', 
           icon: ShieldAlert,
           badge: criticalThreatsCount > 0 ? criticalThreatsCount : undefined
         },
         { name: 'Incidents', path: '/incidents', icon: Flame },
-        { name: 'Response', path: '/response', icon: ShieldCheck }
+        { name: 'Response Center', path: '/response', icon: ShieldCheck }
       ]
     },
     {
-      title: 'SYSTEM',
+      title: 'PLATFORM',
       items: [
-        { name: 'Integrations', path: '/integrations', icon: Layers },
-        { name: 'Settings', path: '/settings', icon: Settings }
+        { name: 'Forwarders', path: '/integrations', icon: Layers },
+        { name: 'Audit Trail', path: '/audit', icon: FileText },
+        { name: 'Configuration', path: '/settings', icon: Settings }
       ]
     }
   ];
 
   return (
     <aside
-      className={`bg-[#0B0F17] border-r border-[#1E293B] flex flex-col transition-all duration-200 z-30 select-none ${
+      className={`bg-[#0D111A] border-r border-[#1A2232] flex flex-col transition-all duration-200 z-30 select-none ${
         sidebarCollapsed ? 'w-[68px]' : 'w-[230px]'
       }`}
     >
       {/* Brand & Wordmark */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1E293B]">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1A2232]">
         <NavLink to="/" className="flex items-center gap-2 group overflow-hidden">
           <SentinelLogo size="sm" showWordmark={!sidebarCollapsed} />
         </NavLink>
@@ -86,7 +87,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1 rounded-md text-[#94A3B8] hover:text-white hover:bg-[#141C2E] transition-colors cursor-pointer"
+          className="p-1 rounded-md text-[#94A3B8] hover:text-white hover:bg-[#182030] transition-colors cursor-pointer"
           title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -116,8 +117,8 @@ export const Sidebar: React.FC = () => {
                     title={sidebarCollapsed ? item.name : undefined}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-[#0066FF]/15 text-[#38BDF8] border border-[#0066FF]/30 font-semibold shadow-sm'
-                        : 'text-[#94A3B8] hover:text-white hover:bg-[#141C2E] border border-transparent'
+                        ? 'bg-[#3B82F6]/15 text-[#38BDF8] border border-[#3B82F6]/30 font-semibold shadow-sm'
+                        : 'text-[#94A3B8] hover:text-white hover:bg-[#141C2B] border border-transparent'
                     } ${sidebarCollapsed ? 'justify-center px-0' : ''}`}
                   >
                     <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#38BDF8]' : 'text-[#64748B]'}`} />
@@ -127,13 +128,13 @@ export const Sidebar: React.FC = () => {
                     )}
 
                     {!sidebarCollapsed && item.badge !== undefined && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-[#FF5722] text-white shadow-sm">
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-[#EF4444] text-white shadow-sm">
                         {item.badge}
                       </span>
                     )}
 
                     {sidebarCollapsed && item.badge !== undefined && (
-                      <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#FF5722]" />
+                      <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#EF4444]" />
                     )}
                   </NavLink>
                 );
@@ -143,24 +144,24 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Sentinel Status Pulse */}
-      <div className="p-3 border-t border-[#1E293B]">
+      {/* Genysis Engine Pulse */}
+      <div className="p-3 border-t border-[#1A2232]">
         {!sidebarCollapsed ? (
-          <div className="p-2.5 rounded-lg bg-[#0F1523] border border-[#1E293B] text-xs">
+          <div className="p-2.5 rounded-lg bg-[#121722] border border-[#1A2232] text-xs">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white">
-                <span className="w-2 h-2 rounded-full bg-[#38BDF8] animate-pulse" />
-                Sentinel Engine
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                Genysis Bot Engine
               </span>
-              <span className="text-[10px] font-mono text-[#38BDF8]">v2.0</span>
+              <span className="text-[10px] font-mono text-[#F97316]">ONLINE</span>
             </div>
             <p className="text-[10px] text-[#94A3B8] mt-1 leading-tight font-sans">
-              Ingestion active across 5 forwarders
+              Autonomous telemetry synced across 5 forwarders
             </p>
           </div>
         ) : (
           <div className="flex justify-center p-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#38BDF8] animate-pulse" title="Sentinel Engine Active" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" title="Genysis Bot Engine Active" />
           </div>
         )}
       </div>

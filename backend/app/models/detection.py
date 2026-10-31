@@ -16,7 +16,7 @@ class DetectionModel(Base):
     source_ip: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     target_accounts: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     event_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, default=100.0, nullable=False)
     risk_score: Mapped[float] = mapped_column(Float, default=50.0, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="open", index=True, nullable=False)

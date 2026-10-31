@@ -12,8 +12,8 @@ class ThreatIntelModel(Base):
     threat_classification: Mapped[str] = mapped_column(String(128), nullable=False)
     reputation_score: Mapped[int] = mapped_column(Integer, default=50, nullable=False)  # 0-100
     associated_incidents: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
-    first_seen: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    last_seen: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     confidence: Mapped[int] = mapped_column(Integer, default=80, nullable=False)
     country: Mapped[str] = mapped_column(String(64), default="", nullable=False)
     country_code: Mapped[str] = mapped_column(String(8), default="", nullable=False)

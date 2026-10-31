@@ -9,7 +9,7 @@ class SecurityEventModel(Base):
     __tablename__ = "security_events"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, index=True, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
     source: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     username: Mapped[str] = mapped_column(String(128), index=True, nullable=False)

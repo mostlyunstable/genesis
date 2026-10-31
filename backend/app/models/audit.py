@@ -9,7 +9,7 @@ class AuditRecordModel(Base):
     __tablename__ = "audit_records"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True, nullable=False)
     category: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     action: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
     actor: Mapped[str] = mapped_column(String(128), nullable=False)

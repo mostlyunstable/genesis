@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ScrollText, 
+  FileText, 
   Search, 
   Download, 
   ChevronDown, 
@@ -8,14 +8,10 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   ShieldCheck, 
-  Filter,
-  Copy,
-  Check
+  Copy, 
+  Check 
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
-import { AuditRecord } from '@/types';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 
@@ -61,156 +57,140 @@ export const AuditTrailPage: React.FC = () => {
     setCopiedId(id);
     addNotification({
       type: 'info',
-      title: 'Audit Payload Copied',
-      message: `Payload for ${id} copied to clipboard.`
+      title: 'Payload Copied',
+      message: `Audit entry ${id} copied to clipboard.`
     });
     setTimeout(() => setCopiedId(null), 1500);
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#252D38]">
+    <div className="space-y-6 max-w-6xl mx-auto font-sans">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E2638]">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-[#E8EDF4]">Compliance & Execution Audit Trail</h2>
-            <Badge variant="accent">SOC2 / ISO 27001 LOG</Badge>
+          <div className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#3B82F6] uppercase mb-1">
+            IMMUTABLE VERIFICATION LEDGER
           </div>
-          <p className="text-xs text-[#8994A4] font-mono mt-0.5">
-            Immutable log of policy decisions, autonomous countermeasure executions, and configuration changes.
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
+            Audit Trail
+          </h2>
+          <p className="text-sm text-[#94A3B8] font-sans mt-0.5">
+            Cryptographically timestamped record of detections, policy evaluations, and countermeasure executions.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<Download className="w-3.5 h-3.5" />}
-            onClick={handleExportJson}
-          >
-            Export JSON ({filteredRecords.length})
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={<Download className="w-3.5 h-3.5" />}
+          onClick={handleExportJson}
+        >
+          Export Ledger (JSON)
+        </Button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="p-3 bg-[#121720] border border-[#252D38] rounded-md flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs">
-        <div className="flex-1 w-full sm:max-w-md">
+      {/* Filter Toolbar */}
+      <div className="bg-[#0E131F] border border-[#1E2638] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 font-sans text-xs">
+        <div className="w-full sm:w-80">
           <Input
-            icon={<Search className="w-3.5 h-3.5 text-[#8994A4]" />}
+            icon={<Search className="w-3.5 h-3.5" />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search action, actor, target or audit ID..."
           />
         </div>
 
-        <div className="w-full sm:w-auto">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <Select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full sm:w-64"
+            className="w-full sm:w-56"
           >
             <option value="all">All Audit Categories</option>
-            <option value="RESPONSE_EXECUTION">Response Execution</option>
-            <option value="POLICY_DECISION">Policy Decision</option>
-            <option value="AI_INVESTIGATION">AI Investigation</option>
-            <option value="DETECTION">Detection Event</option>
-            <option value="CONFIG_CHANGE">Configuration Change</option>
+            <option value="DETECTION">Detections</option>
+            <option value="AI_INVESTIGATION">AI Investigations</option>
+            <option value="POLICY_DECISION">Policy Decisions</option>
+            <option value="RESPONSE_EXECUTION">Response Executions</option>
+            <option value="CONFIG_CHANGE">Configuration Changes</option>
           </Select>
         </div>
       </div>
 
-      {/* Audit Table */}
-      <div className="bg-[#121720] border border-[#252D38] rounded-md overflow-hidden font-mono text-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-[#0F141C] border-b border-[#252D38] text-[#8994A4] uppercase">
-              <tr>
-                <th className="py-2.5 px-3 w-8"></th>
-                <th className="py-2.5 px-3">Timestamp (UTC)</th>
-                <th className="py-2.5 px-3">Audit ID</th>
-                <th className="py-2.5 px-3">Category</th>
-                <th className="py-2.5 px-3">Action</th>
-                <th className="py-2.5 px-3">Actor</th>
-                <th className="py-2.5 px-3">Target</th>
-                <th className="py-2.5 px-3">Result</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1C2430]">
-              {filteredRecords.map((rec) => {
-                const isExpanded = expandedId === rec.id;
+      {/* Audit Record Stream */}
+      <div className="bg-[#0E131F] border border-[#1E2638] rounded-2xl shadow-sm overflow-hidden divide-y divide-[#1E2638]">
+        {filteredRecords.length === 0 ? (
+          <div className="p-12 text-center text-xs text-[#94A3B8] font-mono">
+            No audit records match filter criteria.
+          </div>
+        ) : (
+          filteredRecords.map((rec) => {
+            const isExpanded = expandedId === rec.id;
 
-                return (
-                  <React.Fragment key={rec.id}>
-                    <tr
-                      onClick={() => setExpandedId(isExpanded ? null : rec.id)}
-                      className={`cursor-pointer transition-colors ${
-                        isExpanded ? 'bg-[#171E28]' : 'hover:bg-[#151D28]'
-                      }`}
-                    >
-                      <td className="py-2.5 px-3 text-[#586574]">
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#E8EDF4] whitespace-nowrap">
-                        {new Date(rec.timestamp).toLocaleTimeString()}
-                        <span className="text-[10px] text-[#586574] ml-1">UTC</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-[#E0A34A] font-semibold">
-                        {rec.id}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#8994A4]">
-                        <span className="px-1.5 py-0.5 rounded bg-[#171E28] border border-[#252D38] text-[10px]">
-                          {rec.category}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 font-semibold text-[#E8EDF4]">
-                        {rec.action}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#6DA9E8] truncate max-w-[150px]">
-                        {rec.actor}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#EF5350] truncate max-w-[150px]">
-                        {rec.target}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
-                          rec.result === 'SUCCESS' ? 'bg-[#42B883]/15 text-[#42B883] border border-[#42B883]/30' :
-                          rec.result === 'WARNING' ? 'bg-[#E5AD52]/15 text-[#E5AD52] border border-[#E5AD52]/30' :
-                          'bg-[#EF5350]/15 text-[#EF5350] border border-[#EF5350]/30'
-                        }`}>
-                          {rec.result}
-                        </span>
-                      </td>
-                    </tr>
+            return (
+              <div
+                key={rec.id}
+                onClick={() => setExpandedId(isExpanded ? null : rec.id)}
+                className="hover:bg-[#121722] transition-colors cursor-pointer"
+              >
+                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-3 font-mono">
+                    <span className="text-[#3B82F6] font-semibold text-[11px] whitespace-nowrap">
+                      {new Date(rec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141C2B] text-[#94A3B8] border border-[#1E2638]">
+                      {rec.category}
+                    </span>
+                    <span className="font-bold text-white font-sans">{rec.action}</span>
+                  </div>
 
-                    {/* Expandable JSON Payload */}
-                    {isExpanded && (
-                      <tr className="bg-[#0D1016]">
-                        <td colSpan={8} className="p-4 border-b border-[#252D38]">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-[10px] text-[#586574]">
-                              <span>STRUCTURED AUDIT PAYLOAD DETAILS</span>
-                              <button
-                                onClick={() => handleCopyPayload(rec.details, rec.id)}
-                                className="text-[#E0A34A] hover:underline flex items-center gap-1"
-                              >
-                                {copiedId === rec.id ? <Check className="w-3 h-3 text-[#42B883]" /> : <Copy className="w-3 h-3" />}
-                                Copy Payload
-                              </button>
-                            </div>
-                            <pre className="p-3 bg-[#080A0E] rounded border border-[#1C2430] text-xs text-[#6DA9E8] overflow-x-auto">
-                              {JSON.stringify(rec.details, null, 2)}
-                            </pre>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                  <div className="flex items-center gap-4 text-xs font-mono justify-between sm:justify-end">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#64748B]">actor:</span>
+                      <span className="text-white font-semibold">{rec.actor}</span>
+                      <span className="text-[#64748B]">target:</span>
+                      <span className="text-[#F97316] font-semibold">{rec.target}</span>
+                    </div>
+
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      rec.result === 'SUCCESS' ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30' :
+                      rec.result === 'WARNING' ? 'bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30' :
+                      'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30'
+                    }`}>
+                      {rec.result}
+                    </span>
+
+                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-white" /> : <ChevronDown className="w-3.5 h-3.5 text-[#64748B]" />}
+                  </div>
+                </div>
+
+                {/* Expandable JSON Payload Drawer */}
+                {isExpanded && (
+                  <div className="px-5 pb-5 pt-2 bg-[#090C12] border-t border-[#1E2638] text-xs font-mono space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-1">
+                      <span className="text-[#3B82F6] font-bold tracking-wider text-[11px]">
+                        AUDIT ATTRIBUTE SIGNATURE [{rec.id}]
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyPayload(rec.details, rec.id);
+                        }}
+                        className="text-[#F97316] hover:underline flex items-center gap-1.5 cursor-pointer font-bold text-xs"
+                      >
+                        {copiedId === rec.id ? <Check className="w-3 h-3 text-[#10B981]" /> : <Copy className="w-3 h-3 text-[#64748B]" />}
+                        Copy Record JSON
+                      </button>
+                    </div>
+
+                    <pre className="p-4 bg-[#07090E] rounded-xl border border-[#1E2638] text-slate-200 text-xs leading-relaxed overflow-x-auto">
+                      {JSON.stringify(rec.details, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

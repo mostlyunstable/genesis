@@ -1,13 +1,14 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
-import { SentinelAssistantPage } from '@/features/assistant/SentinelAssistantPage';
+import { IntelligenceWorkspacePage } from '@/features/workspace/IntelligenceWorkspacePage';
 import { InvestigationsPage } from '@/features/investigations/InvestigationsPage';
 import { SecurityActivityPage } from '@/features/activity/SecurityActivityPage';
 import { ThreatsPage } from '@/features/threats/ThreatsPage';
 import { IncidentsPage } from '@/features/incidents/IncidentsPage';
 import { AutonomousResponsePage } from '@/features/response/AutonomousResponsePage';
 import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
+import { AuditTrailPage } from '@/features/audit/AuditTrailPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 
 export const router = createBrowserRouter([
@@ -17,7 +18,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <SentinelAssistantPage />
+        element: <IntelligenceWorkspacePage />
       },
       {
         path: 'investigations',
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: 'integrations',
         element: <IntegrationsPage />
+      },
+      {
+        path: 'audit',
+        element: <AuditTrailPage />
       },
       {
         path: 'settings',
@@ -79,10 +84,6 @@ export const router = createBrowserRouter([
       {
         path: 'threat-intel',
         element: <Navigate to="/threats" replace />
-      },
-      {
-        path: 'audit',
-        element: <Navigate to="/response" replace />
       },
       {
         path: '*',

@@ -1,23 +1,26 @@
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from typing import AsyncGenerator, Dict, Any, Optional
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
 from backend.app.core.config import settings
 
-# Engine configuration with dialect detection
-is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+def get_engine_kwargs(url: str) -> Dict[str, Any]:
+    if url.startswith("sqlite"):
+        return {"connect_args": {"check_same_thread": False}}
+    return {
+        "pool_pre_ping": True,
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_recycle": 3600,
+        "connect_args": {
+            "server_settings": {"application_name": "sentinel_ai_backend"}
+        } if "asyncpg" in url else {}
+    }
 
-engine_kwargs = {}
-if is_sqlite:
-    engine_kwargs["connect_args"] = {"check_same_thread": False}
-else:
-    engine_kwargs["pool_pre_ping"] = True
-    engine_kwargs["pool_size"] = 10
-    engine_kwargs["max_overflow"] = 20
-
-engine = create_async_engine(
+engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     future=True,
-    **engine_kwargs
+    **get_engine_kwargs(settings.DATABASE_URL)
 )
 
 async_session_factory = async_sessionmaker(
@@ -27,6 +30,17 @@ async_session_factory = async_sessionmaker(
     autocommit=False,
     autoflush=False
 )
+
+
+async def check_db_health(db_engine: Optional[AsyncEngine] = None) -> bool:
+    """Executes a fast SELECT 1 probe against the database engine."""
+    eng = db_engine or engine
+    try:
+        async with eng.connect() as conn:
+            res = await conn.execute(text("SELECT 1"))
+            return res.scalar() == 1
+    except Exception:
+        return False
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
