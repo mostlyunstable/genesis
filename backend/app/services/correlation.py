@@ -121,6 +121,7 @@ class CorrelationEngine:
 
             # Link detection to incident
             detection.associated_incident_id = matching_incident.id
+            await db.flush()
             return matching_incident
 
         else:
@@ -192,6 +193,7 @@ class CorrelationEngine:
                 is_simulated=True
             )
             db.add(new_incident)
+            await db.flush()
             return new_incident
 
 

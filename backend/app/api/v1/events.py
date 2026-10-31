@@ -54,6 +54,8 @@ async def ingest_batch(
     for evt in new_events:
         await detection_engine.process_event(evt, db)
 
+    await db.commit()
+
     return IngestBatchResponse(
         status="ACCEPTED",
         receivedCount=received,

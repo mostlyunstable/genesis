@@ -264,6 +264,7 @@ class DetectionEngine:
             existing.target_accounts = list(set(existing.target_accounts + target_accounts))
             existing.supporting_event_ids = list(set(existing.supporting_event_ids + supporting_event_ids))
             existing.triggering_conditions = triggering_conditions
+            await db.flush()
             return existing
         else:
             new_det = DetectionModel(
@@ -287,6 +288,7 @@ class DetectionEngine:
                 is_simulated=True
             )
             db.add(new_det)
+            await db.flush()
             return new_det
 
 

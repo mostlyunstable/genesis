@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy import String, Integer, Boolean, DateTime, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,7 +32,7 @@ class ResponseActionModel(Base):
     target: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="simulated_success", nullable=False)
     execution_mode: Mapped[str] = mapped_column(String(32), default="simulated", nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True, nullable=False)
     duration_ms: Mapped[int] = mapped_column(Integer, default=150, nullable=False)
     details: Mapped[str] = mapped_column(Text, default="", nullable=False)
     verification_status: Mapped[str] = mapped_column(String(32), default="verified", nullable=False)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy import String, Integer, Boolean, DateTime, Text, JSON, Index
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,8 +18,8 @@ class IncidentModel(Base):
     source_ips: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     target_accounts: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     event_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     detection_ids: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     event_ids: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     detection_explanation: Mapped[str] = mapped_column(Text, default="", nullable=False)

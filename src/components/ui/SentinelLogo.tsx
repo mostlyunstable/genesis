@@ -1,67 +1,51 @@
 import React from 'react';
+import logoImage from '../../assets/sentinel-logo.png';
 
 interface SentinelLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showWordmark?: boolean;
   className?: string;
+  imageOnly?: boolean;
 }
 
 export const SentinelLogo: React.FC<SentinelLogoProps> = ({
   size = 'md',
   showWordmark = true,
-  className = ''
+  className = '',
+  imageOnly = false
 }) => {
   const iconSizes = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-10 h-10',
-    xl: 'w-12 h-12'
+    sm: 'w-7 h-7',
+    md: 'w-9 h-9',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16'
   };
 
   const textSizes = {
     sm: 'text-xs',
     md: 'text-sm',
     lg: 'text-base',
-    xl: 'text-lg'
+    xl: 'text-xl'
   };
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Sentinel Iconic Beacon Mark */}
+      {/* Official Sentinel Hexagonal 'S' Emblem */}
       <div className={`${iconSizes[size]} shrink-0 relative flex items-center justify-center`}>
-        <svg
-          viewBox="0 0 32 32"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full"
-        >
-          {/* Subtle perimeter frame */}
-          <rect
-            width="32"
-            height="32"
-            rx="9"
-            fill="#F15A24"
-            className="transition-transform duration-200 group-hover:scale-105"
-          />
-          {/* Geometric protective focal facets */}
-          <path
-            d="M16 6.5L24.5 11.5V20.5L16 25.5L7.5 20.5V11.5L16 6.5Z"
-            stroke="white"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-          {/* Intelligent observation core */}
-          <circle cx="16" cy="16" r="3.25" fill="white" />
-        </svg>
+        <img
+          src={logoImage}
+          alt="Sentinel AI"
+          className="w-full h-full object-contain filter drop-shadow-xs transition-transform duration-200 group-hover:scale-105"
+        />
       </div>
 
       {/* Sentinel AI Wordmark */}
-      {showWordmark && (
+      {showWordmark && !imageOnly && (
         <div className="flex items-center gap-1.5 leading-none">
-          <span className={`font-bold tracking-tight text-canvas-text font-sans ${textSizes[size]}`}>
+          <span className={`font-bold tracking-tight text-[#171717] dark:text-[#F4F4F2] font-sans ${textSizes[size]}`}>
             SENTINEL
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-brand-soft text-brand border border-brand/20 uppercase tracking-wide">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/20 uppercase tracking-wide">
             AI
           </span>
         </div>

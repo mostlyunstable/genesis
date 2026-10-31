@@ -216,8 +216,8 @@ export const SentinelAssistantPage: React.FC = () => {
     <div className="flex flex-col h-[calc(100vh-8.5rem)] max-w-4xl mx-auto">
       {/* Central Hero Header */}
       <div className="text-center pt-2 pb-6 select-none">
-        <div className="inline-flex items-center gap-2 mb-2">
-          <SentinelLogo size="md" showWordmark={true} />
+        <div className="inline-flex items-center gap-2 mb-3">
+          <SentinelLogo size="xl" showWordmark={true} />
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#171717] font-sans">
           Your security operations, under intelligent watch.
@@ -254,8 +254,8 @@ export const SentinelAssistantPage: React.FC = () => {
             ) : (
               /* Sentinel AI Structured Investigation Output */
               <div className="flex items-start gap-3.5 max-w-3xl">
-                <div className="w-8 h-8 rounded-full bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/20 flex items-center justify-center shrink-0 mt-1">
-                  <Sparkles className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+                  <SentinelLogo size="sm" showWordmark={false} imageOnly={true} />
                 </div>
 
                 <div className="flex-1 bg-white border border-[#E9E6E0] rounded-2xl p-5 shadow-2xs text-xs space-y-4">
