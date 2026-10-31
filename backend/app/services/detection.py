@@ -11,11 +11,12 @@ from backend.app.models.settings import SettingsModel
 
 
 class SlidingWindowItem:
-    def __init__(self, event_id: str, timestamp: datetime, username: str, outcome: str):
+    def __init__(self, event_id: str, timestamp: datetime, username: str, outcome: str, destination_ip: str = "10.240.10.15"):
         self.event_id = event_id
         self.timestamp = timestamp
         self.username = username
         self.outcome = outcome
+        self.destination_ip = destination_ip
 
 
 class DetectionEngine:
@@ -77,7 +78,7 @@ class DetectionEngine:
 
         # Record event in window
         self._ip_windows[event.source_ip].append(
-            SlidingWindowItem(event.id, ts, event.username, event.outcome)
+            SlidingWindowItem(event.id, ts, event.username, event.outcome, event.destination_ip)
         )
         if event.outcome == "failure":
             self._user_windows[event.username].append((event.id, ts, event.source_ip))
@@ -219,6 +220,74 @@ class DetectionEngine:
                     rule_id="RULE-DISTRIB-BRUTE-003",
                     rule_name="Coordinated Multi-IP Target Probing",
                     suggested_playbook_id="PB-SPRAY-DEFENSE-02"
+                )
+                if det:
+                    created_or_updated.append(det)
+
+        # -------------------------------------------------------------
+        # HEURISTIC 5: Cross-Asset Authentication Failures (Lateral Movement Probing)
+        # -------------------------------------------------------------
+        if event.outcome == "failure":
+            window_cutoff = ts - timedelta(seconds=thresholds["ssh_window"])
+            recent_fails = [item for item in ip_history if item.outcome == "failure" and item.timestamp >= window_cutoff]
+            distinct_dest_ips = set(item.destination_ip for item in recent_fails)
+            if len(distinct_dest_ips) >= 2 and len(recent_fails) >= 4:
+                det = await self._record_detection(
+                    db=db,
+                    detection_id=f"DET-CROSS-ASSET-{event.source_ip.replace('.', '-')}",
+                    name=f"Multi-Asset Authentication Probing from {event.source_ip}",
+                    category="lateral_probing",
+                    description=f"Source IP {event.source_ip} attempted failed logins across {len(distinct_dest_ips)} distinct internal infrastructure targets.",
+                    severity="high",
+                    source_ip=event.source_ip,
+                    target_accounts=list(set(item.username for item in recent_fails)),
+                    event_count=len(recent_fails),
+                    timestamp=ts,
+                    confidence=88.0,
+                    risk_score=82.0,
+                    triggering_conditions=[
+                        f"Distinct destination targets ({len(distinct_dest_ips)}) >= 2",
+                        f"Observed failed logons: {len(recent_fails)}"
+                    ],
+                    supporting_event_ids=[item.event_id for item in recent_fails[-15:]],
+                    rule_id="RULE-CROSS-ASSET-FAIL-004",
+                    rule_name="Cross-Asset Authentication Anomaly",
+                    suggested_playbook_id="PB-SSH-BRUTE-01"
+                )
+                if det:
+                    created_or_updated.append(det)
+
+        # -------------------------------------------------------------
+        # HEURISTIC 6: Privileged Account Targeting (High-Value Identity)
+        # -------------------------------------------------------------
+        if event.outcome == "failure" and event.username.lower() in ["root", "admin", "administrator", "domain_admin", "svc_backup"]:
+            window_cutoff = ts - timedelta(seconds=thresholds["ssh_window"])
+            priv_fails = [
+                item for item in ip_history
+                if item.username.lower() == event.username.lower() and item.outcome == "failure" and item.timestamp >= window_cutoff
+            ]
+            if len(priv_fails) >= 5:
+                det = await self._record_detection(
+                    db=db,
+                    detection_id=f"DET-PRIV-{event.username.lower()}-{event.source_ip.replace('.', '-')}",
+                    name=f"Focused Privileged Account Brute Force on '{event.username}'",
+                    category="privilege_targeting",
+                    description=f"{len(priv_fails)} failed attempts directed specifically at privileged account '{event.username}' from {event.source_ip}.",
+                    severity="critical" if len(priv_fails) >= 10 else "high",
+                    source_ip=event.source_ip,
+                    target_accounts=[event.username],
+                    event_count=len(priv_fails),
+                    timestamp=ts,
+                    confidence=92.0,
+                    risk_score=89.0,
+                    triggering_conditions=[
+                        f"Target identity is privileged: '{event.username}'",
+                        f"Targeted failures ({len(priv_fails)}) >= 5 within {thresholds['ssh_window']}s"
+                    ],
+                    supporting_event_ids=[item.event_id for item in priv_fails[-15:]],
+                    rule_id="RULE-PRIV-TARGET-005",
+                    rule_name="High-Value Identity Targeted Attack",
+                    suggested_playbook_id="PB-SSH-BRUTE-01"
                 )
                 if det:
                     created_or_updated.append(det)

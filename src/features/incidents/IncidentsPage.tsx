@@ -1,201 +1,283 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Flame, 
   Search, 
-  ChevronRight, 
-  Zap, 
+  Clock, 
+  ShieldAlert, 
   CheckCircle2, 
-  Clock,
-  Activity
+  AlertTriangle,
+  FileText,
+  User,
+  Radio,
+  ExternalLink,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
+import { Incident } from '@/types';
 import { SeverityBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Input, Select } from '@/components/ui/Input';
-import { RiskScoreBadge } from '@/components/ui/RiskScoreBadge';
 
 export const IncidentsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { incidents, selectedIncidentId, setSelectedIncidentId, updateIncidentStatus, executePlaybookAction } = useSecurityStore();
+  const { 
+    incidents, 
+    selectedIncidentId, 
+    setSelectedIncidentId, 
+    updateIncidentStatus,
+    addNotification 
+  } = useSecurityStore();
+
+  const [statusFilter, setStatusFilter] = useState<'ALL' | Incident['status']>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeIncident = incidents.find(i => i.id === selectedIncidentId) || incidents[0];
+  const selectedIncident = incidents.find(i => i.id === selectedIncidentId) || incidents[0];
 
   const filteredIncidents = incidents.filter(i => {
+    if (statusFilter !== 'ALL' && i.status !== statusFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (
         i.title.toLowerCase().includes(q) ||
         i.id.toLowerCase().includes(q) ||
-        i.sourceIps.some(ip => ip.includes(q))
+        i.sourceIps.some(ip => ip.includes(q)) ||
+        i.targetAccounts.some(acc => acc.toLowerCase().includes(q))
       );
     }
     return true;
   });
 
-  const handleSimulateResponse = async () => {
-    if (!activeIncident?.assignedPlaybookId) return;
-    await executePlaybookAction(
-      activeIncident.assignedPlaybookId,
-      'Incident Automated Quarantine Dry Run',
-      activeIncident.sourceIps[0],
-      activeIncident.id
-    );
+  const handleStatusUpdate = (newStatus: Incident['status']) => {
+    if (!selectedIncident) return;
+    updateIncidentStatus(selectedIncident.id, newStatus);
+    addNotification({
+      type: 'info',
+      title: 'Incident Lifecycle Updated',
+      message: `${selectedIncident.id} marked as ${newStatus.toUpperCase()}.`
+    });
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E293B]">
-        <div>
-          <div className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#38BDF8] uppercase mb-1">
-            SECURITY INCIDENT CORRELATION
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
-            Incidents
-          </h2>
-          <p className="text-sm text-slate-300 font-sans mt-0.5">
-            Correlated event sequences requiring analytical assessment or containment.
-          </p>
-        </div>
-
-        <div className="w-full sm:w-72">
-          <Input
-            icon={<Search className="w-3.5 h-3.5" />}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter incidents..."
-          />
-        </div>
-      </div>
-
-      {/* Clean 2-Column Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Incidents List (5 cols) */}
-        <div className="lg:col-span-5 space-y-3">
-          {filteredIncidents.length === 0 ? (
-            <div className="p-8 text-center bg-[#0F1523] border border-[#1E293B] rounded-xl text-xs text-[#94A3B8] font-mono">
-              No active incidents.
+    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-16">
+      
+      {/* ─────────────────────────────────────────────────────────────
+          1. INCIDENT COMMAND HEADER & LIFECYCLE FILTERS
+          ───────────────────────────────────────────────────────────── */}
+      <section className="bg-[#10131B] border border-[#1C2230] rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#38BDF8] flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-[#F97316]" />
+                INCIDENT OPERATIONS CENTER
+              </span>
+              <span className="text-[#64748B]">•</span>
+              <span className="text-[10px] font-mono text-[#94A3B8]">CORRELATED MULTI-SIGNAL INCIDENTS</span>
             </div>
-          ) : (
-            filteredIncidents.map((inc) => {
-              const isSelected = activeIncident?.id === inc.id;
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Incident Management
+            </h1>
+            <p className="text-xs text-[#94A3B8]">
+              Multi-vector adversary engagements, target exposure, evidence progression, and incident lifecycle state.
+            </p>
+          </div>
+
+          {/* Quick Lifecycle Filters */}
+          <div className="flex items-center gap-2 flex-wrap font-mono text-xs">
+            {(['ALL', 'active', 'investigating', 'contained', 'resolved'] as const).map((st) => (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  statusFilter === st
+                    ? 'bg-[#38BDF8]/15 border-[#38BDF8] text-[#38BDF8] font-bold'
+                    : 'bg-[#07080B] border-[#1C2230] text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                {st.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. TWO-COLUMN MASTER-DETAIL INCIDENT ENVIRONMENT
+          Left (5 cols): Incident Queue
+          Right (7 cols): Full Incident Dossier & Lifecycle Controls
+          ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Column: Incidents List */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#64748B] px-1">
+            Correlated Incidents ({filteredIncidents.length})
+          </div>
+
+          <div className="space-y-2">
+            {filteredIncidents.map((incident) => {
+              const isSelected = incident.id === selectedIncident?.id;
 
               return (
                 <div
-                  key={inc.id}
-                  onClick={() => setSelectedIncidentId(inc.id)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                  key={incident.id}
+                  onClick={() => setSelectedIncidentId(incident.id)}
+                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#141C2E] border-[#0066FF] shadow-cyber-blue ring-1 ring-[#0066FF]/30'
-                      : 'bg-[#0F1523] border-[#1E293B] hover:border-[#0066FF]/40 shadow-sm'
+                      ? 'bg-[#161B26] border-[#38BDF8] ring-1 ring-[#38BDF8]/20 shadow-sm'
+                      : 'bg-[#10131B] border-[#1C2230] hover:border-[#2A3347]'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-mono font-bold text-[#FF5722]">{inc.id}</span>
-                    <div className="flex items-center gap-1.5">
-                      <SeverityBadge severity={inc.severity} />
-                      <RiskScoreBadge score={inc.riskScore} size="sm" showLabel={false} />
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="font-bold text-[#38BDF8]">{incident.id}</span>
+                    <div className="flex items-center gap-2">
+                      <SeverityBadge severity={incident.severity} />
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#07080B] text-[#64748B] border border-[#1C2230] uppercase">
+                        {incident.status}
+                      </span>
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-bold text-white mt-2 font-sans line-clamp-2">
-                    {inc.title}
+                  <h3 className="text-sm font-bold text-white font-sans mt-1 leading-snug">
+                    {incident.title}
                   </h3>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B] mt-3 pt-2.5 border-t border-[#1E293B]">
-                    <span>Asset: <strong className="text-white">{inc.sourceIps[0]}</strong></span>
-                    <span className="capitalize px-2 py-0.5 rounded-full bg-[#161F30] text-[#38BDF8] border border-[#0066FF]/30 font-bold font-mono text-[10px]">
-                      {inc.status}
-                    </span>
+                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-[#1C2230] text-[11px] font-mono text-[#64748B]">
+                    <span>Target: <strong className="text-slate-300">{incident.targetAccounts.join(', ')}</strong></span>
+                    <span>Risk: <strong className="text-[#EF4444]">{incident.riskScore}</strong></span>
                   </div>
                 </div>
               );
-            })
-          )}
+            })}
+          </div>
         </div>
 
-        {/* Right Column: Clean Incident Detail Dossier (7 cols) */}
-        {activeIncident && (
-          <div className="lg:col-span-7 bg-[#0F1523] border border-[#1E293B] rounded-2xl p-6 sm:p-7 shadow-cyber-lg space-y-6 relative overflow-hidden">
-            {/* Top Glowing Gradient Accent */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0066FF] via-[#38BDF8] to-[#FF5722]" />
+        {/* Right Column: Full Incident Dossier */}
+        <div className="lg:col-span-7">
+          {selectedIncident ? (
+            <div className="bg-[#10131B] border border-[#1C2230] rounded-xl overflow-hidden shadow-sm space-y-6">
+              
+              {/* Incident Header & Lifecycle Status Control */}
+              <div className="p-5 border-b border-[#1C2230] bg-[#0C0E14] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="text-[#38BDF8] font-bold">{selectedIncident.id}</span>
+                    <SeverityBadge severity={selectedIncident.severity} />
+                    <span className="text-[#64748B]">Created: {selectedIncident.createdAt.split('T')[1]?.replace('Z', ' UTC')}</span>
+                  </div>
+                  <h2 className="text-xl font-bold text-white mt-1">
+                    {selectedIncident.title}
+                  </h2>
+                </div>
 
-            <div className="space-y-2 border-b border-[#1E293B] pb-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-[#FF5722]">{activeIncident.id}</span>
                 <div className="flex items-center gap-2">
-                  <RiskScoreBadge score={activeIncident.riskScore} />
-                  <Select
-                    value={activeIncident.status}
-                    onChange={(e) => updateIncidentStatus(activeIncident.id, e.target.value as any)}
-                    className="text-xs font-mono"
+                  <select
+                    value={selectedIncident.status}
+                    onChange={(e) => handleStatusUpdate(e.target.value as Incident['status'])}
+                    className="bg-[#07080B] border border-[#1C2230] text-white px-3 py-1.5 rounded-lg text-xs font-mono focus:outline-none focus:border-[#38BDF8]"
                   >
-                    <option value="active">Active</option>
-                    <option value="investigating">Investigating</option>
-                    <option value="contained">Contained</option>
-                    <option value="resolved">Resolved</option>
-                  </Select>
+                    <option value="active">STATUS: ACTIVE</option>
+                    <option value="investigating">STATUS: INVESTIGATING</option>
+                    <option value="contained">STATUS: CONTAINED</option>
+                    <option value="resolved">STATUS: RESOLVED</option>
+                    <option value="dismissed">STATUS: DISMISSED</option>
+                  </select>
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-white font-sans tracking-tight">
-                {activeIncident.title}
-              </h3>
-              <p className="text-sm text-slate-300 leading-relaxed font-sans">
-                {activeIncident.detectionExplanation}
-              </p>
-            </div>
-
-            {/* AI Summary Banner */}
-            <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1E293B] space-y-2 text-xs">
-              <div className="text-[10px] font-mono font-bold text-[#38BDF8] uppercase tracking-[0.15em] flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-[#38BDF8]" />
-                <span>ANALYTICAL SUMMARY</span>
-              </div>
-              <p className="text-sm text-slate-200 leading-relaxed font-sans font-normal">
-                {activeIncident.aiSummary.executiveSummary}
-              </p>
-            </div>
-
-            {/* Investigation Progression Timeline */}
-            <div className="space-y-3">
-              <div className="text-[10px] font-mono font-bold text-[#64748B] tracking-[0.15em] uppercase">
-                PROGRESSION TIMELINE
-              </div>
-              <div className="space-y-2 border-l-2 border-[#1E293B] ml-2 pl-4 font-mono text-xs">
-                {activeIncident.timelineEvents.map((evt) => (
-                  <div key={evt.id} className="p-3 rounded-xl bg-[#0B0F17] border border-[#1E293B]">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-white">{evt.title}</span>
-                      <span className="text-[#64748B] text-[11px]">{evt.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-[#94A3B8] mt-1 font-sans">{evt.description}</p>
+              {/* Dossier Content */}
+              <div className="p-5 space-y-6">
+                
+                {/* Executive Summary & Root Cause */}
+                <div className="space-y-1">
+                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
+                    EXECUTIVE INCIDENT SUMMARY
                   </div>
-                ))}
-              </div>
-            </div>
+                  <p className="text-sm text-slate-200 leading-relaxed font-sans">
+                    {selectedIncident.aiSummary.executiveSummary}
+                  </p>
+                </div>
 
-            {/* Response Trigger */}
-            <div className="pt-4 border-t border-[#1E293B] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0B0F17] p-4 rounded-xl border border-[#1E293B]">
-              <div>
-                <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider">Assigned Playbook</div>
-                <div className="font-bold text-white text-sm font-mono mt-0.5">{activeIncident.assignedPlaybookId}</div>
+                {/* Scope & Identity Ribbons */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#1C2230] font-mono text-xs">
+                  <div className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230]">
+                    <span className="text-[10px] text-[#64748B] uppercase block">Adversary IPs</span>
+                    <span className="text-[#F97316] font-bold text-sm block mt-0.5 truncate">{selectedIncident.sourceIps.join(', ')}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230]">
+                    <span className="text-[10px] text-[#64748B] uppercase block">Target Accounts</span>
+                    <span className="text-white font-bold text-sm block mt-0.5 truncate">{selectedIncident.targetAccounts.join(', ')}</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230]">
+                    <span className="text-[10px] text-[#64748B] uppercase block">Risk Score</span>
+                    <span className="text-[#EF4444] font-bold text-sm block mt-0.5">{selectedIncident.riskScore}/100</span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230]">
+                    <span className="text-[10px] text-[#64748B] uppercase block">Event Volume</span>
+                    <span className="text-white font-bold text-sm block mt-0.5">{selectedIncident.eventCount} events</span>
+                  </div>
+                </div>
+
+                {/* Root Cause Analysis */}
+                <div className="pt-4 border-t border-[#1C2230] space-y-1">
+                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
+                    ROOT CAUSE ANALYSIS
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-300 font-sans leading-relaxed">
+                    {selectedIncident.aiSummary.rootCauseAnalysis}
+                  </p>
+                </div>
+
+                {/* Attack Progression Timeline */}
+                <div className="pt-4 border-t border-[#1C2230] space-y-3">
+                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
+                    EVIDENCE &amp; ATTACK PROGRESSION TIMELINE
+                  </div>
+                  <div className="border-l-2 border-[#1C2230] ml-2 pl-4 space-y-3 font-mono text-xs">
+                    {selectedIncident.timelineEvents.map((evt) => (
+                      <div key={evt.id} className="space-y-0.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-white font-sans">{evt.title}</span>
+                          <span className="text-[11px] text-[#64748B]">{evt.timestamp.split('T')[1]?.replace('Z', ' UTC')}</span>
+                        </div>
+                        <p className="text-xs text-[#94A3B8] font-sans">{evt.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Assigned Playbook */}
+                {selectedIncident.assignedPlaybookId && (
+                  <div className="pt-4 border-t border-[#1C2230] p-4 rounded-xl bg-[#07080B] border border-[#1C2230] flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-mono text-[#F97316] font-bold uppercase">
+                        Assigned Defense Playbook
+                      </div>
+                      <div className="text-sm font-bold text-white mt-0.5 font-mono">
+                        {selectedIncident.assignedPlaybookId}
+                      </div>
+                    </div>
+                    <Button
+                      variant="action"
+                      size="sm"
+                      onClick={() => handleStatusUpdate('contained')}
+                    >
+                      Contain Incident
+                    </Button>
+                  </div>
+                )}
+
               </div>
 
-              <Button
-                variant="primary"
-                size="md"
-                icon={<Zap className="w-4 h-4" />}
-                onClick={handleSimulateResponse}
-              >
-                Execute Policy Dry Run
-              </Button>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="p-8 text-center bg-[#10131B] border border-[#1C2230] rounded-xl text-xs text-[#94A3B8] font-mono">
+              Select an incident from the queue on the left.
+            </div>
+          )}
+        </div>
+
       </div>
+
     </div>
   );
 };

@@ -129,6 +129,7 @@ async def list_events(
             rawEvent=m.raw_event,
             parsedFields=m.parsed_fields or {},
             correlationId=m.correlation_id,
+            fingerprint=m.fingerprint,
             isSimulated=m.is_simulated
         )
         for m in models
@@ -161,5 +162,6 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         rawEvent=m.raw_event,
         parsedFields=m.parsed_fields or {},
         correlationId=m.correlation_id,
+        fingerprint=m.fingerprint,
         isSimulated=m.is_simulated
     )

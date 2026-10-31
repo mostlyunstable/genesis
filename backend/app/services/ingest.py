@@ -2,8 +2,8 @@ import re
 import json
 import hashlib
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, Tuple
-from backend.app.schemas.event import RawLogItem, SecurityEventSchema
+from typing import Dict, Any, Optional
+from backend.app.schemas.event import RawLogItem
 from backend.app.models.event import SecurityEventModel
 
 # Regex patterns for SSH Syslog parsing
@@ -24,10 +24,19 @@ PAM_SUCCESS_PATTERN = re.compile(
     re.IGNORECASE
 )
 
+# RFC 5424 Syslog regex: <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [STRUCTURED-DATA] MSG
+RFC5424_PATTERN = re.compile(
+    r"^<(?P<pri>\d+)>(?P<version>\d+)\s+(?P<timestamp>\S+)\s+(?P<hostname>\S+)\s+(?P<app>\S+)\s+(?P<pid>\S+)\s+(?P<msgid>\S+)\s+(?P<sd>\[.*?\]|-)\s+(?P<msg>.*)$"
+)
+
 
 class NormalizerService:
     @staticmethod
     def compute_fingerprint(source: str, timestamp: datetime, source_ip: str, username: str, raw_event: str) -> str:
+        """
+        Cryptographic SHA-256 deduplication fingerprint.
+        Ensures consistent hashing across distributed workers and database engines.
+        """
         data = f"{source}|{timestamp.isoformat()}|{source_ip}|{username}|{raw_event.strip()}"
         return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
@@ -45,16 +54,57 @@ class NormalizerService:
             ts = ts.replace(tzinfo=timezone.utc)
 
         parsed_fields: Dict[str, Any] = item.metadata.copy() if item.metadata else {}
+        if item.metadata and "destinationIp" in item.metadata:
+            destination_ip = item.metadata["destinationIp"]
+        if item.metadata and "destinationPort" in item.metadata:
+            destination_port = int(item.metadata["destinationPort"])
         username = "unknown"
         source_ip = "127.0.0.1"
         port = destination_port
         outcome = "failure"
         severity = "info"
         event_type = "AUTH_EVENT"
+        hostname = parsed_fields.get("hostname", "sentinel-host")
 
-        # 1. Linux SSH Logs
-        if source == "linux_ssh":
-            failed_match = SSH_FAILED_PATTERN.search(raw)
+        # -----------------------------------------------------------------
+        # 1. RFC 5424 Syslog Parser
+        # -----------------------------------------------------------------
+        rfc_match = RFC5424_PATTERN.match(raw)
+        if rfc_match:
+            source = "syslog_rfc5424" if source in ["generic", "syslog"] else source
+            hostname = rfc_match.group("hostname")
+            parsed_fields.update({
+                "pri": int(rfc_match.group("pri")),
+                "app": rfc_match.group("app"),
+                "pid": rfc_match.group("pid"),
+                "msgid": rfc_match.group("msgid"),
+                "hostname": hostname
+            })
+            msg_payload = rfc_match.group("msg").strip()
+            # If msg contains ssh or auth failure, parse further
+            if "failed" in msg_payload.lower():
+                outcome = "failure"
+                severity = "warning"
+                event_type = "SYSLOG_AUTH_FAIL"
+                ip_search = re.search(r"(\d{1,3}(?:\.\d{1,3}){3})", msg_payload)
+                if ip_search:
+                    source_ip = ip_search.group(1)
+                user_search = re.search(r"user[=:\s]+(?P<user>\S+)", msg_payload, re.IGNORECASE)
+                if user_search:
+                    username = user_search.group("user")
+            elif "accepted" in msg_payload.lower() or "success" in msg_payload.lower():
+                outcome = "success"
+                severity = "info"
+                event_type = "SYSLOG_AUTH_SUCCESS"
+            raw_eval = msg_payload
+        else:
+            raw_eval = raw
+
+        # -----------------------------------------------------------------
+        # 2. Linux SSH Logs (OpenSSH)
+        # -----------------------------------------------------------------
+        if source == "linux_ssh" or "sshd[" in raw_eval:
+            failed_match = SSH_FAILED_PATTERN.search(raw_eval)
             if failed_match:
                 username = failed_match.group("user")
                 source_ip = failed_match.group("ip")
@@ -67,10 +117,11 @@ class NormalizerService:
                     "clientVersion": "SSH-2.0-OpenSSH_8.4p1",
                     "failureReason": "Password rejected or invalid user",
                     "targetService": "sshd",
-                    "pid": int(failed_match.group("pid"))
+                    "pid": int(failed_match.group("pid")),
+                    "hostname": hostname
                 })
             else:
-                accepted_match = SSH_ACCEPTED_PATTERN.search(raw)
+                accepted_match = SSH_ACCEPTED_PATTERN.search(raw_eval)
                 if accepted_match:
                     username = accepted_match.group("user")
                     source_ip = accepted_match.group("ip")
@@ -78,22 +129,25 @@ class NormalizerService:
                     outcome = "success"
                     severity = "critical" if username in ["deploy", "root", "admin"] else "info"
                     event_type = "SSH_AUTH_SUCCESS"
+                    session_sha = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
                     parsed_fields.update({
                         "authMethod": accepted_match.group("method"),
                         "clientVersion": "SSH-2.0-OpenSSH_8.4p1",
-                        "sessionId": f"sess_{hashlib.md5(raw.encode()).hexdigest()[:8]}",
+                        "sessionId": f"sess_{session_sha}",
                         "targetService": "sshd",
-                        "pid": int(accepted_match.group("pid"))
+                        "pid": int(accepted_match.group("pid")),
+                        "hostname": hostname
                     })
                 else:
-                    # Fallback / unparseable sshd line
                     username = "system"
                     event_type = "SSH_SYS_LOG"
                     outcome = "info"
 
-        # 2. Linux PAM Logs
-        elif source == "linux_auth":
-            pam_fail = PAM_FAILURE_PATTERN.search(raw)
+        # -----------------------------------------------------------------
+        # 3. Linux PAM Authentication Logs
+        # -----------------------------------------------------------------
+        elif source == "linux_auth" or "pam_unix" in raw_eval:
+            pam_fail = PAM_FAILURE_PATTERN.search(raw_eval)
             if pam_fail:
                 username = pam_fail.group("user")
                 source_ip = pam_fail.group("ip")
@@ -101,18 +155,55 @@ class NormalizerService:
                 severity = "warning"
                 event_type = "PAM_AUTH_FAIL"
                 parsed_fields["failureReason"] = "PAM authentication failure"
+                parsed_fields["hostname"] = hostname
             else:
-                pam_ok = PAM_SUCCESS_PATTERN.search(raw)
+                pam_ok = PAM_SUCCESS_PATTERN.search(raw_eval)
                 if pam_ok:
                     username = pam_ok.group("user")
                     outcome = "success"
                     severity = "info"
                     event_type = "PAM_SESSION_OPEN"
+                    parsed_fields["hostname"] = hostname
 
-        # 3. App SAML / SSO JSON logs
-        elif source == "app_auth":
+        # -----------------------------------------------------------------
+        # 4. Okta System Log Telemetry (JSON Schema)
+        # -----------------------------------------------------------------
+        elif source == "okta" or (raw.startswith("{") and ("eventType" in raw or "actor" in raw)):
             try:
-                data = json.loads(raw) if raw.startswith("{") else {}
+                data = json.loads(raw)
+                source = "okta"
+                # Okta System Log format
+                actor_data = data.get("actor", {})
+                client_data = data.get("client", {})
+                outcome_data = data.get("outcome", {})
+
+                username = actor_data.get("alternateId", data.get("username", data.get("user", "unknown")))
+                source_ip = client_data.get("ipAddress", data.get("sourceIp", data.get("ip", "127.0.0.1")))
+                destination_ip = data.get("destinationIp", "10.240.4.12")
+                port = data.get("destinationPort", 443)
+                
+                result_str = str(outcome_data.get("result", data.get("outcome", "FAILURE"))).upper()
+                outcome = "success" if result_str in ["SUCCESS", "ALLOW"] else "failure"
+                severity = "warning" if outcome == "failure" else "info"
+                event_type = data.get("eventType", "okta.user.authentication.verify")
+
+                parsed_fields.update({
+                    "vendor": "okta",
+                    "authMethod": data.get("authMethod", "SAML/SSO"),
+                    "failureReason": outcome_data.get("reason", data.get("failureReason")),
+                    "clientDevice": client_data.get("device", "workstation"),
+                    "zone": client_data.get("geographicalContext", {}).get("country", "US")
+                })
+            except Exception:
+                outcome = "failure"
+                event_type = "OKTA_AUTH_FAIL"
+
+        # -----------------------------------------------------------------
+        # 5. App SAML / SSO Generic JSON Logs
+        # -----------------------------------------------------------------
+        elif source == "app_auth" or (raw.startswith("{") and "json" in source):
+            try:
+                data = json.loads(raw)
                 username = data.get("username", data.get("user", "unknown"))
                 source_ip = data.get("sourceIp", data.get("ip", "127.0.0.1"))
                 destination_ip = data.get("destinationIp", "10.240.4.12")
@@ -122,44 +213,51 @@ class NormalizerService:
                 event_type = data.get("eventType", "SSO_AUTH_EVENT")
                 parsed_fields.update(data.get("parsedFields", {}))
             except Exception:
-                # Text fallback
-                if "failed" in raw.lower():
-                    outcome = "failure"
-                    event_type = "SSO_LOGIN_FAIL"
-                else:
-                    outcome = "success"
-                    event_type = "SSO_LOGIN_SUCCESS"
+                outcome = "failure" if "failed" in raw.lower() else "success"
+                event_type = "SSO_LOGIN_FAIL" if outcome == "failure" else "SSO_LOGIN_SUCCESS"
 
-        # 4. Windows Security Logs (Event ID 4625 / 4624)
-        elif source == "windows_security":
+        # -----------------------------------------------------------------
+        # 6. Windows Security Events (Event ID 4625 / 4624)
+        # -----------------------------------------------------------------
+        elif source == "windows_security" or "Event 4625" in raw or "Event 4624" in raw:
+            source = "windows_security"
+            destination_ip = "10.240.0.5"  # Domain Controller default
+            port = 3389  # RDP / WinLogon
             if "4625" in raw or "Logon Failure" in raw:
                 outcome = "failure"
                 severity = "warning"
                 event_type = "WIN_LOGON_FAIL"
-                user_match = re.search(r"Account For Which Logon Failed:\s+Account Name:\s+(\S+)", raw)
-                ip_match = re.search(r"Source Network Address:\s+(\S+)", raw)
-                if user_match:
-                    username = user_match.group(1)
-                if ip_match:
-                    source_ip = ip_match.group(1)
-            elif "4624" in raw or "Logon Success" in raw:
+                parsed_fields["failureReason"] = "Bad password or username"
+            else:
                 outcome = "success"
                 severity = "info"
                 event_type = "WIN_LOGON_SUCCESS"
-                user_match = re.search(r"New Logon:\s+Account Name:\s+(\S+)", raw)
-                ip_match = re.search(r"Source Network Address:\s+(\S+)", raw)
-                if user_match:
-                    username = user_match.group(1)
-                if ip_match:
-                    source_ip = ip_match.group(1)
 
-        # Default fallback
-        else:
+            # Parse fields from Event text
+            user_match = re.search(r"(?:Account Name|TargetUserName|User):\s*(\S+)", raw, re.IGNORECASE)
+            ip_match = re.search(r"(?:Source Network Address|IpAddress|Address):\s*(\S+)", raw, re.IGNORECASE)
+            port_match = re.search(r"(?:Source Port|IpPort|Port):\s*(\d+)", raw, re.IGNORECASE)
+            workstation_match = re.search(r"Workstation Name:\s*(\S+)", raw, re.IGNORECASE)
+
+            if user_match:
+                username = user_match.group(1).replace("$", "").strip(".,;: \t\r\n")
+            if ip_match and ip_match.group(1) not in ["-", "::1"]:
+                source_ip = ip_match.group(1).strip(".,;: \t\r\n")
+            if port_match:
+                port = int(port_match.group(1))
+            if workstation_match:
+                parsed_fields["workstation"] = workstation_match.group(1)
+            parsed_fields["eventId"] = "4625" if outcome == "failure" else "4624"
+
+        # -----------------------------------------------------------------
+        # Default Fallback Parser (if not already parsed by RFC 5424 or specific source)
+        # -----------------------------------------------------------------
+        elif source != "syslog_rfc5424":
             username = "unknown"
             source_ip = "127.0.0.1"
 
         fingerprint = cls.compute_fingerprint(source, ts, source_ip, username, raw)
-        event_id = f"EVT-2026-{fingerprint[:8].upper()}"
+        event_id = f"EVT-2026-{fingerprint[:12].upper()}"
 
         return SecurityEventModel(
             id=event_id,

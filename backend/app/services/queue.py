@@ -170,7 +170,17 @@ class RedisJobQueue:
             "backend": "redis"
         }
 
-    async def is_healthy(self) -> bool:
+    @property
+    def average_latency_ms(self) -> float:
+        if self.processed_jobs_count == 0:
+            return 0.0
+        return self.total_latency_ms / self.processed_jobs_count
+
+    @property
+    def is_healthy(self) -> bool:
+        return not self.failed_jobs_count or self._running
+
+    async def check_health(self) -> bool:
         try:
             client = await self.get_client()
             return await client.ping() is True
@@ -299,7 +309,8 @@ class InMemoryJobQueue:
         job = self._jobs.get(job_id)
         return job.to_dict() if job else None
 
-    async def is_healthy(self) -> bool:
+    @property
+    def is_healthy(self) -> bool:
         return self._running or self._queue.empty()
 
     async def start(self):

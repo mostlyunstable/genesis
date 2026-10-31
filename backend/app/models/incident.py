@@ -27,6 +27,9 @@ class IncidentModel(Base):
     ai_summary: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
     timeline_events: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
     assigned_playbook_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    assigned_analyst: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    comments: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    resolution_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_simulated: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     __table_args__ = (

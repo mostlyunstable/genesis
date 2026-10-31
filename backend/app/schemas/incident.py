@@ -29,8 +29,22 @@ class AISummarySchema(BaseModel):
     confidenceExplanation: str
 
 
+class IncidentCommentSchema(BaseModel):
+    id: str
+    author: str
+    comment: str
+    timestamp: str
+
+
+class AddCommentRequest(BaseModel):
+    author: str
+    comment: str
+
+
 class UpdateIncidentStatusRequest(BaseModel):
-    status: str  # active, investigating, contained, resolved, dismissed
+    status: str  # active, investigating, contained, resolved, dismissed, false_positive
+    assignedAnalyst: Optional[str] = None
+    resolutionNotes: Optional[str] = None
 
 
 class IncidentSchema(BaseModel):
@@ -53,6 +67,9 @@ class IncidentSchema(BaseModel):
     aiSummary: AISummarySchema
     timelineEvents: List[TimelineEventSchema]
     assignedPlaybookId: Optional[str] = None
+    assignedAnalyst: Optional[str] = None
+    comments: List[IncidentCommentSchema] = []
+    resolutionNotes: Optional[str] = None
     isSimulated: bool = True
 
     model_config = ConfigDict(from_attributes=True)

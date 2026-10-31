@@ -36,6 +36,7 @@ class SecurityEventSchema(BaseModel):
     rawEvent: str
     parsedFields: Dict[str, Any]
     correlationId: Optional[str] = None
+    fingerprint: Optional[str] = None
     isSimulated: bool = True
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from sqlalchemy import String, Boolean, DateTime, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from backend.app.db.base import Base
@@ -16,4 +16,6 @@ class AuditRecordModel(Base):
     target: Mapped[str] = mapped_column(String(128), nullable=False)
     result: Mapped[str] = mapped_column(String(32), nullable=False)  # SUCCESS, WARNING, FAILURE, INFO
     details: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    previous_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    record_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     is_simulated: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

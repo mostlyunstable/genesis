@@ -13,3 +13,8 @@ class AnalystQueryResponse(BaseModel):
     mitreTechniques: List[str]
     recommendedPlaybookId: Optional[str] = None
     confidence: float
+    provider: Optional[str] = "local_deterministic"
+    promptTokens: Optional[int] = None
+    completionTokens: Optional[int] = None
+    totalTokens: Optional[int] = None
+    retrievedKnowledgeCount: Optional[int] = 0

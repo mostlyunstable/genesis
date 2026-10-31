@@ -45,3 +45,26 @@ async def client(db_session: AsyncSession):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def auth_headers(client: AsyncClient, db_session: AsyncSession):
+    from backend.app.models.user import User
+    from backend.app.core.security import get_password_hash
+    user = User(
+        id="USR-CONFTEST-01",
+        username="lead_analyst@sentinel.ai",
+        full_name="Lead Analyst",
+        hashed_password=get_password_hash("test_pwd_2026!"),
+        role="analyst",
+        is_active=True
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    login = await client.post("/api/v1/auth/login", json={
+        "username": "lead_analyst@sentinel.ai",
+        "password": "test_pwd_2026!"
+    })
+    token = login.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

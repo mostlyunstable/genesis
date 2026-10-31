@@ -4,68 +4,77 @@
 
 @layer base {
   :root {
-    --bg-main: #07090E;
-    --bg-secondary: #0B0F17;
-    --surface-main: #0F1523;
-    --surface-elevated: #141C2E;
+    /* Strict Charcoal & Obsidian Monochromatic Palette */
+    --canvas-base: #08090D;
+    --canvas-shell: #0C0E14;
+    --surface-main: #10131B;
+    --surface-elevated: #161B26;
+    --surface-sunken: #07080B;
+    
+    /* Hairline Precise Borders */
+    --border-subtle: #1C2230;
+    --border-strong: #2A3347;
+    --border-active: #3B82F6;
+
+    /* Typographic Hierarchy */
     --text-primary: #F8FAFC;
     --text-secondary: #94A3B8;
     --text-muted: #64748B;
-    --border-color: #1E293B;
-    --border-bright: #2E3E5B;
-    --brand-orange: #FF5722;
-    --brand-blue: #0066FF;
-    --brand-blue-light: #38BDF8;
+    --text-disabled: #475569;
+
+    /* Signal Colors (Strictly Functional) */
+    --signal-critical: #EF4444;
+    --signal-action: #F97316;
+    --signal-telemetry: #38BDF8;
+    --signal-verified: #10B981;
+    --signal-warning: #F59E0B;
   }
 
   body {
-    background-color: #07090E;
-    color: #F8FAFC;
+    background-color: var(--canvas-base);
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image: 
-      radial-gradient(circle at 50% 0%, rgba(0, 102, 255, 0.08) 0%, transparent 60%),
-      radial-gradient(circle at 85% 30%, rgba(255, 87, 34, 0.04) 0%, transparent 40%);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
-/* Cyber dark scrollbars */
+/* High-Density Precision Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090E;
+  background: #08090D;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 9999px;
-  border: 1px solid rgba(0, 102, 255, 0.1);
+  background: #1C2230;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2E3E5B;
+  background: #2A3347;
 }
 
-/* Focus styles */
+/* Focus States */
 *:focus-visible {
-  outline: 2px solid #0066FF;
-  outline-offset: 2px;
+  outline: 1px solid #3B82F6;
+  outline-offset: 1px;
 }
 
-/* Monospace font */
+/* Monospace Telemetry & Codes */
 code, pre, .font-mono {
   font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Subtle Cyber Grid Background */
-.cyber-grid {
-  background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+/* Operational Data Table Cells */
+.table-cell-dense {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
 }

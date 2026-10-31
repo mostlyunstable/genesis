@@ -1,73 +1,92 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
-import { IntelligenceWorkspacePage } from '@/features/workspace/IntelligenceWorkspacePage';
-import { InvestigationsPage } from '@/features/investigations/InvestigationsPage';
-import { SecurityActivityPage } from '@/features/activity/SecurityActivityPage';
+import { CommandCenterPage } from '@/features/command-center/CommandCenterPage';
 import { ThreatsPage } from '@/features/threats/ThreatsPage';
+import { SecurityEventsPage } from '@/features/events/SecurityEventsPage';
+import { DetectionEnginePage } from '@/features/detection/DetectionEnginePage';
 import { IncidentsPage } from '@/features/incidents/IncidentsPage';
+import { AIInvestigatorPage } from '@/features/investigator/AIInvestigatorPage';
 import { AutonomousResponsePage } from '@/features/response/AutonomousResponsePage';
-import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
 import { AuditTrailPage } from '@/features/audit/AuditTrailPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
+import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
+      // 1. Command Center
       {
         index: true,
-        element: <IntelligenceWorkspacePage />
+        element: <CommandCenterPage />
       },
-      {
-        path: 'investigations',
-        element: <InvestigationsPage />
-      },
-      {
-        path: 'activity',
-        element: <SecurityActivityPage />
-      },
+      // 2. Threat Intelligence
       {
         path: 'threats',
         element: <ThreatsPage />
       },
+      // 3. Security Events
+      {
+        path: 'events',
+        element: <SecurityEventsPage />
+      },
+      // 4. Detection Engine
+      {
+        path: 'detections',
+        element: <DetectionEnginePage />
+      },
+      // 5. Incidents
       {
         path: 'incidents',
         element: <IncidentsPage />
       },
+      // 6. AI Investigator
+      {
+        path: 'investigator',
+        element: <AIInvestigatorPage />
+      },
+      // 7. Response Operations
       {
         path: 'response',
         element: <AutonomousResponsePage />
       },
-      {
-        path: 'integrations',
-        element: <IntegrationsPage />
-      },
+      // 8. Audit Trail
       {
         path: 'audit',
         element: <AuditTrailPage />
       },
+      // 9. System Configuration
       {
         path: 'settings',
         element: <SettingsPage />
       },
-      // Aliases / Graceful redirects for prior routes
+      // Platform / Telemetry Forwarders
+      {
+        path: 'integrations',
+        element: <IntegrationsPage />
+      },
+      // Aliases & redirects for seamless compatibility
+      {
+        path: 'activity',
+        element: <Navigate to="/events" replace />
+      },
+      {
+        path: 'investigations',
+        element: <Navigate to="/investigator" replace />
+      },
       {
         path: 'analyst',
-        element: <Navigate to="/" replace />
+        element: <Navigate to="/investigator" replace />
       },
       {
         path: 'logs',
-        element: <Navigate to="/activity" replace />
-      },
-      {
-        path: 'detections',
-        element: <Navigate to="/threats" replace />
+        element: <Navigate to="/events" replace />
       },
       {
         path: 'timeline',
-        element: <Navigate to="/investigations" replace />
+        element: <Navigate to="/investigator" replace />
       },
       {
         path: 'playbooks',

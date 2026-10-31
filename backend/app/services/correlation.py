@@ -32,6 +32,18 @@ MITRE_MAPPING = {
         "techniqueId": "T1078.003",
         "techniqueName": "Valid Accounts: Local Accounts",
         "referenceUrl": "https://attack.mitre.org/techniques/T1078/003/"
+    },
+    "lateral_probing": {
+        "tactic": "Lateral Movement",
+        "techniqueId": "T1021",
+        "techniqueName": "Remote Services",
+        "referenceUrl": "https://attack.mitre.org/techniques/T1021/"
+    },
+    "privilege_targeting": {
+        "tactic": "Privilege Escalation",
+        "techniqueId": "T1078.002",
+        "techniqueName": "Valid Accounts: Domain Accounts",
+        "referenceUrl": "https://attack.mitre.org/techniques/T1078/002/"
     }
 }
 
@@ -50,6 +62,8 @@ class CorrelationEngine:
         """
         base_risk = {
             "suspicious_auth": 88,
+            "privilege_targeting": 80,
+            "lateral_probing": 75,
             "ssh_brute_force": 70,
             "password_spraying": 65,
             "distributed_brute_force": 60
@@ -118,6 +132,11 @@ class CorrelationEngine:
             matching_incident.risk_score = max(matching_incident.risk_score, risk)
             matching_incident.confidence_score = max(matching_incident.confidence_score, conf)
             matching_incident.updated_at = ts
+
+            # Append new MITRE techniques if not already represented
+            existing_techs = {m.get("techniqueId") for m in (matching_incident.mitre_attack or [])}
+            if mitre_item.get("techniqueId") not in existing_techs:
+                matching_incident.mitre_attack = list(matching_incident.mitre_attack or []) + [mitre_item]
 
             # Link detection to incident
             detection.associated_incident_id = matching_incident.id
