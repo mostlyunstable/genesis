@@ -85,7 +85,7 @@ export const CommandCenterPage: React.FC = () => {
               OPERATIONAL SURVEILLANCE ACTIVE
             </span>
             <span className="text-[#64748B]">•</span>
-            <span className="text-[10px] font-mono text-[#94A3B8]">SENTINEL ENGINE v2.5</span>
+            <span className="text-[10px] font-mono text-[#94A3B8]">GENYSIS ENGINE v3.2</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Command Center
@@ -303,7 +303,7 @@ export const CommandCenterPage: React.FC = () => {
                 Credential Exhaustion followed by Interactive Shell Acquisition on Bastion DMZ
               </h4>
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Sentinel correlated 35 SSH rejection events with a successful key-based login from 198.51.100.42 within a 4-second convergence window.
+                Genysis Bot correlated 35 SSH rejection events with a successful key-based login from 198.51.100.42 within a 4-second convergence window.
               </p>
             </div>
 

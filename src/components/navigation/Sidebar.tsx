@@ -12,7 +12,8 @@ import {
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  Activity
+  Activity,
+  Server
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GenysisLogo } from '@/components/ui/GenysisLogo';
@@ -43,7 +44,7 @@ export const Sidebar: React.FC = () => {
     {
       title: 'OPERATIONAL COMMAND',
       items: [
-        { name: 'Command Center', path: '/', id: 'command-center', icon: LayoutDashboard },
+        { name: 'Cyber Bot Cockpit', path: '/', id: 'command-center', icon: LayoutDashboard },
         { 
           name: 'Threat Intelligence', 
           path: '/threats', 
@@ -67,7 +68,9 @@ export const Sidebar: React.FC = () => {
           badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
           badgeType: 'warning'
         },
-        { name: 'AI Investigator', path: '/investigator', id: 'ai-investigator', icon: Search }
+        { name: 'AI Investigator', path: '/investigator', id: 'ai-investigator', icon: Search },
+        { name: 'Assets & Topology', path: '/assets', id: 'assets', icon: Server },
+        { name: 'MITRE ATT&CK', path: '/mitre', id: 'mitre', icon: Activity }
       ]
     },
     {
@@ -87,9 +90,9 @@ export const Sidebar: React.FC = () => {
       }`}
     >
       {/* Brand & Wordmark Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1C2230]">
+      <div className="h-16 px-3.5 flex items-center justify-between border-b border-[#1C2230]">
         <NavLink to="/" className="flex items-center gap-2 group overflow-hidden">
-          <GenysisLogo size="sm" showWordmark={!sidebarCollapsed} />
+          <GenysisLogo size="md" showWordmark={!sidebarCollapsed} />
         </NavLink>
 
         <button

@@ -11,10 +11,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Create dedicated non-root application user
+RUN groupadd -g 1001 sentinel && \
+    useradd -u 1001 -g sentinel -m -s /bin/bash sentinel
+
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY backend /app/backend
+RUN chown -R sentinel:sentinel /app
+
+USER sentinel
 
 EXPOSE 8000
 

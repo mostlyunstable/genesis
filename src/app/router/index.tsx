@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
+import { IntelligenceWorkspacePage } from '@/features/workspace/IntelligenceWorkspacePage';
 import { CommandCenterPage } from '@/features/command-center/CommandCenterPage';
 import { ThreatsPage } from '@/features/threats/ThreatsPage';
 import { SecurityEventsPage } from '@/features/events/SecurityEventsPage';
@@ -11,15 +12,22 @@ import { AutonomousResponsePage } from '@/features/response/AutonomousResponsePa
 import { AuditTrailPage } from '@/features/audit/AuditTrailPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
+import { AssetsPage } from '@/features/assets/AssetsPage';
+import { MitreMatrixPage } from '@/features/mitre/MitreMatrixPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
-      // 1. Command Center
+      // 1. Autonomous Cyber Bot Cockpit (Primary View)
       {
         index: true,
+        element: <IntelligenceWorkspacePage />
+      },
+      // Command Center View
+      {
+        path: 'command',
         element: <CommandCenterPage />
       },
       // 2. Threat Intelligence
@@ -47,6 +55,10 @@ export const router = createBrowserRouter([
         path: 'investigator',
         element: <AIInvestigatorPage />
       },
+      {
+        path: 'investigations',
+        element: <AIInvestigatorPage />
+      },
       // 7. Response Operations
       {
         path: 'response',
@@ -57,7 +69,17 @@ export const router = createBrowserRouter([
         path: 'audit',
         element: <AuditTrailPage />
       },
-      // 9. System Configuration
+      // 9. Infrastructure Assets
+      {
+        path: 'assets',
+        element: <AssetsPage />
+      },
+      // 10. MITRE ATT&CK Matrix
+      {
+        path: 'mitre',
+        element: <MitreMatrixPage />
+      },
+      // 11. System Configuration
       {
         path: 'settings',
         element: <SettingsPage />

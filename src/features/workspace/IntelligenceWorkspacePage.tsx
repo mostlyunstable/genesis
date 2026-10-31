@@ -356,11 +356,11 @@ export const IntelligenceWorkspacePage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1A2333] pb-6">
             <div className="flex items-center gap-4">
               {/* Glowing Genysis Hexagonal Bot Emblem */}
-              <div className="relative w-14 h-14 shrink-0 rounded-2xl bg-[#06080D] border border-[#F97316]/40 p-2 flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.25)]">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl bg-[#06080D] border border-[#F97316]/50 p-2.5 flex items-center justify-center shadow-[0_0_25px_rgba(249,115,22,0.35)] group">
                 <img 
                   src={logoImage} 
                   alt="Genysis Autonomous Bot" 
-                  className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(249,115,22,0.7)] transition-transform duration-300 group-hover:scale-105" 
                 />
                 <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#10B981] ring-2 ring-[#0B0F19] flex items-center justify-center">
                   <span className="w-2 h-2 rounded-full bg-white animate-ping" />

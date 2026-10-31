@@ -92,7 +92,7 @@ export const AIInvestigatorPage: React.FC = () => {
       type: 'AI_HYPOTHESIS',
       label: 'Attack Vector Deduction',
       value: 'Dictionary Rotation to Shell Pivot',
-      source: 'Sentinel Correlation Engine',
+      source: 'Genysis Correlation Engine',
       confidence: 98,
       details: 'High-velocity automated spray succeeded by human operator interactive shell takeover within 4.0 seconds of key acceptance.'
     },

@@ -13,7 +13,8 @@ import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, { title: string; section: string }> = {
-  '/': { title: 'Command Center', section: 'OPERATIONAL COMMAND' },
+  '/': { title: 'Autonomous Cyber Bot Cockpit', section: 'OPERATIONAL COMMAND' },
+  '/command': { title: 'Command Center', section: 'OPERATIONAL COMMAND' },
   '/threats': { title: 'Threat Intelligence', section: 'OPERATIONAL COMMAND' },
   '/events': { title: 'Security Events Stream', section: 'OPERATIONAL COMMAND' },
   '/activity': { title: 'Security Events Stream', section: 'OPERATIONAL COMMAND' },
@@ -21,6 +22,8 @@ const routeTitleMap: Record<string, { title: string; section: string }> = {
   '/incidents': { title: 'Incident Command', section: 'INTELLIGENCE' },
   '/investigator': { title: 'AI Investigator', section: 'INVESTIGATION' },
   '/investigations': { title: 'AI Investigator', section: 'INVESTIGATION' },
+  '/assets': { title: 'Infrastructure Assets & Topology', section: 'INTELLIGENCE' },
+  '/mitre': { title: 'MITRE ATT&CK Matrix', section: 'INTELLIGENCE' },
   '/response': { title: 'Response Operations', section: 'DEFENSE' },
   '/audit': { title: 'Cryptographic Audit Trail', section: 'GOVERNANCE' },
   '/settings': { title: 'System Configuration', section: 'SYSTEM' },

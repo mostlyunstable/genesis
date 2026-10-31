@@ -93,16 +93,16 @@ class RedisJobQueue:
     - Status tracking and queue metrics
     - Graceful shutdown
     """
-    def __init__(self, redis_url: str = settings.REDIS_URL):
+    def __init__(self, redis_url: str = settings.REDIS_URL, queue_prefix: str = "sentinel"):
         self.redis_url = redis_url
         self._redis: Optional[aioredis.Redis] = None
         self._running = False
         self._worker_task: Optional[asyncio.Task] = None
         self._handlers: Dict[str, Callable[[JobRecord], Awaitable[None]]] = {}
-        self.queue_key = "sentinel:jobs:queue"
-        self.dlq_key = "sentinel:jobs:dlq"
-        self.job_prefix = "sentinel:job:"
-        self.idemp_prefix = "sentinel:idemp:"
+        self.queue_key = f"{queue_prefix}:jobs:queue"
+        self.dlq_key = f"{queue_prefix}:jobs:dlq"
+        self.job_prefix = f"{queue_prefix}:job:"
+        self.idemp_prefix = f"{queue_prefix}:idemp:"
         self.processed_jobs_count = 0
         self.failed_jobs_count = 0
         self.total_latency_ms = 0.0

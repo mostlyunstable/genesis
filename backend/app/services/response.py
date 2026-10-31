@@ -10,6 +10,7 @@ from backend.app.models.response import ResponsePlaybookModel, ResponseActionMod
 from backend.app.models.audit import AuditRecordModel
 from backend.app.models.incident import IncidentModel
 from backend.app.models.settings import SettingsModel
+from backend.app.services.audit import audit_service
 
 # Protected subnets that can NEVER be targeted by automated defense actions
 PROTECTED_NETWORKS = [
@@ -106,9 +107,8 @@ class ResponseService:
 
         if not approved:
             # Audit the rejection
-            rejection_audit = AuditRecordModel(
-                id=f"AUD-{int(time.time()*1000)%100000:05d}",
-                timestamp=ts,
+            await audit_service.record_audit(
+                db=db,
                 category="POLICY_DECISION",
                 action="DEFENSIVE_ACTION_BLOCKED",
                 actor=actor,
@@ -117,7 +117,6 @@ class ResponseService:
                 details={"reason": reason, "playbookId": playbook_id, "actionName": action_name},
                 is_simulated=True
             )
-            db.add(rejection_audit)
             await db.commit()
             return False, None, reason
 
@@ -153,9 +152,8 @@ class ResponseService:
         db.add(action_record)
 
         # Audit successful execution
-        success_audit = AuditRecordModel(
-            id=f"AUD-{int(time.time()*1000)%100000:05d}",
-            timestamp=ts,
+        await audit_service.record_audit(
+            db=db,
             category="RESPONSE_EXECUTION",
             action="DEFENSIVE_ACTION_EXECUTED",
             actor=actor,
@@ -170,7 +168,6 @@ class ResponseService:
             },
             is_simulated=True
         )
-        db.add(success_audit)
 
         # Increment playbook count
         playbook.execution_count += 1
@@ -211,10 +208,8 @@ class ResponseService:
             action.verification_status = "expired"
             expired_count += 1
 
-            ts = datetime.now(timezone.utc)
-            audit = AuditRecordModel(
-                id=f"AUD-{int(time.time()*1000)%100000:05d}",
-                timestamp=ts,
+            await audit_service.record_audit(
+                db=db,
                 category="POLICY_DECISION",
                 action="DEFENSIVE_ACTION_EXPIRED",
                 actor="system:ttl_worker",
@@ -223,7 +218,6 @@ class ResponseService:
                 details={"actionId": action.id, "ttlMinutes": ttl_minutes},
                 is_simulated=True
             )
-            db.add(audit)
 
         if expired_count > 0:
             await db.commit()
@@ -249,9 +243,8 @@ class ResponseService:
         action.rollback_available = False
 
         # Audit the rollback
-        audit = AuditRecordModel(
-            id=f"AUD-{int(time.time()*1000)%100000:05d}",
-            timestamp=ts,
+        await audit_service.record_audit(
+            db=db,
             category="POLICY_DECISION",
             action="DEFENSIVE_ACTION_ROLLED_BACK",
             actor=actor,
@@ -260,7 +253,6 @@ class ResponseService:
             details={"originalActionId": action_id, "actionName": action.action_name},
             is_simulated=True
         )
-        db.add(audit)
         await db.commit()
         return True, "Rollback verified"
 
@@ -279,10 +271,8 @@ class ResponseService:
         else:
             st.autonomous_response_enabled = enabled
 
-        ts = datetime.now(timezone.utc)
-        audit = AuditRecordModel(
-            id=f"AUD-{int(time.time()*1000)%100000:05d}",
-            timestamp=ts,
+        await audit_service.record_audit(
+            db=db,
             category="CONFIG_CHANGE",
             action="AUTONOMOUS_RESPONSE_GLOBAL_ENABLED" if enabled else "AUTONOMOUS_RESPONSE_GLOBAL_DISABLED",
             actor=actor,
@@ -291,7 +281,6 @@ class ResponseService:
             details={"state": "ENABLED" if enabled else "EMERGENCY_HALT"},
             is_simulated=True
         )
-        db.add(audit)
         await db.commit()
         return enabled
 

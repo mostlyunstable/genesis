@@ -52,6 +52,31 @@ services:
       - DRY_RUN_DEFAULT=true
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sentinel-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sentinel-worker
+    restart: unless-stopped
+    command: ["python", "-m", "backend.app.worker"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_db_secret_2026!@db:5432/sentinel_db
+      - REDIS_URL=redis://redis:6379/0
+      - DEMO_MODE=true
     depends_on:
       db:
         condition: service_healthy

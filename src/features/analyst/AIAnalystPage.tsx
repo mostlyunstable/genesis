@@ -48,7 +48,7 @@ export const AIAnalystPage: React.FC = () => {
       id: 'msg-01',
       sender: 'analyst',
       timestamp: '10:16:40 UTC',
-      content: `**Sentinel AI Analyst Initialized.**\n\nI have correlated telemetry for active incident **INC-2026-0042** (*SSH Brute Force Followed by Successful Authentication*).\n\nKey Findings:\n- **Attacker IP**: \`198.51.100.42\`\n- **Target Host**: \`bastion-01\` (\`10.240.10.15:22\`)\n- **Event Sequence**: 35 failed attempts against root/admin/devops followed by an accepted login for user \`deploy\` (\`EVT-2026-SSH-036\`).\n- **Confidence**: 98%.\n\nSelect a preset query below or ask a specific investigation question.`,
+      content: `**Genysis AI Analyst Initialized.**\n\nI have correlated telemetry for active incident **INC-2026-0042** (*SSH Brute Force Followed by Successful Authentication*).\n\nKey Findings:\n- **Attacker IP**: \`198.51.100.42\`\n- **Target Host**: \`bastion-01\` (\`10.240.10.15:22\`)\n- **Event Sequence**: 35 failed attempts against root/admin/devops followed by an accepted login for user \`deploy\` (\`EVT-2026-SSH-036\`).\n- **Confidence**: 98%.\n\nSelect a preset query below or ask a specific investigation question.`,
       referencedEventIds: ['EVT-2026-SSH-001', 'EVT-2026-SSH-020', 'EVT-2026-SSH-035', 'EVT-2026-SSH-036'],
       mitreTechniques: ['T1110.001 - Password Guessing', 'T1078.003 - Local Accounts'],
       recommendedPlaybookId: 'PB-SSH-BRUTE-01',
@@ -122,7 +122,7 @@ export const AIAnalystPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#252D38]">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-[#E8EDF4]">Sentinel AI Analyst Workspace</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#E8EDF4]">Genysis AI Analyst Workspace</h2>
             <Badge variant="accent" dot>SECURITY LLM COPILOT</Badge>
           </div>
           <p className="text-xs text-[#8994A4] font-mono mt-0.5">
@@ -182,7 +182,7 @@ export const AIAnalystPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between text-[10px] text-[#586574] border-b border-[#1C2430] pb-1.5">
                     <span className="font-semibold text-[#8994A4]">
-                      {msg.sender === 'user' ? 'SecOps Analyst (You)' : 'Sentinel AI Security Assistant'}
+                      {msg.sender === 'user' ? 'SecOps Analyst (You)' : 'Genysis AI Security Assistant'}
                     </span>
                     <span>{msg.timestamp}</span>
                   </div>
@@ -253,7 +253,7 @@ export const AIAnalystPage: React.FC = () => {
             {isTyping && (
               <div className="flex gap-3 items-center text-xs text-[#8994A4] font-mono p-2">
                 <Bot className="w-4 h-4 text-[#E0A34A] animate-spin" />
-                <span>Sentinel AI synthesizing evidence chain & MITRE mapping...</span>
+                <span>Genysis AI synthesizing evidence chain & MITRE mapping...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -280,7 +280,7 @@ export const AIAnalystPage: React.FC = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Ask Sentinel AI about telemetry, evidence attribution, or response recommendations..."
+              placeholder="Ask Genysis AI about telemetry, evidence attribution, or response recommendations..."
               className="flex-1 bg-[#121720] border border-[#252D38] rounded px-3 py-2 text-xs text-[#E8EDF4] placeholder-[#586574] focus:outline-none focus:border-[#E0A34A] font-mono"
             />
             <Button

@@ -20,7 +20,7 @@ class LLMProvider(ABC):
         prompt: str,
         events: List[SecurityEventModel],
         incident: Optional[IncidentModel],
-        retrieved_knowledge: List[Dict[str, Any]]
+        retrieved_knowledge: Optional[List[Dict[str, Any]]] = None
     ) -> AnalystQueryResponse:
         pass
 
@@ -36,8 +36,10 @@ class LocalDeterministicProvider(LLMProvider):
         prompt: str,
         events: List[SecurityEventModel],
         incident: Optional[IncidentModel],
-        retrieved_knowledge: List[Dict[str, Any]]
+        retrieved_knowledge: Optional[List[Dict[str, Any]]] = None
     ) -> AnalystQueryResponse:
+        if retrieved_knowledge is None:
+            retrieved_knowledge = []
         p = prompt.lower()
         available_ids = set(e.id for e in events)
 
@@ -162,8 +164,10 @@ class GeminiProvider(LLMProvider):
         prompt: str,
         events: List[SecurityEventModel],
         incident: Optional[IncidentModel],
-        retrieved_knowledge: List[Dict[str, Any]]
+        retrieved_knowledge: Optional[List[Dict[str, Any]]] = None
     ) -> AnalystQueryResponse:
+        if retrieved_knowledge is None:
+            retrieved_knowledge = []
         available_ids = set(e.id for e in events)
 
         # Build telemetry dataset with strict XML escaping to neutralize prompt injection

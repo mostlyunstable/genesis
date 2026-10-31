@@ -331,7 +331,7 @@ export const INITIAL_INCIDENTS: Incident[] = [
       }
     ],
     aiSummary: {
-      executiveSummary: 'CRITICAL ALERT: Sentinel AI correlated 35 high-frequency SSH password rejections followed within 4.0 seconds by an accepted authentication on host bastion-01 from external IP 198.51.100.42. Account "deploy" possesses sudoer privileges. Immediate host session termination and IP isolation recommended.',
+      executiveSummary: 'CRITICAL ALERT: Genysis Bot correlated 35 high-frequency SSH password rejections followed within 4.0 seconds by an accepted authentication on host bastion-01 from external IP 198.51.100.42. Account "deploy" possesses sudoer privileges. Immediate host session termination and IP isolation recommended.',
       evidenceChain: [
         'EVT-2026-SSH-001 to EVT-2026-SSH-035: Rapid failed attempts against multiple administrative accounts from 198.51.100.42.',
         'EVT-2026-SSH-036: Successful password authentication accepted for user "deploy" from identical source IP port 41236.',
@@ -985,7 +985,7 @@ export const INITIAL_AUDIT_RECORDS: AuditRecord[] = [
     timestamp: '2026-10-31T10:16:44.800Z',
     category: 'RESPONSE_EXECUTION',
     action: 'SIMULATED_PROCESS_KILL',
-    actor: 'SENTINEL_AUTONOMOUS_ENGINE',
+    actor: 'GENYSIS_AUTONOMOUS_ENGINE',
     target: 'sess_993429ab (deploy)',
     result: 'SUCCESS',
     details: {
@@ -1002,7 +1002,7 @@ export const INITIAL_AUDIT_RECORDS: AuditRecord[] = [
     timestamp: '2026-10-31T10:16:42.120Z',
     category: 'RESPONSE_EXECUTION',
     action: 'SIMULATED_IP_BLOCK',
-    actor: 'SENTINEL_AUTONOMOUS_ENGINE',
+    actor: 'GENYSIS_AUTONOMOUS_ENGINE',
     target: TEST_IPS.ATTACKER_SSH,
     result: 'SUCCESS',
     details: {
@@ -1019,11 +1019,11 @@ export const INITIAL_AUDIT_RECORDS: AuditRecord[] = [
     timestamp: '2026-10-31T10:16:40.000Z',
     category: 'AI_INVESTIGATION',
     action: 'SYNTHESIS_COMPLETED',
-    actor: 'SENTINEL_AI_ANALYST',
+    actor: 'GENYSIS_AI_ANALYST',
     target: 'INC-2026-0042',
     result: 'SUCCESS',
     details: {
-      model: 'Sentinel-Security-LLM-Simulated',
+      model: 'Genysis-Security-LLM-Simulated',
       evidenceCount: 4,
       confidence: 0.98,
       riskScore: 94
@@ -1035,7 +1035,7 @@ export const INITIAL_AUDIT_RECORDS: AuditRecord[] = [
     timestamp: '2026-10-31T10:16:35.000Z',
     category: 'DETECTION',
     action: 'INCIDENT_GENERATED',
-    actor: 'SENTINEL_CORRELATION_ENGINE',
+    actor: 'GENYSIS_CORRELATION_ENGINE',
     target: 'INC-2026-0042',
     result: 'WARNING',
     details: {
@@ -1050,7 +1050,7 @@ export const INITIAL_AUDIT_RECORDS: AuditRecord[] = [
     timestamp: '2026-10-31T09:44:10.000Z',
     category: 'POLICY_DECISION',
     action: 'RATE_LIMIT_ENACTED',
-    actor: 'SENTINEL_AUTONOMOUS_ENGINE',
+    actor: 'GENYSIS_AUTONOMOUS_ENGINE',
     target: TEST_IPS.ATTACKER_SPRAY,
     result: 'SUCCESS',
     details: {

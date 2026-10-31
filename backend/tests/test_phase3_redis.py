@@ -12,10 +12,10 @@ from backend.app.services.queue import (
 @pytest.fixture
 async def redis_queue():
     """Initializes and clears a real Redis-backed queue on localhost:6379."""
-    queue = RedisJobQueue("redis://localhost:6379/0")
+    queue = RedisJobQueue("redis://localhost:6379/0", queue_prefix="sentinel:test")
     client = await queue.get_client()
     # Clean keys for test isolation
-    keys = await client.keys("sentinel:jobs:*") + await client.keys("sentinel:job:*") + await client.keys("sentinel:idemp:*")
+    keys = await client.keys("sentinel:test:*")
     if keys:
         await client.delete(*keys)
     yield queue

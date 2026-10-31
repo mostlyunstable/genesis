@@ -199,7 +199,7 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       timestamp,
       category: 'RESPONSE_EXECUTION',
       action: 'DEFENSIVE_ACTION_EXECUTED',
-      actor: 'SENTINEL_AUTONOMOUS_ENGINE (Simulated)',
+      actor: 'GENYSIS_AUTONOMOUS_ENGINE (Simulated)',
       target: target,
       result: 'SUCCESS',
       details: {
