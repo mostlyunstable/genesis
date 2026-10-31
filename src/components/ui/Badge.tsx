@@ -19,21 +19,21 @@ export const Badge: React.FC<BadgeProps> = ({
   const normalizedVariant = variant === 'accent' ? 'brand' : variant;
 
   const variantStyles = {
-    brand: 'bg-[#FFF0E8] text-[#F15A24] border-[#F15A24]/20',
-    critical: 'bg-[#FDF2F2] text-[#D94B45] border-[#D94B45]/20',
-    warning: 'bg-[#FFFBEB] text-[#D97706] border-[#D97706]/20',
-    info: 'bg-[#F0F6FF] text-[#4F7FC1] border-[#4F7FC1]/20',
-    success: 'bg-[#F0FDF4] text-[#258A62] border-[#258A62]/20',
-    neutral: 'bg-[#F3F2EE] text-[#77736D] border-[#E9E6E0]'
+    brand: 'bg-[#FF5722]/15 text-[#FF5722] border-[#FF5722]/30',
+    critical: 'bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/30',
+    warning: 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/30',
+    info: 'bg-[#0066FF]/15 text-[#38BDF8] border-[#0066FF]/30',
+    success: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30',
+    neutral: 'bg-[#141C2E] text-[#94A3B8] border-[#1E293B]'
   };
 
   const dotColors = {
-    brand: 'bg-[#F15A24]',
-    critical: 'bg-[#D94B45]',
-    warning: 'bg-[#D97706]',
-    info: 'bg-[#4F7FC1]',
-    success: 'bg-[#258A62]',
-    neutral: 'bg-[#77736D]'
+    brand: 'bg-[#FF5722]',
+    critical: 'bg-[#EF4444]',
+    warning: 'bg-[#F59E0B]',
+    info: 'bg-[#38BDF8]',
+    success: 'bg-[#10B981]',
+    neutral: 'bg-[#64748B]'
   };
 
   const sizeStyles = {

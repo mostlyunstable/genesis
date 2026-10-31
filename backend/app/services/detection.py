@@ -25,6 +25,11 @@ class DetectionEngine:
         # In-memory sliding windows: username -> list of (event_id, timestamp, ip)
         self._user_windows: Dict[str, List[tuple[str, datetime, str]]] = defaultdict(list)
 
+    def reset(self):
+        """Reset in-memory sliding windows (for test isolation)."""
+        self._ip_windows.clear()
+        self._user_windows.clear()
+
     def _purge_stale(self, now: datetime, window_seconds: int):
         cutoff = now - timedelta(seconds=window_seconds)
         for ip in list(self._ip_windows.keys()):

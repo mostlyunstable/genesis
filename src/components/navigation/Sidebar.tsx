@@ -10,7 +10,8 @@ import {
   Layers, 
   Settings, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  Radio
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SentinelLogo } from '@/components/ui/SentinelLogo';
@@ -72,12 +73,12 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`bg-white border-r border-[#E9E6E0] flex flex-col transition-all duration-200 z-30 select-none ${
-        sidebarCollapsed ? 'w-[68px]' : 'w-[220px]'
+      className={`bg-[#0B0F17] border-r border-[#1E293B] flex flex-col transition-all duration-200 z-30 select-none ${
+        sidebarCollapsed ? 'w-[68px]' : 'w-[230px]'
       }`}
     >
       {/* Brand & Wordmark */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-[#F0ECE6]">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1E293B]">
         <NavLink to="/" className="flex items-center gap-2 group overflow-hidden">
           <SentinelLogo size="sm" showWordmark={!sidebarCollapsed} />
         </NavLink>
@@ -85,7 +86,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1 rounded-md text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE] transition-colors cursor-pointer"
+          className="p-1 rounded-md text-[#94A3B8] hover:text-white hover:bg-[#141C2E] transition-colors cursor-pointer"
           title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -93,11 +94,11 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation Sections */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         {navigationSections.map((section) => (
-          <div key={section.title} className="space-y-1">
+          <div key={section.title} className="space-y-1.5">
             {!sidebarCollapsed && (
-              <div className="px-2.5 pb-1 text-[10px] font-semibold text-[#A5A19A] tracking-wider uppercase font-mono">
+              <div className="px-3 pb-1 text-[10px] font-bold text-[#64748B] tracking-[0.15em] uppercase font-mono">
                 {section.title}
               </div>
             )}
@@ -113,26 +114,26 @@ export const Sidebar: React.FC = () => {
                     key={item.path}
                     to={item.path}
                     title={sidebarCollapsed ? item.name : undefined}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-[#FFF0E8] text-[#F15A24] font-semibold'
-                        : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
+                        ? 'bg-[#0066FF]/15 text-[#38BDF8] border border-[#0066FF]/30 font-semibold shadow-sm'
+                        : 'text-[#94A3B8] hover:text-white hover:bg-[#141C2E] border border-transparent'
                     } ${sidebarCollapsed ? 'justify-center px-0' : ''}`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F15A24]' : 'text-[#77736D]'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#38BDF8]' : 'text-[#64748B]'}`} />
                     
                     {!sidebarCollapsed && (
-                      <span className="truncate flex-1">{item.name}</span>
+                      <span className="truncate flex-1 tracking-tight">{item.name}</span>
                     )}
 
                     {!sidebarCollapsed && item.badge !== undefined && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold bg-[#F15A24] text-white">
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-[#FF5722] text-white shadow-sm">
                         {item.badge}
                       </span>
                     )}
 
                     {sidebarCollapsed && item.badge !== undefined && (
-                      <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#F15A24]" />
+                      <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#FF5722]" />
                     )}
                   </NavLink>
                 );
@@ -143,23 +144,23 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Sentinel Status Pulse */}
-      <div className="p-3 border-t border-[#F0ECE6]">
+      <div className="p-3 border-t border-[#1E293B]">
         {!sidebarCollapsed ? (
-          <div className="p-2.5 rounded-lg bg-[#FAFAF8] border border-[#E9E6E0] text-xs">
+          <div className="p-2.5 rounded-lg bg-[#0F1523] border border-[#1E293B] text-xs">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#171717]">
-                <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white">
+                <span className="w-2 h-2 rounded-full bg-[#38BDF8] animate-pulse" />
                 Sentinel Engine
               </span>
-              <span className="text-[10px] font-mono text-[#77736D]">v2.0</span>
+              <span className="text-[10px] font-mono text-[#38BDF8]">v2.0</span>
             </div>
-            <p className="text-[10px] text-[#77736D] mt-1 leading-tight font-sans">
+            <p className="text-[10px] text-[#94A3B8] mt-1 leading-tight font-sans">
               Ingestion active across 5 forwarders
             </p>
           </div>
         ) : (
           <div className="flex justify-center p-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Sentinel Engine Active" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#38BDF8] animate-pulse" title="Sentinel Engine Active" />
           </div>
         )}
       </div>

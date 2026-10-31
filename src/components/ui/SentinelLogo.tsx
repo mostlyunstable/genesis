@@ -25,27 +25,27 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
     sm: 'text-xs',
     md: 'text-sm',
     lg: 'text-base',
-    xl: 'text-xl'
+    xl: 'text-2xl'
   };
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Sentinel Emblem */}
+      {/* Sentinel Emblem with Cyber Glow */}
       <div className={`${iconSizes[size]} shrink-0 relative flex items-center justify-center`}>
         <img
           src={logoImage}
           alt="Sentinel"
-          className="w-full h-full object-contain filter drop-shadow-xs transition-transform duration-200 group-hover:scale-105"
+          className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,87,34,0.35)] transition-transform duration-200 group-hover:scale-105"
         />
       </div>
 
       {/* Sentinel Wordmark */}
       {showWordmark && !imageOnly && (
         <div className="flex items-center gap-1.5 leading-none">
-          <span className={`font-bold tracking-tight text-[#171717] dark:text-[#F4F4F2] font-sans ${textSizes[size]}`}>
+          <span className={`font-black tracking-tight text-white font-sans ${textSizes[size]}`}>
             SENTINEL
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/20 uppercase tracking-wide">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#FF5722]/20 text-[#FF5722] border border-[#FF5722]/40 uppercase tracking-widest shadow-sm">
             AI
           </span>
         </div>

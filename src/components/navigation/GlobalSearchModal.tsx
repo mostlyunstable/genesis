@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Flame, ShieldAlert, Activity, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, X, Flame, ShieldAlert, Activity, ArrowRight } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 
 interface GlobalSearchModalProps {
@@ -11,7 +11,7 @@ interface GlobalSearchModalProps {
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const { incidents, detections, events, threatIntel, setSelectedIncidentId } = useSecurityStore();
+  const { incidents, detections, events, setSelectedIncidentId } = useSecurityStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,23 +56,23 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-start justify-center pt-24 px-4 animate-in fade-in-0 duration-150">
-      <div className="bg-white border border-[#E9E6E0] rounded-2xl shadow-lg-soft w-full max-w-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-24 px-4 animate-in fade-in-0 duration-150">
+      <div className="bg-[#0F1523] border border-[#1E293B] rounded-2xl shadow-cyber-lg w-full max-w-2xl overflow-hidden">
         {/* Search Input Bar */}
-        <div className="flex items-center px-5 py-4 border-b border-[#F0ECE6] gap-3">
-          <Search className="w-5 h-5 text-[#F15A24]" />
+        <div className="flex items-center px-5 py-4 border-b border-[#1E293B] gap-3">
+          <Search className="w-5 h-5 text-[#38BDF8]" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search threats, incidents, IPs, users, or playbooks..."
-            className="flex-1 bg-transparent border-none text-sm text-[#171717] placeholder-[#A5A19A] focus:outline-none font-sans"
+            className="flex-1 bg-transparent border-none text-sm text-white placeholder-[#64748B] focus:outline-none font-sans"
           />
-          <kbd className="px-2 py-0.5 text-[10px] font-mono text-[#77736D] bg-[#F3F2EE] border border-[#E9E6E0] rounded-md">
+          <kbd className="px-2 py-0.5 text-[10px] font-mono text-[#94A3B8] bg-[#141C2E] border border-[#1E293B] rounded-md">
             ESC
           </kbd>
-          <button onClick={onClose} className="text-[#A5A19A] hover:text-[#171717] p-1">
+          <button onClick={onClose} className="text-[#64748B] hover:text-white p-1 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -82,8 +82,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Incidents */}
           {matchedIncidents.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <Flame className="w-3.5 h-3.5 text-[#D94B45]" />
+              <div className="text-[10px] font-bold text-[#64748B] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Flame className="w-3.5 h-3.5 text-[#FF5722]" />
                 Incidents
               </div>
               <div className="space-y-1">
@@ -91,16 +91,16 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={inc.id}
                     onClick={() => handleSelectIncident(inc.id)}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#141C2E] flex items-center justify-between text-white transition-colors group cursor-pointer border border-transparent hover:border-[#0066FF]/30"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#F15A24] font-semibold font-mono">{inc.id}</span>
+                      <span className="text-[#FF5722] font-semibold font-mono">{inc.id}</span>
                       <span className="truncate">{inc.title}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FDF2F2] text-[#D94B45] font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF5722]/15 text-[#FF5722] font-mono">
                         {inc.severity}
                       </span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-[#38BDF8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -110,8 +110,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Threat Detections */}
           {matchedDetections.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <ShieldAlert className="w-3.5 h-3.5 text-[#F15A24]" />
+              <div className="text-[10px] font-bold text-[#64748B] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#38BDF8]" />
                 Threat Detections
               </div>
               <div className="space-y-1">
@@ -122,14 +122,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       navigate('/threats');
                       onClose();
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#141C2E] flex items-center justify-between text-white transition-colors group cursor-pointer border border-transparent hover:border-[#0066FF]/30"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#77736D] font-mono">{det.id}</span>
+                      <span className="text-[#38BDF8] font-mono">{det.id}</span>
                       <span className="truncate">{det.name}</span>
-                      <span className="text-[#77736D] font-mono text-[11px]">({det.sourceIp})</span>
+                      <span className="text-[#94A3B8] font-mono text-[11px]">({det.sourceIp})</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-[#38BDF8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -139,8 +139,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Activity Events */}
           {matchedEvents.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <Activity className="w-3.5 h-3.5 text-[#4F7FC1]" />
+              <div className="text-[10px] font-bold text-[#64748B] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Activity className="w-3.5 h-3.5 text-[#38BDF8]" />
                 Security Activity Events
               </div>
               <div className="space-y-1">
@@ -151,15 +151,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       navigate('/activity');
                       onClose();
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#141C2E] flex items-center justify-between text-white transition-colors group cursor-pointer border border-transparent hover:border-[#0066FF]/30"
                   >
                     <div className="flex items-center gap-2 truncate font-mono text-[11px]">
-                      <span className="text-[#A5A19A]">{evt.id}</span>
-                      <span className="text-[#F15A24] font-semibold">{evt.eventType}</span>
-                      <span className="text-[#77736D]">{evt.username}</span>
-                      <span className="text-[#4F7FC1]">{evt.sourceIp}</span>
+                      <span className="text-[#64748B]">{evt.id}</span>
+                      <span className="text-[#FF5722] font-semibold">{evt.eventType}</span>
+                      <span className="text-[#94A3B8]">{evt.username}</span>
+                      <span className="text-[#38BDF8]">{evt.sourceIp}</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#64748B] group-hover:text-[#38BDF8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -167,14 +167,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           )}
 
           {q && matchedIncidents.length === 0 && matchedDetections.length === 0 && matchedEvents.length === 0 && (
-            <div className="py-8 text-center text-[#77736D]">
+            <div className="py-8 text-center text-[#94A3B8]">
               No security entities matching &ldquo;{query}&rdquo; found.
             </div>
           )}
         </div>
 
-        <div className="px-5 py-2.5 bg-[#FAFAF8] border-t border-[#F0ECE6] flex items-center justify-between text-[11px] text-[#77736D] font-mono">
-          <span>Press <kbd className="text-[#171717] font-semibold">↵ Enter</kbd> to view entity</span>
+        <div className="px-5 py-2.5 bg-[#0B0F17] border-t border-[#1E293B] flex items-center justify-between text-[11px] text-[#94A3B8] font-mono">
+          <span>Press <kbd className="text-white font-semibold">↵ Enter</kbd> to view entity</span>
           <span>Scope: Local Synthetic Sandbox</span>
         </div>
       </div>

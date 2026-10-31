@@ -10,20 +10,20 @@ export const AppLayout: React.FC = () => {
   const { notifications, dismissNotification } = useSecurityStore();
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#171717] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#07090E] text-[#F8FAFC] flex flex-col font-sans">
       {/* Top Demo Disclosure Banner */}
       <DemoModeBanner />
 
       {/* Main Layout Shell */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Narrow, clean left navigation */}
+        {/* Clean dark cyber navigation */}
         <Sidebar />
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           <TopNav />
 
-          <main className="flex-1 p-6 lg:p-8 bg-[#FAFAF8] max-w-7xl w-full mx-auto">
+          <main className="flex-1 p-5 sm:p-7 lg:p-9 max-w-7xl w-full mx-auto">
             <Outlet />
           </main>
         </div>
@@ -34,21 +34,21 @@ export const AppLayout: React.FC = () => {
         {notifications.slice(0, 3).map((item) => (
           <div
             key={item.id}
-            className="pointer-events-auto bg-white border border-[#E9E6E0] text-xs p-3.5 rounded-xl shadow-lg-soft flex items-start gap-3 animate-in slide-in-from-bottom-2 duration-150"
+            className="pointer-events-auto bg-[#0F1523] border border-[#1E293B] text-xs p-3.5 rounded-xl shadow-cyber-md flex items-start gap-3 animate-in slide-in-from-bottom-2 duration-150"
           >
             <div className="shrink-0 mt-0.5">
-              {item.type === 'error' && <AlertCircle className="w-4 h-4 text-[#D94B45]" />}
-              {item.type === 'success' && <CheckCircle className="w-4 h-4 text-[#258A62]" />}
-              {item.type === 'warning' && <AlertCircle className="w-4 h-4 text-[#D97706]" />}
-              {item.type === 'info' && <Info className="w-4 h-4 text-[#4F7FC1]" />}
+              {item.type === 'error' && <AlertCircle className="w-4 h-4 text-[#EF4444]" />}
+              {item.type === 'success' && <CheckCircle className="w-4 h-4 text-[#10B981]" />}
+              {item.type === 'warning' && <AlertCircle className="w-4 h-4 text-[#F59E0B]" />}
+              {item.type === 'info' && <Info className="w-4 h-4 text-[#38BDF8]" />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[#171717]">{item.title}</div>
-              <div className="text-[11px] text-[#77736D] mt-0.5 font-sans leading-tight">{item.message}</div>
+              <div className="font-semibold text-white">{item.title}</div>
+              <div className="text-[11px] text-[#94A3B8] mt-0.5 font-sans leading-tight">{item.message}</div>
             </div>
             <button
               onClick={() => dismissNotification(item.id)}
-              className="text-[#A5A19A] hover:text-[#171717] shrink-0 p-0.5"
+              className="text-[#64748B] hover:text-white shrink-0 p-0.5 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>

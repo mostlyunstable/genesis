@@ -15,8 +15,9 @@ from backend.app.models.settings import SettingsModel
 PROTECTED_NETWORKS = [
     ipaddress.ip_network("127.0.0.0/8"),
     ipaddress.ip_network("169.254.0.0/16"),
-    ipaddress.ip_network("10.240.0.1/32"),   # Default Core Gateway
-    ipaddress.ip_network("10.240.0.5/32"),   # Active Directory DC
+    ipaddress.ip_network("10.0.0.1/32"),     # Core DNS
+    ipaddress.ip_network("10.0.0.254/32"),   # Core Gateway
+    ipaddress.ip_network("10.240.0.0/24"),   # Core DC & Identity Subnet (including 10.240.0.1, 10.240.0.5, 10.240.0.100)
     ipaddress.ip_network("10.240.10.1/32"),  # Bastion Gateway
     ipaddress.ip_network("198.51.100.210/32") # Legitimate Corporate User IP
 ]

@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { 
-  Settings, 
-  ShieldAlert, 
   RotateCcw, 
   CheckCircle2, 
   AlertTriangle, 
   Server, 
   Save, 
-  Moon, 
-  Sun,
-  Zap
+  Zap,
+  Palette,
+  ShieldAlert
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -29,31 +25,14 @@ export const SettingsPage: React.FC = () => {
 
   const [localThresholds, setLocalThresholds] = useState(thresholds);
   const [fastApiEndpoint, setFastApiEndpoint] = useState('http://localhost:8000');
-  const [isDark, setIsDark] = useState(false);
-
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.remove('dark');
-      setIsDark(false);
-      addNotification({
-        type: 'info',
-        title: 'Theme Updated',
-        message: 'Switched to Warm Canvas light mode.'
-      });
-    } else {
-      root.classList.add('dark');
-      setIsDark(true);
-      addNotification({
-        type: 'info',
-        title: 'Theme Updated',
-        message: 'Switched to Dark Workspace mode.'
-      });
-    }
-  };
 
   const handleSaveThresholds = () => {
     updateThresholds(localThresholds);
+    addNotification({
+      type: 'success',
+      title: 'Policy Saved',
+      message: 'Heuristic velocity thresholds updated successfully.'
+    });
   };
 
   const handlePingBackend = () => {
@@ -67,12 +46,15 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto font-sans">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E293B]">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
+          <div className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#38BDF8] uppercase mb-1">
+            PLATFORM CONTROLS
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
             System Configuration
           </h2>
-          <p className="text-xs text-[#77736D] font-sans mt-0.5">
+          <p className="text-sm text-slate-300 font-sans mt-0.5">
             Ingestion thresholds, defense safeguards, and backend orchestration endpoints.
           </p>
         </div>
@@ -87,7 +69,7 @@ export const SettingsPage: React.FC = () => {
             addNotification({
               type: 'info',
               title: 'Sandbox Reset',
-              message: 'Local mock state restored to default.'
+              message: 'Local mock state restored to default baseline.'
             });
           }}
         >
@@ -95,49 +77,48 @@ export const SettingsPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Visual Workspace Theme */}
-      <div className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
+      {/* Visual Color Theme Indicator */}
+      <div className="p-6 rounded-2xl bg-[#0F1523] border border-[#1E293B] shadow-cyber-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-[#171717]">Appearance & Workspace Theme</h3>
-            <p className="text-xs text-[#77736D] mt-0.5">
-              Choose between MetaMask-inspired Warm Canvas and dark SOC mode.
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-[#38BDF8]" />
+              <h3 className="text-base font-bold text-white font-sans">Active Cyber Visual Identity</h3>
+            </div>
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">
+              Command theme: <strong>Obsidian Black</strong> with <strong>Electric Blue</strong> telemetry &amp; <strong>Brand Orange</strong> countermeasures.
             </p>
           </div>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={isDark ? <Sun className="w-4 h-4 text-[#F15A24]" /> : <Moon className="w-4 h-4 text-[#77736D]" />}
-            onClick={toggleTheme}
-          >
-            {isDark ? 'Switch to Warm Canvas' : 'Switch to Dark Mode'}
-          </Button>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0066FF]/15 text-[#38BDF8] border border-[#0066FF]/30 font-mono text-xs font-bold shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#38BDF8] animate-pulse" />
+            <span>Black • Blue • Orange Active</span>
+          </div>
         </div>
       </div>
 
       {/* Emergency Autonomous Kill Switch */}
-      <div className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-4">
-        <div className="flex items-start justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-[#0F1523] border border-[#1E293B] shadow-cyber-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-[#171717]">Emergency Autonomous Guard</h3>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                autonomousResponseGlobalEnabled ? 'bg-[#F0FDF4] text-[#258A62] border border-[#258A62]/20' :
-                'bg-[#FDF2F2] text-[#D94B45] border border-[#D94B45]/20'
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-base font-bold text-white font-sans">Emergency Autonomous Guard</h3>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                autonomousResponseGlobalEnabled ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30' :
+                'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30'
               }`}>
                 {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
               </span>
             </div>
-            <p className="text-xs text-[#77736D] mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 leading-relaxed">
               When disengaged, automated countermeasures and dry runs are paused across all forwarders.
             </p>
           </div>
 
           <Button
             variant={autonomousResponseGlobalEnabled ? 'danger' : 'primary'}
-            size="sm"
-            icon={<Zap className="w-3.5 h-3.5" />}
+            size="md"
+            icon={<Zap className="w-4 h-4" />}
             onClick={toggleAutonomousGlobal}
             className="shrink-0"
           >
@@ -147,11 +128,11 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Heuristic Detection Thresholds */}
-      <div className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-[#F0ECE6] pb-3">
+      <div className="p-6 rounded-2xl bg-[#0F1523] border border-[#1E293B] shadow-cyber-sm space-y-5">
+        <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
           <div>
-            <h3 className="text-sm font-bold text-[#171717]">Detection Thresholds & Windows</h3>
-            <p className="text-xs text-[#77736D] mt-0.5">Adjust velocity thresholds for brute force and spraying detectors.</p>
+            <h3 className="text-base font-bold text-white font-sans">Detection Thresholds &amp; Windows</h3>
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-0.5">Adjust velocity thresholds for brute force and spraying detectors.</p>
           </div>
           <Button
             variant="primary"
@@ -163,9 +144,9 @@ export const SettingsPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
           <div>
-            <label className="text-[#171717] font-medium block mb-1">
+            <label className="text-white font-semibold block mb-1.5 font-sans">
               SSH Failed Login Velocity Limit:
             </label>
             <Input
@@ -173,11 +154,11 @@ export const SettingsPage: React.FC = () => {
               value={localThresholds.sshFailedAttemptThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshFailedAttemptThreshold: Number(e.target.value) })}
             />
-            <span className="text-[11px] text-[#A5A19A] font-mono mt-1 block">Default: 10 attempts</span>
+            <span className="text-[11px] text-[#64748B] font-mono mt-1.5 block">Default: 10 attempts</span>
           </div>
 
           <div>
-            <label className="text-[#171717] font-medium block mb-1">
+            <label className="text-white font-semibold block mb-1.5 font-sans">
               SSH Window Seconds:
             </label>
             <Input
@@ -185,11 +166,11 @@ export const SettingsPage: React.FC = () => {
               value={localThresholds.sshWindowSeconds}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshWindowSeconds: Number(e.target.value) })}
             />
-            <span className="text-[11px] text-[#A5A19A] font-mono mt-1 block">Default: 120 seconds</span>
+            <span className="text-[11px] text-[#64748B] font-mono mt-1.5 block">Default: 120 seconds</span>
           </div>
 
           <div>
-            <label className="text-[#171717] font-medium block mb-1">
+            <label className="text-white font-semibold block mb-1.5 font-sans">
               Password Spray Unique Users Limit:
             </label>
             <Input
@@ -197,11 +178,11 @@ export const SettingsPage: React.FC = () => {
               value={localThresholds.passwordSprayUniqueUsersThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, passwordSprayUniqueUsersThreshold: Number(e.target.value) })}
             />
-            <span className="text-[11px] text-[#A5A19A] font-mono mt-1 block">Default: 8 distinct users</span>
+            <span className="text-[11px] text-[#64748B] font-mono mt-1.5 block">Default: 8 distinct users</span>
           </div>
 
           <div>
-            <label className="text-[#171717] font-medium block mb-1">
+            <label className="text-white font-semibold block mb-1.5 font-sans">
               Temporary IP Block TTL (minutes):
             </label>
             <Input
@@ -209,16 +190,16 @@ export const SettingsPage: React.FC = () => {
               value={localThresholds.temporaryIpBlockDurationMinutes}
               onChange={(e) => setLocalThresholds({ ...localThresholds, temporaryIpBlockDurationMinutes: Number(e.target.value) })}
             />
-            <span className="text-[11px] text-[#A5A19A] font-mono mt-1 block">Default: 30 minutes</span>
+            <span className="text-[11px] text-[#64748B] font-mono mt-1.5 block">Default: 30 minutes</span>
           </div>
         </div>
       </div>
 
       {/* Backend Target Integration */}
-      <div className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-4">
+      <div className="p-6 rounded-2xl bg-[#0F1523] border border-[#1E293B] shadow-cyber-sm space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#171717]">FastAPI Backend Target</h3>
-          <p className="text-xs text-[#77736D] mt-0.5">
+          <h3 className="text-base font-bold text-white font-sans">FastAPI Backend Target</h3>
+          <p className="text-xs sm:text-sm text-[#94A3B8] mt-0.5">
             Configure the target Python/FastAPI endpoint for live telemetry.
           </p>
         </div>
@@ -231,7 +212,7 @@ export const SettingsPage: React.FC = () => {
           />
           <Button
             variant="secondary"
-            size="sm"
+            size="md"
             onClick={handlePingBackend}
             className="shrink-0"
           >

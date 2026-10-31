@@ -20,20 +20,20 @@ export const Card: React.FC<CardProps> = ({
   noPadding = false
 }) => {
   return (
-    <div className={`bg-white border border-[#E9E6E0] rounded-xl overflow-hidden shadow-2xs transition-all ${className}`}>
+    <div className={`bg-[#0F1523] border border-[#1E293B] rounded-2xl overflow-hidden shadow-cyber-sm transition-all ${className}`}>
       {(title || action || badge || subtitle) && (
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#F0ECE6]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1E293B]">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               {typeof title === 'string' ? (
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#171717]">{title}</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white font-mono">{title}</h3>
               ) : (
                 title
               )}
               {badge}
             </div>
             {subtitle && (
-              <span className="text-[11px] text-[#77736D] font-normal mt-0.5">{subtitle}</span>
+              <span className="text-[11px] text-[#94A3B8] font-normal mt-0.5">{subtitle}</span>
             )}
           </div>
           {action && <div className="flex items-center gap-2">{action}</div>}
