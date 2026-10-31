@@ -1,48 +1,52 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { 
-  Zap, 
   ShieldCheck, 
   AlertTriangle, 
+  Zap, 
   RotateCcw, 
   CheckCircle2, 
-  Ban, 
-  Play, 
-  BookOpen, 
-  History, 
-  Clock,
+  Clock, 
+  Shield, 
+  Play,
   ArrowRight
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
+import { ResponsePlaybook } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
 export const AutonomousResponsePage: React.FC = () => {
-  const navigate = useNavigate();
   const { 
     actions, 
     playbooks, 
     autonomousResponseGlobalEnabled, 
     toggleAutonomousGlobal,
+    executePlaybookAction,
     rollbackAction 
   } = useSecurityStore();
 
-  const successActions = actions.filter(a => a.status === 'simulated_success');
-  const rolledBackActions = actions.filter(a => a.status === 'rolled_back');
-  const tempRestrictions = actions.filter(a => a.status === 'simulated_success' && a.actionName.toLowerCase().includes('block'));
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'history' | 'policies'>('recommendations');
+
+  const handleSimulateExecution = async (playbook: ResponsePlaybook) => {
+    await executePlaybookAction(
+      playbook.id,
+      `Simulated Dry Run: ${playbook.name}`,
+      '198.51.100.42 (Target Asset)',
+      'INC-2026-0042'
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header with Global Emergency Kill Switch */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#252D38]">
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-[#E8EDF4]">Autonomous Defensive Response Center</h2>
-            <Badge variant="accent" dot>SOAR AUTOMATION</Badge>
-          </div>
-          <p className="text-xs text-[#8994A4] font-mono mt-0.5">
-            Real-time rule execution, temporary containment restrictions, and deterministic verification.
+          <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
+            Autonomous Response
+          </h2>
+          <p className="text-xs text-[#77736D] font-sans mt-0.5">
+            Defensive action governance, policy evaluations, dry runs, and deterministic verifications.
           </p>
         </div>
 
@@ -53,19 +57,19 @@ export const AutonomousResponsePage: React.FC = () => {
             icon={<AlertTriangle className="w-3.5 h-3.5" />}
             onClick={toggleAutonomousGlobal}
           >
-            {autonomousResponseGlobalEnabled ? 'EMERGENCY HALT (Disable Autonomous)' : 'RESTORE AUTONOMOUS ENGINE'}
+            {autonomousResponseGlobalEnabled ? 'Emergency Halt' : 'Resume Autonomous Defense'}
           </Button>
         </div>
       </div>
 
-      {/* Global Status Banner if Emergency Halt */}
+      {/* Emergency Halt Banner if disabled */}
       {!autonomousResponseGlobalEnabled && (
-        <div className="p-4 rounded-md bg-[#EF5350]/15 border border-[#EF5350]/40 text-xs font-mono text-[#EF5350] flex items-center justify-between gap-4">
+        <div className="p-4 rounded-xl bg-[#FDF2F2] border border-[#D94B45]/20 text-xs font-sans text-[#D94B45] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
-            <div>
-              <span className="font-bold">AUTONOMOUS COUNTERMEASURES GLOBALLY HALTED:</span> No automated firewall drops or session revocations will execute until restored by security administration.
-            </div>
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              <strong>DEFENSIVE AUTOMATION HALTED:</strong> All automated playbooks, firewall block actions, and session revocations are blocked by emergency policy.
+            </span>
           </div>
           <Button variant="danger" size="sm" onClick={toggleAutonomousGlobal}>
             Resume Protection
@@ -73,120 +77,135 @@ export const AutonomousResponsePage: React.FC = () => {
         </div>
       )}
 
-      {/* Overview Stat Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
-        <div className="bg-[#121720] border border-[#252D38] p-3.5 rounded-md">
-          <div className="text-[10px] text-[#586574] uppercase">Active Defense Playbooks</div>
-          <div className="text-xl font-bold text-[#E8EDF4] mt-1">{playbooks.filter(p => p.enabled).length} Online</div>
-          <div className="text-[10px] text-[#42B883] mt-1">100% Policy Sync</div>
-        </div>
-
-        <div className="bg-[#121720] border border-[#252D38] p-3.5 rounded-md">
-          <div className="text-[10px] text-[#586574] uppercase">Simulated Executions</div>
-          <div className="text-xl font-bold text-[#42B883] mt-1">{successActions.length} Executed</div>
-          <div className="text-[10px] text-[#586574] mt-1">Zero failures recorded</div>
-        </div>
-
-        <div className="bg-[#121720] border border-[#252D38] p-3.5 rounded-md">
-          <div className="text-[10px] text-[#586574] uppercase">Temporary IP Drops</div>
-          <div className="text-xl font-bold text-[#EF5350] mt-1">{tempRestrictions.length} Active</div>
-          <div className="text-[10px] text-[#8994A4] mt-1">30m expiration TTL</div>
-        </div>
-
-        <div className="bg-[#121720] border border-[#252D38] p-3.5 rounded-md">
-          <div className="text-[10px] text-[#586574] uppercase">Verified Mitigations</div>
-          <div className="text-xl font-bold text-[#6DA9E8] mt-1">100% Pass</div>
-          <div className="text-[10px] text-[#586574] mt-1">Post-action probe check</div>
-        </div>
-
-        <div className="bg-[#121720] border border-[#252D38] p-3.5 rounded-md">
-          <div className="text-[10px] text-[#586574] uppercase">Reverted / Rolled Back</div>
-          <div className="text-xl font-bold text-[#8994A4] mt-1">{rolledBackActions.length} Reverted</div>
-          <div className="text-[10px] text-[#586574] mt-1">Audit tracked</div>
+      {/* Action States Guide Pill */}
+      <div className="p-3 bg-white border border-[#E9E6E0] rounded-xl flex items-center justify-between overflow-x-auto gap-3 text-[11px] font-mono">
+        <span className="text-[#A5A19A] uppercase shrink-0 font-semibold">Action States:</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="px-2 py-0.5 rounded-full bg-[#FFFBEB] text-[#D97706] border border-[#D97706]/20 font-medium">RECOMMENDED</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#F0F6FF] text-[#4F7FC1] border border-[#4F7FC1]/20 font-medium">POLICY APPROVED</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/30 font-bold">DRY RUN (DEFAULT)</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#F0FDF4] text-[#258A62] border border-[#258A62]/20 font-semibold">VERIFIED</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#F3F2EE] text-[#77736D] border border-[#E9E6E0] font-medium">ROLLED BACK</span>
         </div>
       </div>
 
-      {/* 2-Section Grid: Playbooks Summary & Recent Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Playbooks Section (6 cols) */}
-        <div className="lg:col-span-6 space-y-3">
-          <Card
-            title="Operational Defensive Playbooks"
-            badge={<Badge variant="accent">{playbooks.length} CONFIGURED</Badge>}
-            action={
-              <Button size="sm" variant="outline" onClick={() => navigate('/playbooks')}>
-                View Playbook Specs <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            }
-          >
-            <div className="space-y-3 font-mono text-xs">
-              {playbooks.slice(0, 3).map((pb) => (
-                <div key={pb.id} className="p-3 bg-[#0D1016] border border-[#252D38] rounded space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#E8EDF4]">{pb.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#171E28] text-[#E0A34A] border border-[#252D38]">
-                      {pb.id}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#8994A4] line-clamp-2">{pb.description}</p>
-                  <div className="flex items-center justify-between text-[10px] text-[#586574] pt-2 border-t border-[#1C2430]">
-                    <span>Scope: {pb.allowedScope}</span>
-                    <span>Executions: <strong className="text-[#E8EDF4]">{pb.executionCount}</strong></span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* Action History Feed (6 cols) */}
-        <div className="lg:col-span-6 space-y-3">
-          <Card
-            title="Recent Simulated Defensive Actions"
-            badge={<Badge variant="info">AUDIT LOG</Badge>}
-            action={
-              <Button size="sm" variant="outline" onClick={() => navigate('/action-history')}>
-                Full History <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            }
-          >
-            <div className="space-y-2.5 font-mono text-xs">
-              {actions.map((act) => (
-                <div key={act.id} className="p-3 bg-[#0D1016] border border-[#252D38] rounded space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#E8EDF4] font-semibold">{act.actionName}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-semibold ${
-                      act.status === 'simulated_success' ? 'bg-[#42B883]/20 text-[#42B883]' :
-                      act.status === 'rolled_back' ? 'bg-[#8994A4]/20 text-[#8994A4]' : 'bg-[#EF5350]/20 text-[#EF5350]'
-                    }`}>
-                      {act.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-[#8994A4]">
-                    <span>Target: <strong className="text-[#EF5350]">{act.target}</strong></span>
-                    <span>Latency: {act.durationMs}ms</span>
-                  </div>
-
-                  <p className="text-[10px] text-[#586574]">{act.details}</p>
-
-                  <div className="flex items-center justify-between text-[10px] text-[#586574] pt-2 border-t border-[#1C2430]">
-                    <span>{new Date(act.timestamp).toLocaleTimeString()} UTC</span>
-                    {act.rollbackAvailable && (
-                      <button
-                        onClick={() => rollbackAction(act.id)}
-                        className="text-[#E0A34A] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <RotateCcw className="w-3 h-3" /> Revert Action (Simulated)
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#E9E6E0] pb-2 text-xs font-medium font-sans">
+        <button
+          onClick={() => setActiveTab('recommendations')}
+          className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+            activeTab === 'recommendations'
+              ? 'bg-[#171717] text-white'
+              : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
+          }`}
+        >
+          Active Recommendations ({playbooks.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+            activeTab === 'history'
+              ? 'bg-[#171717] text-white'
+              : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
+          }`}
+        >
+          Action History & Rollback ({actions.length})
+        </button>
       </div>
+
+      {/* Tab 1: Recommended Actions & Policies */}
+      {activeTab === 'recommendations' && (
+        <div className="space-y-4">
+          {playbooks.map((pb) => (
+            <div
+              key={pb.id}
+              className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-4 transition-all"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#FFF0E8] text-[#F15A24] flex items-center justify-center font-bold text-xs font-mono">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#171717] font-sans">{pb.name}</h3>
+                    <span className="text-[10px] font-mono text-[#F15A24] font-semibold">{pb.id}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/30">
+                    DRY RUN READY
+                  </span>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Play className="w-3 h-3" />}
+                    onClick={() => handleSimulateExecution(pb)}
+                  >
+                    Simulate Dry Run
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#77736D] font-sans leading-relaxed">
+                {pb.description}
+              </p>
+
+              {/* Attribution Meta Strip */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-[#FAFAF8] rounded-xl border border-[#E9E6E0] text-xs font-mono">
+                <div>
+                  <span className="text-[#A5A19A] text-[10px] block">PERMITTED SCOPE</span>
+                  <span className="text-[#171717] font-medium">{pb.allowedScope}</span>
+                </div>
+                <div>
+                  <span className="text-[#A5A19A] text-[10px] block">TRIGGER CONDITION</span>
+                  <span className="text-[#171717] font-medium truncate block">{pb.triggers[0]}</span>
+                </div>
+                <div>
+                  <span className="text-[#A5A19A] text-[10px] block">VERIFICATION LOOP</span>
+                  <span className="text-[#258A62] font-semibold">Telemetry Probe Active</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tab 2: Action History */}
+      {activeTab === 'history' && (
+        <div className="bg-white border border-[#E9E6E0] rounded-2xl shadow-sm overflow-hidden divide-y divide-[#F0ECE6]">
+          {actions.map((act) => (
+            <div key={act.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#171717] font-sans">{act.actionName}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F0FDF4] text-[#258A62] border border-[#258A62]/30">
+                    VERIFIED (DRY RUN)
+                  </span>
+                </div>
+                <div className="text-[11px] text-[#77736D] font-mono">
+                  Target: <strong className="text-[#171717]">{act.target}</strong> • Latency: {act.durationMs}ms • Timestamp: {new Date(act.timestamp).toLocaleTimeString()} UTC
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {act.rollbackAvailable ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<RotateCcw className="w-3 h-3" />}
+                    onClick={() => rollbackAction(act.id)}
+                  >
+                    Rollback
+                  </Button>
+                ) : (
+                  <span className="text-[10px] font-mono text-[#A5A19A]">Rollback Locked</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

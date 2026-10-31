@@ -11,31 +11,35 @@ export const RiskScoreBadge: React.FC<RiskScoreBadgeProps> = ({
   size = 'md',
   showLabel = true
 }) => {
-  let colorStyle = 'text-[#42B883] border-[#42B883]/30 bg-[#42B883]/10';
+  let colorStyle = 'text-[#258A62] bg-[#F0FDF4] border-[#258A62]/20';
   let level = 'LOW';
 
   if (score >= 80) {
-    colorStyle = 'text-[#EF5350] border-[#EF5350]/30 bg-[#EF5350]/10';
+    colorStyle = 'text-[#D94B45] bg-[#FDF2F2] border-[#D94B45]/20';
     level = 'CRITICAL';
   } else if (score >= 60) {
-    colorStyle = 'text-[#E5AD52] border-[#E5AD52]/30 bg-[#E5AD52]/10';
+    colorStyle = 'text-[#D97706] bg-[#FFFBEB] border-[#D97706]/20';
     level = 'HIGH';
   } else if (score >= 40) {
-    colorStyle = 'text-[#6DA9E8] border-[#6DA9E8]/30 bg-[#6DA9E8]/10';
+    colorStyle = 'text-[#4F7FC1] bg-[#F0F6FF] border-[#4F7FC1]/20';
     level = 'MEDIUM';
   }
 
   const sizeClasses = {
-    sm: 'text-xs px-1.5 py-0.5',
+    sm: 'text-[11px] px-2 py-0.5',
     md: 'text-xs px-2.5 py-1',
-    lg: 'text-sm px-3 py-1.5 font-bold'
+    lg: 'text-sm px-3.5 py-1.5 font-bold'
   };
 
   return (
-    <div className={`inline-flex items-center gap-1.5 rounded border font-mono ${colorStyle} ${sizeClasses[size]}`}>
+    <div className={`inline-flex items-center gap-1.5 rounded-full border font-mono ${colorStyle} ${sizeClasses[size]}`}>
       <span className="font-semibold">{score}</span>
-      <span className="text-[10px] opacity-70">/100</span>
-      {showLabel && <span className="text-[10px] uppercase font-medium tracking-wider pl-1 border-l border-current/20">{level}</span>}
+      <span className="text-[10px] opacity-60">/100</span>
+      {showLabel && (
+        <span className="text-[10px] uppercase font-semibold pl-1 border-l border-current/20">
+          {level}
+        </span>
+      )}
     </div>
   );
 };

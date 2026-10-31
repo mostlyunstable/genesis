@@ -4,54 +4,66 @@
 
 @layer base {
   :root {
-    --color-bg: #090B0F;
-    --color-sidebar: #0D1016;
-    --color-surface: #121720;
-    --color-surface-hover: #151D28;
-    --color-secondary: #171E28;
-    --color-border: #252D38;
-    --color-text: #E8EDF4;
-    --color-text-muted: #8994A4;
-    --color-accent: #E0A34A;
-    --color-critical: #EF5350;
-    --color-warning: #E5AD52;
-    --color-success: #42B883;
-    --color-info: #6DA9E8;
+    --bg-main: #FAFAF8;
+    --bg-secondary: #F3F2EE;
+    --surface-main: #FFFFFF;
+    --text-primary: #171717;
+    --text-secondary: #77736D;
+    --border-color: #E9E6E0;
+    --brand-orange: #F15A24;
+    --brand-soft: #FFF0E8;
+  }
+
+  .dark {
+    --bg-main: #101113;
+    --bg-secondary: #141619;
+    --surface-main: #181A1D;
+    --text-primary: #F4F4F2;
+    --text-secondary: #999DA4;
+    --border-color: #2B2F36;
+    --brand-orange: #FF6938;
+    --brand-soft: rgba(255, 105, 56, 0.12);
   }
 
   body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom restrained scrollbars */
+/* Subtle, elegant scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D1016;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #252D38;
-  border-radius: 3px;
+  background: #D8D4CC;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #32363E;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #394556;
+  background: #B8B4AC;
 }
 
-/* Code and mono fonts */
-code, pre, .font-mono {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Subtle focus outlines */
+/* Focus styles */
 *:focus-visible {
-  outline: 1px solid #E0A34A;
-  outline-offset: 1px;
+  outline: 2px solid #F15A24;
+  outline-offset: 2px;
+}
+
+/* Monospace font */
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }

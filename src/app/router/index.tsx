@@ -1,19 +1,13 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
-import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { LiveLogsPage } from '@/features/logs/LiveLogsPage';
-import { ThreatDetectionPage } from '@/features/detection/ThreatDetectionPage';
-import { AttackIntelligencePage } from '@/features/intelligence/AttackIntelligencePage';
+import { SentinelAssistantPage } from '@/features/assistant/SentinelAssistantPage';
+import { InvestigationsPage } from '@/features/investigations/InvestigationsPage';
+import { SecurityActivityPage } from '@/features/activity/SecurityActivityPage';
+import { ThreatsPage } from '@/features/threats/ThreatsPage';
 import { IncidentsPage } from '@/features/incidents/IncidentsPage';
-import { AIAnalystPage } from '@/features/analyst/AIAnalystPage';
-import { AttackTimelinePage } from '@/features/timeline/AttackTimelinePage';
 import { AutonomousResponsePage } from '@/features/response/AutonomousResponsePage';
-import { PlaybooksPage } from '@/features/response/PlaybooksPage';
-import { ActionHistoryPage } from '@/features/response/ActionHistoryPage';
-import { LogSourcesPage } from '@/features/sources/LogSourcesPage';
-import { ThreatIntelPage } from '@/features/intelligence/ThreatIntelPage';
-import { AuditTrailPage } from '@/features/audit/AuditTrailPage';
+import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 
 export const router = createBrowserRouter([
@@ -23,59 +17,72 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />
+        element: <SentinelAssistantPage />
       },
       {
-        path: 'logs',
-        element: <LiveLogsPage />
+        path: 'investigations',
+        element: <InvestigationsPage />
       },
       {
-        path: 'detections',
-        element: <ThreatDetectionPage />
+        path: 'activity',
+        element: <SecurityActivityPage />
       },
       {
-        path: 'attack-intelligence',
-        element: <AttackIntelligencePage />
+        path: 'threats',
+        element: <ThreatsPage />
       },
       {
         path: 'incidents',
         element: <IncidentsPage />
       },
       {
-        path: 'analyst',
-        element: <AIAnalystPage />
-      },
-      {
-        path: 'timeline',
-        element: <AttackTimelinePage />
-      },
-      {
         path: 'response',
         element: <AutonomousResponsePage />
       },
       {
-        path: 'playbooks',
-        element: <PlaybooksPage />
-      },
-      {
-        path: 'action-history',
-        element: <ActionHistoryPage />
-      },
-      {
-        path: 'sources',
-        element: <LogSourcesPage />
-      },
-      {
-        path: 'threat-intel',
-        element: <ThreatIntelPage />
-      },
-      {
-        path: 'audit',
-        element: <AuditTrailPage />
+        path: 'integrations',
+        element: <IntegrationsPage />
       },
       {
         path: 'settings',
         element: <SettingsPage />
+      },
+      // Aliases / Graceful redirects for prior routes
+      {
+        path: 'analyst',
+        element: <Navigate to="/" replace />
+      },
+      {
+        path: 'logs',
+        element: <Navigate to="/activity" replace />
+      },
+      {
+        path: 'detections',
+        element: <Navigate to="/threats" replace />
+      },
+      {
+        path: 'timeline',
+        element: <Navigate to="/investigations" replace />
+      },
+      {
+        path: 'playbooks',
+        element: <Navigate to="/response" replace />
+      },
+      {
+        path: 'action-history',
+        element: <Navigate to="/response" replace />
+      },
+      {
+        path: 'sources',
+        element: <Navigate to="/integrations" replace />
+      },
+      {
+        path: 'threat-intel',
+        element: <Navigate to="/threats" replace />
+      },
+      {
+        path: 'audit',
+        element: <Navigate to="/response" replace />
       },
       {
         path: '*',

@@ -3,8 +3,8 @@ import { Severity, Outcome } from '@/types';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'critical' | 'warning' | 'info' | 'success' | 'neutral' | 'accent';
-  size?: 'sm' | 'md';
+  variant?: 'brand' | 'accent' | 'critical' | 'warning' | 'info' | 'success' | 'neutral';
+  size?: 'xs' | 'sm' | 'md';
   className?: string;
   dot?: boolean;
 }
@@ -16,34 +16,37 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   dot = false
 }) => {
+  const normalizedVariant = variant === 'accent' ? 'brand' : variant;
+
   const variantStyles = {
-    critical: 'bg-[#EF5350]/15 text-[#EF5350] border-[#EF5350]/30',
-    warning: 'bg-[#E5AD52]/15 text-[#E5AD52] border-[#E5AD52]/30',
-    info: 'bg-[#6DA9E8]/15 text-[#6DA9E8] border-[#6DA9E8]/30',
-    success: 'bg-[#42B883]/15 text-[#42B883] border-[#42B883]/30',
-    accent: 'bg-[#E0A34A]/15 text-[#E0A34A] border-[#E0A34A]/30',
-    neutral: 'bg-[#171E28] text-[#8994A4] border-[#252D38]'
+    brand: 'bg-[#FFF0E8] text-[#F15A24] border-[#F15A24]/20',
+    critical: 'bg-[#FDF2F2] text-[#D94B45] border-[#D94B45]/20',
+    warning: 'bg-[#FFFBEB] text-[#D97706] border-[#D97706]/20',
+    info: 'bg-[#F0F6FF] text-[#4F7FC1] border-[#4F7FC1]/20',
+    success: 'bg-[#F0FDF4] text-[#258A62] border-[#258A62]/20',
+    neutral: 'bg-[#F3F2EE] text-[#77736D] border-[#E9E6E0]'
   };
 
   const dotColors = {
-    critical: 'bg-[#EF5350]',
-    warning: 'bg-[#E5AD52]',
-    info: 'bg-[#6DA9E8]',
-    success: 'bg-[#42B883]',
-    accent: 'bg-[#E0A34A]',
-    neutral: 'bg-[#8994A4]'
+    brand: 'bg-[#F15A24]',
+    critical: 'bg-[#D94B45]',
+    warning: 'bg-[#D97706]',
+    info: 'bg-[#4F7FC1]',
+    success: 'bg-[#258A62]',
+    neutral: 'bg-[#77736D]'
   };
 
   const sizeStyles = {
-    sm: 'text-[11px] px-2 py-0.5 font-medium leading-4',
-    md: 'text-xs px-2.5 py-1 font-medium leading-4'
+    xs: 'text-[10px] px-1.5 py-0.2 font-medium',
+    sm: 'text-[11px] px-2 py-0.5 font-medium',
+    md: 'text-xs px-2.5 py-1 font-medium'
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded border uppercase tracking-wider font-mono ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border tracking-wide font-mono ${variantStyles[normalizedVariant]} ${sizeStyles[size]} ${className}`}
     >
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotColors[variant]}`} />}
+      {dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColors[normalizedVariant]}`} />}
       {children}
     </span>
   );
@@ -62,7 +65,7 @@ export const SeverityBadge: React.FC<{ severity: Severity; className?: string }>
 
   return (
     <Badge variant={map[severity]} dot className={className}>
-      {severity}
+      {severity.toUpperCase()}
     </Badge>
   );
 };
@@ -80,7 +83,7 @@ export const OutcomeBadge: React.FC<{ outcome: Outcome; className?: string }> = 
 
   return (
     <Badge variant={map[outcome]} className={className}>
-      {outcome}
+      {outcome.toUpperCase()}
     </Badge>
   );
 };

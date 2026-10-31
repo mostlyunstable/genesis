@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, AlertOctagon, Crosshair, FileText, Globe, ArrowRight } from 'lucide-react';
+import { Search, X, Flame, ShieldAlert, Activity, ArrowRight, Sparkles } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 
 interface GlobalSearchModalProps {
@@ -17,11 +17,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        if (isOpen) {
-          onClose();
-        } else {
-          // Open handled by parent or shortcut
-        }
+        onClose();
       }
       if (e.key === 'Escape' && isOpen) {
         onClose();
@@ -51,12 +47,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     e.id.toLowerCase().includes(q) || 
     e.sourceIp.includes(q) ||
     e.username.toLowerCase().includes(q)
-  ).slice(0, 4) : [];
-
-  const matchedIntel = q ? threatIntel.filter(ti => 
-    ti.ip.includes(q) || 
-    ti.threatClassification.toLowerCase().includes(q)
-  ) : [];
+  ).slice(0, 3) : [];
 
   const handleSelectIncident = (id: string) => {
     setSelectedIncidentId(id);
@@ -65,34 +56,34 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-start justify-center pt-20 px-4">
-      <div className="bg-[#121720] border border-[#252D38] rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-start justify-center pt-24 px-4 animate-in fade-in-0 duration-150">
+      <div className="bg-white border border-[#E9E6E0] rounded-2xl shadow-lg-soft w-full max-w-2xl overflow-hidden">
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3 border-b border-[#252D38] gap-3">
-          <Search className="w-5 h-5 text-[#8994A4]" />
+        <div className="flex items-center px-5 py-4 border-b border-[#F0ECE6] gap-3">
+          <Search className="w-5 h-5 text-[#F15A24]" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search incidents, IP addresses, events, or MITRE techniques (e.g. 198.51.100.42, brute force)..."
-            className="flex-1 bg-transparent border-none text-sm text-[#E8EDF4] placeholder-[#586574] focus:outline-none font-mono"
+            placeholder="Search threats, incidents, IPs, users, or playbooks..."
+            className="flex-1 bg-transparent border-none text-sm text-[#171717] placeholder-[#A5A19A] focus:outline-none font-sans"
           />
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-[#8994A4] bg-[#171E28] border border-[#252D38] rounded">
+          <kbd className="px-2 py-0.5 text-[10px] font-mono text-[#77736D] bg-[#F3F2EE] border border-[#E9E6E0] rounded-md">
             ESC
           </kbd>
-          <button onClick={onClose} className="text-[#8994A4] hover:text-[#E8EDF4]">
+          <button onClick={onClose} className="text-[#A5A19A] hover:text-[#171717] p-1">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-[60vh] overflow-y-auto p-3 space-y-4 text-xs font-mono">
+        <div className="max-h-[60vh] overflow-y-auto p-4 space-y-4 text-xs font-sans">
           {/* Incidents */}
           {matchedIncidents.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#586574] uppercase px-2 mb-1.5 flex items-center gap-1.5">
-                <AlertOctagon className="w-3.5 h-3.5 text-[#EF5350]" />
+              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Flame className="w-3.5 h-3.5 text-[#D94B45]" />
                 Incidents
               </div>
               <div className="space-y-1">
@@ -100,16 +91,16 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={inc.id}
                     onClick={() => handleSelectIncident(inc.id)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-[#171E28] flex items-center justify-between text-[#E8EDF4] transition-colors group cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#E0A34A] font-semibold">{inc.id}</span>
+                      <span className="text-[#F15A24] font-semibold font-mono">{inc.id}</span>
                       <span className="truncate">{inc.title}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#EF5350]/20 text-[#EF5350]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FDF2F2] text-[#D94B45] font-mono">
                         {inc.severity}
                       </span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#586574] group-hover:text-[#E8EDF4] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -119,8 +110,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Threat Detections */}
           {matchedDetections.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#586574] uppercase px-2 mb-1.5 flex items-center gap-1.5">
-                <Crosshair className="w-3.5 h-3.5 text-[#E5AD52]" />
+              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#F15A24]" />
                 Threat Detections
               </div>
               <div className="space-y-1">
@@ -128,92 +119,62 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={det.id}
                     onClick={() => {
-                      navigate('/detections');
+                      navigate('/threats');
                       onClose();
                     }}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-[#171E28] flex items-center justify-between text-[#E8EDF4] transition-colors group cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#6DA9E8]">{det.id}</span>
+                      <span className="text-[#77736D] font-mono">{det.id}</span>
                       <span className="truncate">{det.name}</span>
-                      <span className="text-[#8994A4] text-[11px]">({det.sourceIp})</span>
+                      <span className="text-[#77736D] font-mono text-[11px]">({det.sourceIp})</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#586574] group-hover:text-[#E8EDF4] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Threat Intel Indicators */}
-          {matchedIntel.length > 0 && (
-            <div>
-              <div className="text-[10px] font-semibold text-[#586574] uppercase px-2 mb-1.5 flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#6DA9E8]" />
-                Threat Intelligence Indicators
-              </div>
-              <div className="space-y-1">
-                {matchedIntel.map(ti => (
-                  <button
-                    key={ti.ip}
-                    onClick={() => {
-                      navigate('/threat-intel');
-                      onClose();
-                    }}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-[#171E28] flex items-center justify-between text-[#E8EDF4] transition-colors group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#EF5350] font-semibold">{ti.ip}</span>
-                      <span className="text-[#8994A4] truncate">{ti.threatClassification}</span>
-                      <span className="text-[10px] text-[#E0A34A]">Score: {ti.reputationScore}</span>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#586574] group-hover:text-[#E8EDF4] shrink-0" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Raw Events */}
+          {/* Activity Events */}
           {matchedEvents.length > 0 && (
             <div>
-              <div className="text-[10px] font-semibold text-[#586574] uppercase px-2 mb-1.5 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-[#8994A4]" />
-                Security Events
+              <div className="text-[10px] font-semibold text-[#A5A19A] uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Activity className="w-3.5 h-3.5 text-[#4F7FC1]" />
+                Security Activity Events
               </div>
               <div className="space-y-1">
                 {matchedEvents.map(evt => (
                   <button
                     key={evt.id}
                     onClick={() => {
-                      navigate('/logs');
+                      navigate('/activity');
                       onClose();
                     }}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-[#171E28] flex items-center justify-between text-[#E8EDF4] transition-colors group cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAFAF8] flex items-center justify-between text-[#171717] transition-colors group cursor-pointer border border-transparent hover:border-[#E9E6E0]"
                   >
-                    <div className="flex items-center gap-2 truncate text-[11px]">
-                      <span className="text-[#586574]">{evt.id}</span>
-                      <span className="text-[#E0A34A]">{evt.eventType}</span>
-                      <span className="text-[#8994A4]">{evt.username}</span>
-                      <span className="text-[#6DA9E8]">{evt.sourceIp}</span>
+                    <div className="flex items-center gap-2 truncate font-mono text-[11px]">
+                      <span className="text-[#A5A19A]">{evt.id}</span>
+                      <span className="text-[#F15A24] font-semibold">{evt.eventType}</span>
+                      <span className="text-[#77736D]">{evt.username}</span>
+                      <span className="text-[#4F7FC1]">{evt.sourceIp}</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#586574] group-hover:text-[#E8EDF4] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24] shrink-0" />
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {q && matchedIncidents.length === 0 && matchedDetections.length === 0 && matchedIntel.length === 0 && matchedEvents.length === 0 && (
-            <div className="py-8 text-center text-[#586574]">
-              No security entities matching &ldquo;{query}&rdquo; found in local telemetry.
+          {q && matchedIncidents.length === 0 && matchedDetections.length === 0 && matchedEvents.length === 0 && (
+            <div className="py-8 text-center text-[#77736D]">
+              No security entities matching &ldquo;{query}&rdquo; found.
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2 bg-[#0D1016] border-t border-[#252D38] flex items-center justify-between text-[10px] text-[#586574] font-mono">
-          <span>ProTip: Press <kbd className="text-[#8994A4]">Enter</kbd> to jump directly to entity</span>
+        <div className="px-5 py-2.5 bg-[#FAFAF8] border-t border-[#F0ECE6] flex items-center justify-between text-[11px] text-[#77736D] font-mono">
+          <span>Press <kbd className="text-[#171717] font-semibold">↵ Enter</kbd> to view entity</span>
           <span>Scope: Local Synthetic Sandbox</span>
         </div>
       </div>

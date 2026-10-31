@@ -1,97 +1,71 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
-  Shield, 
-  LayoutDashboard, 
-  FileText, 
-  Crosshair, 
-  Radar, 
-  AlertOctagon, 
-  Bot, 
-  GitCommit, 
-  Zap, 
-  BookOpen, 
-  History, 
-  Server, 
-  Globe, 
-  ScrollText, 
+  Sparkles, 
+  Search, 
+  Activity, 
+  ShieldAlert, 
+  Flame, 
+  ShieldCheck, 
+  Layers, 
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  ShieldCheck,
-  Flame
+  Radio
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
+import { SentinelLogo } from '@/components/ui/SentinelLogo';
 
 interface NavItem {
   name: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number | string;
-  badgeVariant?: 'critical' | 'warning' | 'info';
 }
 
-interface NavGroup {
-  group: string;
+interface NavSection {
+  title: string;
   items: NavItem[];
 }
 
 export const Sidebar: React.FC = () => {
-  const { sidebarCollapsed, toggleSidebar, incidents, detections, actions } = useSecurityStore();
+  const { sidebarCollapsed, toggleSidebar, incidents, detections } = useSecurityStore();
   const location = useLocation();
 
   const activeIncidentsCount = incidents.filter(i => i.status === 'active').length;
-  const criticalDetectionsCount = detections.filter(d => d.severity === 'critical' && d.status === 'open').length;
+  const criticalThreatsCount = detections.filter(d => d.severity === 'critical' && d.status === 'open').length;
 
-  const navigationGroups: NavGroup[] = [
+  const navigationSections: NavSection[] = [
     {
-      group: 'OVERVIEW',
+      title: 'PRIMARY',
       items: [
-        { name: 'Command Center', path: '/', icon: LayoutDashboard }
-      ]
-    },
-    {
-      group: 'MONITORING',
-      items: [
-        { name: 'Live Logs', path: '/logs', icon: FileText },
+        { name: 'Assistant', path: '/', icon: Sparkles },
         { 
-          name: 'Threat Detection', 
-          path: '/detections', 
-          icon: Crosshair,
-          badge: criticalDetectionsCount > 0 ? criticalDetectionsCount : undefined,
-          badgeVariant: 'critical'
+          name: 'Investigations', 
+          path: '/investigations', 
+          icon: Search,
+          badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined
         },
-        { name: 'Attack Intelligence', path: '/attack-intelligence', icon: Radar }
+        { name: 'Activity', path: '/activity', icon: Activity }
       ]
     },
     {
-      group: 'INVESTIGATION',
+      title: 'SECURITY',
       items: [
         { 
-          name: 'Incidents', 
-          path: '/incidents', 
-          icon: AlertOctagon,
-          badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
-          badgeVariant: 'critical'
+          name: 'Threats', 
+          path: '/threats', 
+          icon: ShieldAlert,
+          badge: criticalThreatsCount > 0 ? criticalThreatsCount : undefined
         },
-        { name: 'AI Analyst', path: '/analyst', icon: Bot },
-        { name: 'Attack Timeline', path: '/timeline', icon: GitCommit }
+        { name: 'Incidents', path: '/incidents', icon: Flame },
+        { name: 'Response', path: '/response', icon: ShieldCheck }
       ]
     },
     {
-      group: 'RESPONSE',
+      title: 'SYSTEM',
       items: [
-        { name: 'Autonomous Response', path: '/response', icon: Zap },
-        { name: 'Playbooks', path: '/playbooks', icon: BookOpen },
-        { name: 'Action History', path: '/action-history', icon: History }
-      ]
-    },
-    {
-      group: 'ADMINISTRATION',
-      items: [
-        { name: 'Log Sources', path: '/sources', icon: Server },
-        { name: 'Threat Intelligence', path: '/threat-intel', icon: Globe },
-        { name: 'Audit Trail', path: '/audit', icon: ScrollText },
+        { name: 'Integrations', path: '/integrations', icon: Layers },
         { name: 'Settings', path: '/settings', icon: Settings }
       ]
     }
@@ -99,81 +73,67 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`bg-[#0D1016] border-r border-[#252D38] flex flex-col transition-all duration-200 z-30 select-none ${
-        sidebarCollapsed ? 'w-[64px]' : 'w-[240px]'
+      className={`bg-white border-r border-[#E9E6E0] flex flex-col transition-all duration-200 z-30 select-none ${
+        sidebarCollapsed ? 'w-[68px]' : 'w-[220px]'
       }`}
     >
-      {/* Brand & Workspace Header */}
-      <div className="h-14 border-b border-[#252D38] flex items-center justify-between px-3.5">
-        <NavLink to="/" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded bg-[#171E28] border border-[#252D38] flex items-center justify-center shrink-0">
-            <Shield className="w-4 h-4 text-[#E0A34A]" />
-          </div>
-          {!sidebarCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-sm tracking-wider text-[#E8EDF4] font-mono leading-none">
-                SENTINEL<span className="text-[#E0A34A]">.AI</span>
-              </span>
-              <span className="text-[10px] text-[#586574] font-mono mt-0.5 tracking-tight flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#42B883]" />
-                DEFENSE ONLINE
-              </span>
-            </div>
-          )}
+      {/* Brand & Wordmark */}
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#F0ECE6]">
+        <NavLink to="/" className="flex items-center gap-2 group overflow-hidden">
+          <SentinelLogo size="sm" showWordmark={!sidebarCollapsed} />
         </NavLink>
 
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1 rounded text-[#8994A4] hover:text-[#E8EDF4] hover:bg-[#171E28] transition-colors"
-          title={sidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar"}
+          className="p-1 rounded-md text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE] transition-colors"
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      {/* Nav List */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-4">
-        {navigationGroups.map((group) => (
-          <div key={group.group}>
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        {navigationSections.map((section) => (
+          <div key={section.title} className="space-y-1">
             {!sidebarCollapsed && (
-              <div className="px-2.5 mb-1.5 text-[10px] font-semibold font-mono tracking-wider text-[#586574] uppercase">
-                {group.group}
+              <div className="px-2.5 pb-1 text-[10px] font-semibold text-[#A5A19A] tracking-wider uppercase font-mono">
+                {section.title}
               </div>
             )}
             <div className="space-y-0.5">
-              {group.items.map((item) => {
+              {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path || 
-                  (item.path !== '/' && location.pathname.startsWith(item.path));
+                const isActive = item.path === '/' 
+                  ? location.pathname === '/' 
+                  : location.pathname.startsWith(item.path);
 
                 return (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     title={sidebarCollapsed ? item.name : undefined}
-                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded text-xs transition-colors group relative ${
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-[#171E28] text-[#E8EDF4] font-medium border-l-2 border-[#E0A34A]'
-                        : 'text-[#8994A4] hover:text-[#E8EDF4] hover:bg-[#121720]'
+                        ? 'bg-[#FFF0E8] text-[#F15A24] font-semibold'
+                        : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
                     } ${sidebarCollapsed ? 'justify-center px-0' : ''}`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#E0A34A]' : 'text-[#8994A4] group-hover:text-[#E8EDF4]'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F15A24]' : 'text-[#77736D]'}`} />
                     
                     {!sidebarCollapsed && (
                       <span className="truncate flex-1">{item.name}</span>
                     )}
 
                     {!sidebarCollapsed && item.badge !== undefined && (
-                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold ${
-                        item.badgeVariant === 'critical' ? 'bg-[#EF5350]/20 text-[#EF5350]' : 'bg-[#E5AD52]/20 text-[#E5AD52]'
-                      }`}>
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-semibold bg-[#F15A24] text-white">
                         {item.badge}
                       </span>
                     )}
 
                     {sidebarCollapsed && item.badge !== undefined && (
-                      <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#EF5350]" />
+                      <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#F15A24]" />
                     )}
                   </NavLink>
                 );
@@ -183,26 +143,27 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Bottom Health Box */}
-      {!sidebarCollapsed ? (
-        <div className="p-3 border-t border-[#252D38] bg-[#0A0D12] m-2 rounded border text-xs">
-          <div className="flex items-center justify-between text-[#8994A4] mb-1.5 font-mono text-[11px]">
-            <span>SYSTEM HEALTH</span>
-            <span className="text-[#42B883] font-semibold">NORMAL</span>
+      {/* Sentinel Autonomous Pulse Beacon */}
+      <div className="p-3 border-t border-[#F0ECE6]">
+        {!sidebarCollapsed ? (
+          <div className="p-2.5 rounded-lg bg-[#FAFAF8] border border-[#E9E6E0] text-xs">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#171717]">
+                <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
+                Sentinel Agent
+              </span>
+              <span className="text-[10px] font-mono text-[#77736D]">v2.0</span>
+            </div>
+            <p className="text-[10px] text-[#77736D] mt-1 leading-tight">
+              Observing auth & network streams
+            </p>
           </div>
-          <div className="w-full bg-[#171E28] h-1.5 rounded-full overflow-hidden">
-            <div className="bg-[#42B883] h-full w-[98%]" />
+        ) : (
+          <div className="flex justify-center p-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Sentinel Agent Online" />
           </div>
-          <div className="flex justify-between items-center mt-2 text-[10px] text-[#586574] font-mono">
-            <span>UPTIME: 99.98%</span>
-            <span>SIMULATED</span>
-          </div>
-        </div>
-      ) : (
-        <div className="p-2 border-t border-[#252D38] flex justify-center">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#42B883]" title="Telemetry Engine Healthy" />
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 };

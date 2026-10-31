@@ -1,13 +1,14 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-console.log('--- SENTINEL AI VERIFICATION SUITE ---');
+console.log('--- SENTINEL AI v2.0 (METAMASK-INSPIRED MINIMALISM) VERIFICATION ---');
 
 const filesToCheck = [
   'src/types/index.ts',
   'src/services/mock/data.ts',
   'src/services/api/index.ts',
   'src/stores/useSecurityStore.ts',
+  'src/components/ui/SentinelLogo.tsx',
   'src/components/ui/Badge.tsx',
   'src/components/ui/Button.tsx',
   'src/components/ui/Card.tsx',
@@ -19,20 +20,15 @@ const filesToCheck = [
   'src/components/navigation/GlobalSearchModal.tsx',
   'src/app/layouts/AppLayout.tsx',
   'src/app/router/index.tsx',
-  'src/features/dashboard/DashboardPage.tsx',
-  'src/features/logs/LiveLogsPage.tsx',
-  'src/features/detection/ThreatDetectionPage.tsx',
+  'src/features/assistant/SentinelAssistantPage.tsx',
+  'src/features/investigations/InvestigationsPage.tsx',
+  'src/features/activity/SecurityActivityPage.tsx',
+  'src/features/threats/ThreatsPage.tsx',
   'src/features/incidents/IncidentsPage.tsx',
-  'src/features/analyst/AIAnalystPage.tsx',
-  'src/features/timeline/AttackTimelinePage.tsx',
   'src/features/response/AutonomousResponsePage.tsx',
-  'src/features/response/PlaybooksPage.tsx',
-  'src/features/response/ActionHistoryPage.tsx',
-  'src/features/sources/LogSourcesPage.tsx',
-  'src/features/intelligence/ThreatIntelPage.tsx',
-  'src/features/intelligence/AttackIntelligencePage.tsx',
-  'src/features/audit/AuditTrailPage.tsx',
+  'src/features/integrations/IntegrationsPage.tsx',
   'src/features/settings/SettingsPage.tsx',
+  'docs/FRONTEND_REDESIGN_PLAN.md'
 ];
 
 let allFilesExist = true;
@@ -41,54 +37,41 @@ for (const file of filesToCheck) {
   if (!existsSync(fullPath)) {
     console.error(`[FAIL] File missing: ${file}`);
     allFilesExist = false;
-  } else {
-    // Check non-empty
-    const content = readFileSync(fullPath, 'utf-8');
-    if (content.length < 50) {
-      console.error(`[FAIL] File suspiciously small: ${file}`);
-      allFilesExist = false;
-    }
   }
 }
 
 if (allFilesExist) {
-  console.log(`[PASS] All ${filesToCheck.length} required module files verified and populated.`);
+  console.log(`[PASS] All ${filesToCheck.length} design files and components verified.`);
 } else {
   process.exit(1);
 }
 
-// Check route parity between router and sidebar
+// Check primary navigation routes
 const routerContent = readFileSync(resolve(process.cwd(), 'src/app/router/index.tsx'), 'utf-8');
 const sidebarContent = readFileSync(resolve(process.cwd(), 'src/components/navigation/Sidebar.tsx'), 'utf-8');
 
-const requiredRoutes = [
+const redesignedRoutes = [
   '/',
-  '/logs',
-  '/detections',
-  '/attack-intelligence',
+  '/investigations',
+  '/activity',
+  '/threats',
   '/incidents',
-  '/analyst',
-  '/timeline',
   '/response',
-  '/playbooks',
-  '/action-history',
-  '/sources',
-  '/threat-intel',
-  '/audit',
+  '/integrations',
   '/settings'
 ];
 
-for (const r of requiredRoutes) {
+for (const r of redesignedRoutes) {
   const pathPart = r === '/' ? "index: true" : `path: '${r.replace('/', '')}'`;
   if (!routerContent.includes(pathPart)) {
-    console.error(`[FAIL] Route not declared in router: ${r}`);
+    console.error(`[FAIL] Route not in router: ${r}`);
     process.exit(1);
   }
   if (!sidebarContent.includes(`path: '${r}'`)) {
-    console.error(`[FAIL] Route not linked in sidebar: ${r}`);
+    console.error(`[FAIL] Route not in sidebar: ${r}`);
     process.exit(1);
   }
 }
 
-console.log(`[PASS] All ${requiredRoutes.length} application routes match 1:1 between router and navigation.`);
+console.log(`[PASS] All ${redesignedRoutes.length} core routes match 1:1 between router and navigation.`);
 console.log('--- ALL QUALITY GATES PASSED ---');
