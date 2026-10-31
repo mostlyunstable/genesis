@@ -20,8 +20,8 @@ export const IntegrationsPage: React.FC = () => {
   const handleTestProbe = (name: string) => {
     addNotification({
       type: 'success',
-      title: 'Forwarder Probe Verified',
-      message: `Telemetry pipeline connectivity to ${name} is active.`
+      title: 'Forwarder Connectivity Confirmed',
+      message: `Telemetry ingest pipeline verified for ${name}.`
     });
   };
 
@@ -31,16 +31,16 @@ export const IntegrationsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Telemetry Integrations
+            Telemetry Forwarders
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Distributed Syslog, WinLogBeat, and Kubernetes PAM collectors streaming to Genysis.
+            Configured log forwarders, agents, and protocol collectors.
           </p>
         </div>
 
         <div className="flex items-center gap-2 font-mono text-xs text-[#77736D]">
           <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
-          <span>5 Forwarders Online</span>
+          <span>5 Forwarders Ingesting</span>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export const IntegrationsPage: React.FC = () => {
                 size="sm"
                 onClick={() => handleTestProbe(source.name)}
               >
-                Test Connection Probe
+                Verify Connectivity
               </Button>
             </div>
           </div>

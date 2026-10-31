@@ -55,6 +55,7 @@ class ExecuteActionRequest(BaseModel):
 class ExecuteActionResponse(BaseModel):
     success: bool
     action: ResponseActionSchema
+    message: Optional[str] = None
 
 
 class RollbackResponse(BaseModel):

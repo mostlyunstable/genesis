@@ -67,10 +67,10 @@ export const InvestigationsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Security Investigations
+            Investigations
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Progressive investigation chronologies, telemetry attribution, and AI analytical synthesis.
+            Every signal has a story. Find it.
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export const InvestigationsPage: React.FC = () => {
             icon={<Search className="w-3.5 h-3.5" />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search investigations..."
+            placeholder="Filter investigations..."
           />
         </div>
       </div>
@@ -88,47 +88,53 @@ export const InvestigationsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Minimal Investigation List (5 cols) */}
         <div className="lg:col-span-5 space-y-2.5">
-          {filteredIncidents.map((inv) => {
-            const isSelected = activeInvestigation?.id === inv.id;
+          {filteredIncidents.length === 0 ? (
+            <div className="p-8 text-center bg-white border border-[#E9E6E0] rounded-xl text-xs text-[#77736D] font-mono">
+              No investigations match filter criteria.
+            </div>
+          ) : (
+            filteredIncidents.map((inv) => {
+              const isSelected = activeInvestigation?.id === inv.id;
 
-            return (
-              <div
-                key={inv.id}
-                onClick={() => {
-                  setActiveInvestigationId(inv.id);
-                  setSelectedIncidentId(inv.id);
-                }}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  isSelected
-                    ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
-                    : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-semibold text-[#F15A24]">{inv.id}</span>
-                  <div className="flex items-center gap-1.5">
-                    <SeverityBadge severity={inv.severity} />
-                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#F3F2EE] text-[#77736D]">
-                      {inv.status.toUpperCase()}
-                    </span>
+              return (
+                <div
+                  key={inv.id}
+                  onClick={() => {
+                    setActiveInvestigationId(inv.id);
+                    setSelectedIncidentId(inv.id);
+                  }}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
+                      : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-semibold text-[#F15A24]">{inv.id}</span>
+                    <div className="flex items-center gap-1.5">
+                      <SeverityBadge severity={inv.severity} />
+                      <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#F3F2EE] text-[#77736D]">
+                        {inv.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-2">
+                    {inv.title}
+                  </h3>
+
+                  <p className="text-[11px] text-[#77736D] mt-1 line-clamp-2 font-sans">
+                    {inv.detectionExplanation}
+                  </p>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
+                    <span>{new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC</span>
+                    <span>{inv.eventCount} Correlated Events</span>
                   </div>
                 </div>
-
-                <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-2">
-                  {inv.title}
-                </h3>
-
-                <p className="text-[11px] text-[#77736D] mt-1 line-clamp-2 font-sans">
-                  {inv.detectionExplanation}
-                </p>
-
-                <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
-                  <span>{new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC</span>
-                  <span>{inv.eventCount} Correlated Events</span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Right Column: Dedicated Investigation Detail View (7 cols) */}
@@ -151,7 +157,7 @@ export const InvestigationsPage: React.FC = () => {
             {/* AI Analytical Synthesis */}
             <div className="space-y-2">
               <div className="text-[10px] font-mono font-semibold text-[#F15A24] uppercase">
-                AI REASONING SYNTHESIS
+                ANALYTICAL SYNTHESIS
               </div>
               <div className="p-3.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6E0] text-xs text-[#171717] font-sans leading-relaxed">
                 {activeInvestigation.aiSummary.executiveSummary}
@@ -185,7 +191,7 @@ export const InvestigationsPage: React.FC = () => {
             {/* Progression Timeline */}
             <div className="space-y-3">
               <div className="text-[10px] font-mono font-semibold text-[#77736D] uppercase">
-                ATTACK PROGRESSION TIMELINE ({activeInvestigation.timelineEvents.length} STAGES)
+                PROGRESSION TIMELINE ({activeInvestigation.timelineEvents.length} STAGES)
               </div>
               <div className="space-y-2 border-l-2 border-[#E9E6E0] ml-2 pl-3 font-mono text-xs">
                 {activeInvestigation.timelineEvents.map((evt) => (
@@ -222,7 +228,7 @@ export const InvestigationsPage: React.FC = () => {
                   icon={<Zap className="w-3.5 h-3.5" />}
                   onClick={() => handleExecuteResponse(activeInvestigation.assignedPlaybookId!, activeInvestigation.sourceIps[0])}
                 >
-                  Simulate Countermeasure Dry Run
+                  Execute Policy Dry Run
                 </Button>
               </div>
             )}

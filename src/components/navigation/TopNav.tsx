@@ -3,27 +3,23 @@ import { useLocation, Link } from 'react-router-dom';
 import { 
   Search, 
   Bell, 
-  ShieldCheck, 
-  Clock, 
   ChevronRight, 
   CheckCircle, 
   AlertTriangle, 
-  X,
-  Radio,
-  Sliders
+  X
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, { title: string; section: string }> = {
-  '/': { title: 'Genysis Assistant', section: 'Primary' },
-  '/investigations': { title: 'Security Investigations', section: 'Primary' },
-  '/activity': { title: 'Security Activity Stream', section: 'Primary' },
-  '/threats': { title: 'Threat Detections', section: 'Security' },
-  '/incidents': { title: 'Active Incidents', section: 'Security' },
+  '/': { title: 'Assistant', section: 'Primary' },
+  '/investigations': { title: 'Investigations', section: 'Primary' },
+  '/activity': { title: 'Security Activity', section: 'Primary' },
+  '/threats': { title: 'Threats', section: 'Security' },
+  '/incidents': { title: 'Incidents', section: 'Security' },
   '/response': { title: 'Autonomous Response', section: 'Security' },
-  '/integrations': { title: 'Integrations & Sources', section: 'System' },
-  '/settings': { title: 'Settings & Policy', section: 'System' }
+  '/integrations': { title: 'Telemetry Forwarders', section: 'System' },
+  '/settings': { title: 'System Configuration', section: 'System' }
 };
 
 export const TopNav: React.FC = () => {
@@ -34,13 +30,13 @@ export const TopNav: React.FC = () => {
 
   const activeIncidents = incidents.filter(i => i.status === 'active');
   const systemState = !autonomousResponseGlobalEnabled 
-    ? { label: 'EMERGENCY HALT', color: 'text-[#D94B45] bg-[#FDF2F2] border-[#D94B45]/20' }
+    ? { label: 'DEFENSE HALTED', color: 'text-[#D94B45] bg-[#FDF2F2] border-[#D94B45]/20' }
     : activeIncidents.length > 0 
-    ? { label: 'THREAT DETECTED', color: 'text-[#F15A24] bg-[#FFF0E8] border-[#F15A24]/30' }
+    ? { label: 'THREAT IDENTIFIED', color: 'text-[#F15A24] bg-[#FFF0E8] border-[#F15A24]/30' }
     : { label: 'MONITORING', color: 'text-[#258A62] bg-[#F0FDF4] border-[#258A62]/20' };
 
   const routeInfo = routeTitleMap[location.pathname] || {
-    title: 'GENYSIS AI',
+    title: 'SENTINEL',
     section: 'Workspace'
   };
 
@@ -60,14 +56,14 @@ export const TopNav: React.FC = () => {
         <div className="flex-1 max-w-sm mx-6 hidden md:block">
           <button
             onClick={() => setSearchOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-1.5 rounded-full bg-[#FAFAF8] border border-[#E9E6E0] hover:border-[#F15A24]/40 text-xs text-[#77736D] transition-all cursor-pointer group shadow-2xs"
+            className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-full bg-[#FAFAF8] border border-[#E9E6E0] hover:border-[#F15A24]/40 text-xs text-[#77736D] transition-all cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-[#A5A19A] group-hover:text-[#F15A24]" />
-              <span className="text-xs">Ask or search anything...</span>
+              <span className="text-xs">Search signals, assets, or techniques...</span>
             </div>
             <kbd className="px-1.5 py-0.2 text-[10px] font-mono bg-white text-[#77736D] rounded border border-[#E9E6E0]">
-              ⌘K
+              Ctrl+K
             </kbd>
           </button>
         </div>
@@ -83,7 +79,7 @@ export const TopNav: React.FC = () => {
           {/* Search Trigger for small screens */}
           <button
             onClick={() => setSearchOpen(true)}
-            aria-label="Search"
+            aria-label="Search signals, assets, or techniques"
             className="md:hidden p-2 rounded-lg text-[#77736D] hover:bg-[#F3F2EE]"
           >
             <Search className="w-4 h-4" />
@@ -115,7 +111,7 @@ export const TopNav: React.FC = () => {
                 <div className="max-h-64 overflow-y-auto divide-y divide-[#F0ECE6]">
                   {notifications.length === 0 ? (
                     <div className="py-6 text-center text-xs text-[#A5A19A]">
-                      No new security alerts
+                      No active notifications.
                     </div>
                   ) : (
                     notifications.map((n) => (

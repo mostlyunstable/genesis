@@ -70,10 +70,10 @@ export const SettingsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Platform Settings & Policy
+            System Configuration
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Configure defense parameters, autonomous safeguards, and backend orchestrator targets.
+            Ingestion thresholds, defense safeguards, and backend orchestration endpoints.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export const SettingsPage: React.FC = () => {
             });
           }}
         >
-          Reset Demo State
+          Reset Sandbox Baseline
         </Button>
       </div>
 
@@ -130,7 +130,7 @@ export const SettingsPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-[#77736D] mt-1 leading-relaxed">
-              When disengaged, Genysis AI is immediately restricted from executing automated dry runs or countermeasure policies.
+              When disengaged, automated countermeasures and dry runs are paused across all forwarders.
             </p>
           </div>
 
@@ -141,7 +141,7 @@ export const SettingsPage: React.FC = () => {
             onClick={toggleAutonomousGlobal}
             className="shrink-0"
           >
-            {autonomousResponseGlobalEnabled ? 'Engage Emergency Halt' : 'Enable Autonomous Defense'}
+            {autonomousResponseGlobalEnabled ? 'Engage Emergency Halt' : 'Resume Autonomous Engine'}
           </Button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export const SettingsPage: React.FC = () => {
       <div className="p-5 rounded-2xl bg-white border border-[#E9E6E0] shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-[#F0ECE6] pb-3">
           <div>
-            <h3 className="text-sm font-bold text-[#171717]">Detection Heuristics & Windows</h3>
+            <h3 className="text-sm font-bold text-[#171717]">Detection Thresholds & Windows</h3>
             <p className="text-xs text-[#77736D] mt-0.5">Adjust velocity thresholds for brute force and spraying detectors.</p>
           </div>
           <Button

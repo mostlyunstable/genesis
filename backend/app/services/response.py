@@ -120,6 +120,18 @@ class ResponseService:
             await db.commit()
             return False, None, reason
 
+        # Action Idempotency Check: if active action already exists on target, return it idempotently
+        res_active = await db.execute(
+            select(ResponseActionModel).where(
+                ResponseActionModel.playbook_id == playbook_id,
+                ResponseActionModel.target == target,
+                ResponseActionModel.status == "simulated_success"
+            )
+        )
+        existing_active = res_active.scalar_one_or_none()
+        if existing_active:
+            return True, existing_active, "Action already active on target (idempotent)"
+
         # Execution in Dry-Run / Safe Lab mode
         action_id = f"ACT-2026-{int(time.time()*1000)%10000:04d}"
         action_record = ResponseActionModel(
@@ -174,6 +186,49 @@ class ResponseService:
         return True, action_record, "Executed successfully"
 
     @classmethod
+    async def expire_stale_actions(
+        cls,
+        ttl_minutes: int,
+        db: AsyncSession
+    ) -> int:
+        """
+        Scans for actions in simulated_success status older than ttl_minutes,
+        transitions them to expired, disables rollback, and creates an audit record.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=ttl_minutes)
+        res_stale = await db.execute(
+            select(ResponseActionModel).where(
+                ResponseActionModel.status == "simulated_success",
+                ResponseActionModel.timestamp <= cutoff
+            )
+        )
+        stale_actions = res_stale.scalars().all()
+        expired_count = 0
+        for action in stale_actions:
+            action.status = "expired"
+            action.rollback_available = False
+            action.verification_status = "expired"
+            expired_count += 1
+
+            ts = datetime.now(timezone.utc)
+            audit = AuditRecordModel(
+                id=f"AUD-{int(time.time()*1000)%100000:05d}",
+                timestamp=ts,
+                category="POLICY_DECISION",
+                action="DEFENSIVE_ACTION_EXPIRED",
+                actor="system:ttl_worker",
+                target=action.target,
+                result="INFO",
+                details={"actionId": action.id, "ttlMinutes": ttl_minutes},
+                is_simulated=True
+            )
+            db.add(audit)
+
+        if expired_count > 0:
+            await db.commit()
+        return expired_count
+
+    @classmethod
     async def rollback_action(
         cls,
         action_id: str,
@@ -185,8 +240,8 @@ class ResponseService:
         if not action:
             return False, f"Action '{action_id}' not found"
 
-        if not action.rollback_available or action.status == "rolled_back":
-            return False, f"Action '{action_id}' cannot be rolled back or is already reverted"
+        if not action.rollback_available or action.status in ["rolled_back", "expired"]:
+            return False, f"Action '{action_id}' cannot be rolled back or is already reverted/expired"
 
         ts = datetime.now(timezone.utc)
         action.status = "rolled_back"

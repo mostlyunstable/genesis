@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImage from '../../assets/sentinel-logo.png';
+import logoImage from '@/assets/sentinel-logo.png';
 
 interface SentinelLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -30,20 +30,20 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Official Genysis Hexagonal Emblem */}
+      {/* Sentinel Emblem */}
       <div className={`${iconSizes[size]} shrink-0 relative flex items-center justify-center`}>
         <img
           src={logoImage}
-          alt="Genysis AI"
+          alt="Sentinel"
           className="w-full h-full object-contain filter drop-shadow-xs transition-transform duration-200 group-hover:scale-105"
         />
       </div>
 
-      {/* Genysis AI Wordmark */}
+      {/* Sentinel Wordmark */}
       {showWordmark && !imageOnly && (
         <div className="flex items-center gap-1.5 leading-none">
           <span className={`font-bold tracking-tight text-[#171717] dark:text-[#F4F4F2] font-sans ${textSizes[size]}`}>
-            GENYSIS
+            SENTINEL
           </span>
           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#FFF0E8] text-[#F15A24] border border-[#F15A24]/20 uppercase tracking-wide">
             AI

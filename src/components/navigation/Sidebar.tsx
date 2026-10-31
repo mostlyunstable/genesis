@@ -10,8 +10,7 @@ import {
   Layers, 
   Settings, 
   ChevronLeft, 
-  ChevronRight,
-  Radio
+  ChevronRight 
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SentinelLogo } from '@/components/ui/SentinelLogo';
@@ -86,7 +85,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1 rounded-md text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE] transition-colors"
+          className="p-1 rounded-md text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE] transition-colors cursor-pointer"
           title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -143,24 +142,24 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Genysis Autonomous Pulse Beacon */}
+      {/* Sentinel Status Pulse */}
       <div className="p-3 border-t border-[#F0ECE6]">
         {!sidebarCollapsed ? (
           <div className="p-2.5 rounded-lg bg-[#FAFAF8] border border-[#E9E6E0] text-xs">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#171717]">
                 <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
-                Genysis Agent
+                Sentinel Engine
               </span>
               <span className="text-[10px] font-mono text-[#77736D]">v2.0</span>
             </div>
-            <p className="text-[10px] text-[#77736D] mt-1 leading-tight">
-              Observing auth & network streams
+            <p className="text-[10px] text-[#77736D] mt-1 leading-tight font-sans">
+              Ingestion active across 5 forwarders
             </p>
           </div>
         ) : (
           <div className="flex justify-center p-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Genysis Agent Online" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Sentinel Engine Active" />
           </div>
         )}
       </div>

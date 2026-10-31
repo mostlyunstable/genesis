@@ -46,7 +46,7 @@ export const AutonomousResponsePage: React.FC = () => {
             Autonomous Response
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Defensive action governance, policy evaluations, dry runs, and deterministic verifications.
+            Policy-approved defensive countermeasures, dry runs, and verification telemetry.
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export const AutonomousResponsePage: React.FC = () => {
             icon={<AlertTriangle className="w-3.5 h-3.5" />}
             onClick={toggleAutonomousGlobal}
           >
-            {autonomousResponseGlobalEnabled ? 'Emergency Halt' : 'Resume Autonomous Defense'}
+            {autonomousResponseGlobalEnabled ? 'Emergency Defense Halt' : 'Resume Autonomous Engine'}
           </Button>
         </div>
       </div>
@@ -68,7 +68,7 @@ export const AutonomousResponsePage: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
-              <strong>DEFENSIVE AUTOMATION HALTED:</strong> All automated playbooks, firewall block actions, and session revocations are blocked by emergency policy.
+              <strong>DEFENSIVE AUTOMATION HALTED:</strong> Automated countermeasures blocked by administrative override.
             </span>
           </div>
           <Button variant="danger" size="sm" onClick={toggleAutonomousGlobal}>
@@ -79,7 +79,7 @@ export const AutonomousResponsePage: React.FC = () => {
 
       {/* Action States Guide Pill */}
       <div className="p-3 bg-white border border-[#E9E6E0] rounded-xl flex items-center justify-between overflow-x-auto gap-3 text-[11px] font-mono">
-        <span className="text-[#A5A19A] uppercase shrink-0 font-semibold">Action States:</span>
+        <span className="text-[#A5A19A] uppercase shrink-0 font-semibold">Countermeasure Pipeline:</span>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="px-2 py-0.5 rounded-full bg-[#FFFBEB] text-[#D97706] border border-[#D97706]/20 font-medium">RECOMMENDED</span>
           <span className="px-2 py-0.5 rounded-full bg-[#F0F6FF] text-[#4F7FC1] border border-[#4F7FC1]/20 font-medium">POLICY APPROVED</span>
@@ -99,7 +99,7 @@ export const AutonomousResponsePage: React.FC = () => {
               : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
           }`}
         >
-          Active Recommendations ({playbooks.length})
+          Defensive Playbooks ({playbooks.length})
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -109,7 +109,7 @@ export const AutonomousResponsePage: React.FC = () => {
               : 'text-[#77736D] hover:text-[#171717] hover:bg-[#F3F2EE]'
           }`}
         >
-          Action History & Rollback ({actions.length})
+          Action Log & Verification ({actions.length})
         </button>
       </div>
 
@@ -142,7 +142,7 @@ export const AutonomousResponsePage: React.FC = () => {
                     icon={<Play className="w-3 h-3" />}
                     onClick={() => handleSimulateExecution(pb)}
                   >
-                    Simulate Dry Run
+                    Execute Policy Dry Run
                   </Button>
                 </div>
               </div>
@@ -180,7 +180,7 @@ export const AutonomousResponsePage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-[#171717] font-sans">{act.actionName}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F0FDF4] text-[#258A62] border border-[#258A62]/30">
-                    VERIFIED (DRY RUN)
+                    VERIFIED — Telemetry Probe Confirmed
                   </span>
                 </div>
                 <div className="text-[11px] text-[#77736D] font-mono">

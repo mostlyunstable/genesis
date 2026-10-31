@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, ChevronDown, ChevronUp, Terminal, Shield } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 
 export const DemoModeBanner: React.FC = () => {
@@ -12,10 +12,10 @@ export const DemoModeBanner: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-[#E9E6E0] font-semibold text-[#F15A24] text-[10px]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#F15A24] animate-pulse" />
-            DEMO MODE
+            SIMULATION ENVIRONMENT
           </span>
           <span className="text-[#171717] font-medium hidden sm:inline">
-            Genysis AI Security Intelligence v2.0
+            Autonomous Security Intelligence
           </span>
           <span className="text-[#A5A19A] hidden md:inline">•</span>
           <span className="text-[#77736D] hidden md:inline">
@@ -42,11 +42,11 @@ export const DemoModeBanner: React.FC = () => {
       </div>
 
       {expanded && (
-        <div className="px-4 py-2 bg-white border-t border-[#E9E6E0] text-xs">
-          <div className="max-w-7xl mx-auto flex items-start gap-2 text-[#77736D]">
+        <div className="px-4 py-2.5 bg-white border-t border-[#E9E6E0] text-xs">
+          <div className="max-w-7xl mx-auto flex items-start gap-2.5 text-[#77736D]">
             <AlertCircle className="w-3.5 h-3.5 text-[#F15A24] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong>Simulated Telemetry Disclosure:</strong> All brute-force detections, SSH authentication rejections, and defensive response executions operate in a local deterministic simulation mode. Production enforcement requires authenticating with the FastAPI backend orchestrator in Settings.
+              <strong>Telemetry Notice:</strong> Ingested events, brute-force indicators, and countermeasure executions operate in a local deterministic verification sandbox. Telemetry originates from reserved RFC 5737 ranges (198.51.100.0/24, 203.0.113.0/24). Production enforcement requires authenticating with the FastAPI orchestrator in Settings.
             </p>
           </div>
         </div>

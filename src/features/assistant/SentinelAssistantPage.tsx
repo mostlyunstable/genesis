@@ -50,10 +50,10 @@ interface Message {
 }
 
 const PROMPT_CHIPS = [
-  'Investigate recent SSH attacks',
-  'Analyze authentication failures',
-  'Show active security incidents',
-  'Explain suspicious login activity'
+  'Investigate an IP address',
+  'Trace authentication failures',
+  'Examine a security event',
+  'Review active incidents'
 ];
 
 export const SentinelAssistantPage: React.FC = () => {
@@ -64,7 +64,7 @@ export const SentinelAssistantPage: React.FC = () => {
       id: 'welcome-01',
       sender: 'sentinel',
       timestamp: 'Just now',
-      content: `Hello, I'm **Genysis AI**. I'm actively monitoring your telemetry for authentication attacks, brute-force anomalies, and policy breaches.\n\nAsk me to investigate an IP address, correlate evidence for an incident, or execute an autonomous defensive playbook.`,
+      content: `Sentinel is standing by.\n\nMonitoring telemetry across enrolled forwarders. Specify a signal, address, or incident to initiate analysis.`,
       structured: {
         title: 'Initial Security Telemetry Synthesis',
         summary: '35 consecutive SSH authentication failures were observed against bastion-01 followed within 4.0 seconds by an accepted login for user "deploy" from external IP 198.51.100.42.',
@@ -216,14 +216,14 @@ export const SentinelAssistantPage: React.FC = () => {
     <div className="flex flex-col h-[calc(100vh-8.5rem)] max-w-4xl mx-auto">
       {/* Central Hero Header */}
       <div className="text-center pt-2 pb-6 select-none">
-        <div className="inline-flex items-center gap-2 mb-3">
-          <SentinelLogo size="xl" showWordmark={true} />
+        <div className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[#F15A24] mb-2">
+          AUTONOMOUS SECURITY INTELLIGENCE
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#171717] font-sans">
-          Your security operations, under intelligent watch.
+          Know what happened.<br />Understand what happens next.
         </h2>
-        <p className="text-xs sm:text-sm text-[#77736D] mt-1.5 max-w-xl mx-auto font-sans leading-relaxed">
-          Ask Genysis to investigate suspicious activity, analyze authentication logs, identify threats or explain what is happening across your environment.
+        <p className="text-xs sm:text-sm text-[#77736D] mt-2 max-w-xl mx-auto font-sans leading-relaxed">
+          Sentinel correlates security events, investigates emerging threats and coordinates defensive action — with evidence at every step.
         </p>
 
         {/* Suggested Prompt Chips */}
@@ -263,7 +263,7 @@ export const SentinelAssistantPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-3 border-b border-[#F0ECE6] pb-3">
                     <div>
                       <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#F15A24]">
-                        GENYSIS INVESTIGATION
+                        EVIDENCE SYNTHESIS
                       </div>
                       <h4 className="text-sm font-bold text-[#171717] mt-0.5">
                         {msg.structured?.title || 'Security Telemetry Analysis'}
@@ -356,12 +356,12 @@ export const SentinelAssistantPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Recommended Autonomous Response Strip */}
+                  {/* Recommended Autonomous Mitigation Strip */}
                   {msg.structured?.recommendedAction && (
                     <div className="p-3.5 rounded-xl bg-[#FFF0E8]/40 border border-[#F15A24]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <div className="text-[10px] font-mono font-semibold text-[#F15A24] uppercase">
-                          RECOMMENDED RESPONSE
+                          RECOMMENDED MITIGATION
                         </div>
                         <div className="text-xs text-[#171717] font-medium mt-0.5">
                           {msg.structured.recommendedAction}
@@ -379,12 +379,12 @@ export const SentinelAssistantPage: React.FC = () => {
                           onClick={() => handleSimulateExecution(msg.id, msg.structured!.playbookId || 'PB-SSH-BRUTE-01', msg.structured!.evidence.sourceIp)}
                           className="shrink-0"
                         >
-                          Execute Defensive Dry Run
+                          Execute Policy Dry Run
                         </Button>
                       ) : (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F0FDF4] text-[#258A62] border border-[#258A62]/30 text-xs font-mono font-semibold shrink-0">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>DRY RUN VERIFIED</span>
+                          <span>VERIFIED — Telemetry Probe Confirmed</span>
                         </div>
                       )}
                     </div>
@@ -398,7 +398,7 @@ export const SentinelAssistantPage: React.FC = () => {
         {isTyping && (
           <div className="flex items-center gap-3 text-xs text-[#77736D] p-3 font-mono">
             <Sparkles className="w-4 h-4 text-[#F15A24] animate-spin" />
-            <span>Genysis is correlating evidence across telemetry forwarders...</span>
+            <span>Correlating telemetry across enrolled forwarders...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -417,7 +417,7 @@ export const SentinelAssistantPage: React.FC = () => {
                 handleSendMessage();
               }
             }}
-            placeholder="Ask Genysis anything about your security environment..."
+            placeholder="Describe an event or begin an investigation..."
             className="w-full bg-transparent border-none text-xs sm:text-sm text-[#171717] placeholder-[#A5A19A] focus:outline-none resize-none font-sans px-2"
           />
 
@@ -436,7 +436,7 @@ export const SentinelAssistantPage: React.FC = () => {
                 <Paperclip className="w-4 h-4" />
               </button>
               <span className="hidden sm:inline text-[11px] text-[#A5A19A] font-mono">
-                Press <kbd className="text-[#171717] font-semibold">↵ Enter</kbd> to analyze, <kbd className="text-[#171717] font-semibold">⇧ Enter</kbd> for newline
+                <kbd className="text-[#171717] font-semibold">↵ Send</kbd> • <kbd className="text-[#171717] font-semibold">⇧↵ Line break</kbd>
               </span>
             </div>
 
@@ -447,7 +447,7 @@ export const SentinelAssistantPage: React.FC = () => {
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || isTyping}
             >
-              Analyze
+              Start Investigation
             </Button>
           </div>
         </div>

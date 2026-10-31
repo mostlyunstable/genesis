@@ -1,65 +1,76 @@
-# GENYSIS AI — Autonomous Security Intelligence
-**Design Philosophy:** MetaMask-Inspired Minimalism × Autonomous AI Security  
+# SENTINEL AI — Autonomous Security Intelligence
+
+**Design Philosophy:** Minimalist Product Architecture × Autonomous Security Intelligence  
+**Environment:** Ingestion & Defensive Verification Sandbox (RFC 5737)  
 **Version:** 2.0.0  
 
-GENYSIS AI is an autonomous generative-AI-powered cybersecurity analyst. It continuously monitors security events, identifies threats, investigates suspicious activity, correlates evidence, assesses risk, and executes policy-approved defensive dry runs.
+Sentinel is an autonomous security intelligence system. It continuously correlates security events, identifies threats, investigates suspicious activity, evaluates evidence, assesses risk, and executes policy-approved defensive countermeasures.
 
 ---
 
-## 🦊 Design Philosophy & Aesthetics
+## Architecture & Visual Discipline
 
-GENYSIS AI v2.0 takes inspiration from the visual restraint, clean typography, iconic branding, and approachable product presentation of **MetaMask** (`metamask.io`):
-- **AI-First Hero Workspace**: The central AI assistant is the default home screen (`/`), not an analytical dashboard grid.
-- **Warm Canvas Light Theme**: Natural warm background (`#FAFAF8`), subtle borders (`#E9E6E0`), pure white elevated surfaces, and recognizable **Brand Orange** (`#F15A24` and soft `#FFF0E8`) accents.
-- **Iconic Genysis Hexagonal Emblem**: A protective perimeter mark enclosing an intelligent observation point in brand orange.
-- **Restrained 8-Item Navigation**:
-  - **Primary**: Assistant (`/`), Investigations (`/investigations`), Activity (`/activity`)
-  - **Security**: Threats (`/threats`), Incidents (`/incidents`), Response (`/response`)
-  - **System**: Integrations (`/integrations`), Settings (`/settings`)
-- **Product Honesty**: Clear distinction between `RECOMMENDED`, `POLICY APPROVED`, `DRY RUN` (default), `EXECUTING`, `VERIFIED`, and `ROLLED BACK`.
+Sentinel v2.0 is built on visual restraint, precise typography, and disciplined information hierarchy:
+
+- **Primary Canvas**: Warm background (`#FAFAF8`), subtle borders (`#E9E6E0`), clean elevated surfaces (`#FFFFFF`), and brand orange (`#F15A24` and soft `#FFF0E8`) accents.
+- **Dark Workspace**: Elevated dark surfaces (`#101113`, `#181A1D`, `#202328`) with high-contrast neutral typography (`#F4F4F2`).
+- **Autonomous Core**: The AI assistant serves as the primary operational surface (`/`), supported by progressive disclosure across telemetry streams, detections, and investigations.
+- **Operational Precision**: Every defensive countermeasure is governed by an explicit pipeline: `RECOMMENDED` -> `POLICY APPROVED` -> `DRY RUN` (default) -> `EXECUTING` -> `VERIFIED` -> `ROLLED BACK`.
+- **Honest Telemetry Disclosure**: All simulated brute-force, password-spraying, and privilege-escalation events adhere to reserved RFC 5737 test ranges (`198.51.100.0/24`, `203.0.113.0/24`).
 
 ---
 
-## 🛡️ Core Experiences
+## Operational Workspaces
 
-### 1. Genysis Assistant (`/`)
-- Central AI workspace featuring the greeting *"Your security operations, under intelligent watch."*
-- Interactive suggested prompt chips:
-  - *Investigate recent SSH attacks*
-  - *Analyze authentication failures*
-  - *Show active security incidents*
-  - *Explain suspicious login activity*
-- Premium composer with log attachment control, shortcut helpers, and loading state.
-- Structured analytical responses with evidence attribution, risk ratings, MITRE ATT&CK mapping, and defensive dry-run execution.
+### 1. Assistant (`/`)
+- Headline: *"Know what happened. Understand what happens next."*
+- Supporting copy: *"Sentinel correlates security events, investigates emerging threats and coordinates defensive action — with evidence at every step."*
+- Investigative workflows:
+  - Investigate an IP address
+  - Trace authentication failures
+  - Examine a security event
+  - Review active incidents
+- Structured analytical responses featuring evidence attribution, calculated confidence scores, MITRE ATT&CK technique mapping, and policy dry-run execution.
 
-### 2. Security Investigations (`/investigations`)
-- Progressive disclosure investigation list with risk scores and correlated event counts.
-- Dedicated detail view with chronological attack timeline, AI analytical synthesis, and one-click countermeasure dry run.
+### 2. Investigations (`/investigations`)
+- Progressive disclosure of correlated incident sequences.
+- Chronological attack timelines, technical evidence references, and automated countermeasure dry runs.
 
 ### 3. Security Activity (`/activity`)
-- Clean real-time telemetry stream across Linux SSH, Linux PAM, Windows AD, and SAML SSO with expandable syslog payloads and parsed CEF attributes.
+- Raw and normalized event telemetry observed across Linux SSH, Linux PAM, Windows AD, and SAML SSO forwarders.
+- Expandable raw syslog payloads and parsed event fields.
 
 ### 4. Threats & Incidents (`/threats`, `/incidents`)
-- Minimalist behavioral anomaly cards and incident narratives prioritizing clarity over metric overload.
+- Behavioral anomaly detections, heuristic threshold matches, and multi-stage incident chronologies.
 
 ### 5. Autonomous Response (`/response`)
-- Governance interface managing defensive playbooks (*SSH Brute Force*, *Password Spraying*, *Suspicious Login*, *Compromised Account*, *Repeated Escalation*).
-- Action history table with one-click simulated rollbacks and global Emergency Halt switch.
+- Governance interface managing defensive playbooks and policy evaluations.
+- Action history with verification status and single-click administrative rollback.
+- Global Emergency Defense Halt switch.
 
-### 6. Integrations & Settings (`/integrations`, `/settings`)
-- Forwarder connection telemetry, theme toggle (Warm Canvas / Dark Workspace), velocity thresholds, and FastAPI backend URL bindings.
+### 6. Telemetry Forwarders & Configuration (`/integrations`, `/settings`)
+- Forwarder status, ingestion health, detection velocity thresholds, and FastAPI backend orchestrator endpoints.
 
 ---
 
-## 🚀 Getting Started
+## Technical Stack
+
+- **Runtime & Bundler**: Vite 5, React 18, TypeScript (strict mode)
+- **Styling**: Tailwind CSS, PostCSS, Lucide React icons
+- **State Management**: Zustand with persistent simulation storage
+- **Backend Protocol**: REST / FastAPI orchestration target (`http://localhost:8000`)
+
+---
+
+## Local Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Start Vite development server
+# Start Vite development server (port 5173)
 npm run dev
 
-# Run production build & typecheck
+# Run TypeScript typecheck and production build
 npm run build
 ```

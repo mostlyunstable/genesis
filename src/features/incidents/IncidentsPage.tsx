@@ -54,10 +54,10 @@ export const IncidentsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Active Security Incidents
+            Incidents
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Correlated multi-stage security incidents requiring analysis or containment.
+            Correlated event sequences requiring analytical assessment or containment.
           </p>
         </div>
 
@@ -66,7 +66,7 @@ export const IncidentsPage: React.FC = () => {
             icon={<Search className="w-3.5 h-3.5" />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search incidents..."
+            placeholder="Filter incidents..."
           />
         </div>
       </div>
@@ -75,40 +75,46 @@ export const IncidentsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Incidents List (5 cols) */}
         <div className="lg:col-span-5 space-y-2.5">
-          {filteredIncidents.map((inc) => {
-            const isSelected = activeIncident?.id === inc.id;
+          {filteredIncidents.length === 0 ? (
+            <div className="p-8 text-center bg-white border border-[#E9E6E0] rounded-xl text-xs text-[#77736D] font-mono">
+              No active incidents.
+            </div>
+          ) : (
+            filteredIncidents.map((inc) => {
+              const isSelected = activeIncident?.id === inc.id;
 
-            return (
-              <div
-                key={inc.id}
-                onClick={() => setSelectedIncidentId(inc.id)}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  isSelected
-                    ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
-                    : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-semibold text-[#F15A24]">{inc.id}</span>
-                  <div className="flex items-center gap-1.5">
-                    <SeverityBadge severity={inc.severity} />
-                    <RiskScoreBadge score={inc.riskScore} size="sm" showLabel={false} />
+              return (
+                <div
+                  key={inc.id}
+                  onClick={() => setSelectedIncidentId(inc.id)}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
+                      : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-semibold text-[#F15A24]">{inc.id}</span>
+                    <div className="flex items-center gap-1.5">
+                      <SeverityBadge severity={inc.severity} />
+                      <RiskScoreBadge score={inc.riskScore} size="sm" showLabel={false} />
+                    </div>
+                  </div>
+
+                  <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-2">
+                    {inc.title}
+                  </h3>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
+                    <span>Asset: <strong className="text-[#171717]">{inc.sourceIps[0]}</strong></span>
+                    <span className="capitalize px-2 py-0.5 rounded-full bg-[#F3F2EE] text-[#77736D] font-medium font-sans">
+                      {inc.status}
+                    </span>
                   </div>
                 </div>
-
-                <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-2">
-                  {inc.title}
-                </h3>
-
-                <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
-                  <span>Asset: <strong className="text-[#171717]">{inc.sourceIps[0]}</strong></span>
-                  <span className="capitalize px-2 py-0.5 rounded-full bg-[#F3F2EE] text-[#77736D] font-medium font-sans">
-                    {inc.status}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Right Column: Clean Incident Detail & Investigation Timeline (7 cols) */}
@@ -143,7 +149,7 @@ export const IncidentsPage: React.FC = () => {
             {/* AI Summary Banner */}
             <div className="p-4 rounded-xl bg-[#FFF0E8]/50 border border-[#F15A24]/20 space-y-2 text-xs">
               <div className="text-[10px] font-mono font-semibold text-[#F15A24] uppercase">
-                AI REASONING SUMMARY
+                ANALYTICAL SUMMARY
               </div>
               <p className="text-[#171717] leading-relaxed font-sans">
                 {activeIncident.aiSummary.executiveSummary}
@@ -153,7 +159,7 @@ export const IncidentsPage: React.FC = () => {
             {/* Investigation Progression Timeline */}
             <div className="space-y-3">
               <div className="text-[10px] font-mono font-semibold text-[#77736D] uppercase">
-                ATTACK PROGRESSION TIMELINE
+                PROGRESSION TIMELINE
               </div>
               <div className="space-y-2 border-l-2 border-[#E9E6E0] ml-2 pl-3 font-mono text-xs">
                 {activeIncident.timelineEvents.map((evt) => (
@@ -181,7 +187,7 @@ export const IncidentsPage: React.FC = () => {
                 icon={<Zap className="w-3.5 h-3.5" />}
                 onClick={handleSimulateResponse}
               >
-                Execute Autonomous Dry Run
+                Execute Policy Dry Run
               </Button>
             </div>
           </div>

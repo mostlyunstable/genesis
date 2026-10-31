@@ -53,10 +53,10 @@ export const ThreatsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Threat Detections
+            Threats
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Behavioral anomaly detections identified by Genysis rule engines.
+            Behavioral detections and heuristic threshold matches.
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export const ThreatsPage: React.FC = () => {
             icon={<Search className="w-3.5 h-3.5" />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search detected threats..."
+            placeholder="Filter threats by ID, name, or IP..."
           />
         </div>
       </div>
@@ -74,42 +74,48 @@ export const ThreatsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Threats List (5 cols) */}
         <div className="lg:col-span-5 space-y-2.5">
-          {filteredDetections.map((threat) => {
-            const isSelected = selectedThreat?.id === threat.id;
+          {filteredDetections.length === 0 ? (
+            <div className="p-8 text-center bg-white border border-[#E9E6E0] rounded-xl text-xs text-[#77736D] font-mono">
+              No threats match filter criteria.
+            </div>
+          ) : (
+            filteredDetections.map((threat) => {
+              const isSelected = selectedThreat?.id === threat.id;
 
-            return (
-              <div
-                key={threat.id}
-                onClick={() => setSelectedThreatId(threat.id)}
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  isSelected
-                    ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
-                    : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-semibold text-[#F15A24]">{threat.id}</span>
-                  <div className="flex items-center gap-2">
-                    <SeverityBadge severity={threat.severity} />
-                    <RiskScoreBadge score={threat.riskScore} size="sm" showLabel={false} />
+              return (
+                <div
+                  key={threat.id}
+                  onClick={() => setSelectedThreatId(threat.id)}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-white border-[#F15A24] shadow-sm ring-1 ring-[#F15A24]/20'
+                      : 'bg-white border-[#E9E6E0] hover:border-[#D8D4CC] shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-semibold text-[#F15A24]">{threat.id}</span>
+                    <div className="flex items-center gap-2">
+                      <SeverityBadge severity={threat.severity} />
+                      <RiskScoreBadge score={threat.riskScore} size="sm" showLabel={false} />
+                    </div>
+                  </div>
+
+                  <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-1">
+                    {threat.name}
+                  </h3>
+
+                  <p className="text-[11px] text-[#77736D] mt-1 line-clamp-2 font-sans">
+                    {threat.description}
+                  </p>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
+                    <span>Source: <strong className="text-[#D94B45]">{threat.sourceIp}</strong></span>
+                    <span>Confidence: <strong className="text-[#258A62]">{threat.confidence}%</strong></span>
                   </div>
                 </div>
-
-                <h3 className="text-xs font-bold text-[#171717] mt-2 font-sans line-clamp-1">
-                  {threat.name}
-                </h3>
-
-                <p className="text-[11px] text-[#77736D] mt-1 line-clamp-2 font-sans">
-                  {threat.description}
-                </p>
-
-                <div className="flex items-center justify-between text-[10px] font-mono text-[#A5A19A] mt-3 pt-2.5 border-t border-[#F0ECE6]">
-                  <span>Source: <strong className="text-[#D94B45]">{threat.sourceIp}</strong></span>
-                  <span>Confidence: <strong className="text-[#258A62]">{threat.confidence}%</strong></span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Right Column: Clean Threat Details View (7 cols) */}
@@ -183,7 +189,7 @@ export const ThreatsPage: React.FC = () => {
                   icon={<Zap className="w-3.5 h-3.5" />}
                   onClick={() => handleExecutePlaybook(selectedThreat)}
                 >
-                  Execute Defensive Dry Run
+                  Execute Policy Dry Run
                 </Button>
               </div>
             )}

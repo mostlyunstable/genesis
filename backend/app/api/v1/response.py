@@ -92,6 +92,7 @@ async def execute_action(
 
     return ExecuteActionResponse(
         success=True,
+        message=message,
         action=ResponseActionSchema(
             id=action_rec.id,
             incidentId=action_rec.incident_id,

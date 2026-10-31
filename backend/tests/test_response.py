@@ -118,3 +118,79 @@ async def test_emergency_halt_blocks_all_actions(client: AsyncClient, setup_play
     )
     assert restore_res.status_code == 200
     assert restore_res.json()["autonomousResponseGlobalEnabled"] is True
+
+
+@pytest.mark.asyncio
+async def test_action_idempotency(client: AsyncClient, setup_playbook_and_auth: dict):
+    # First execution
+    res1 = await client.post(
+        "/api/v1/response/execute",
+        json={
+            "playbookId": "PB-TEST-01",
+            "actionName": "iptables drop",
+            "target": "203.0.113.88"
+        },
+        headers=setup_playbook_and_auth
+    )
+    assert res1.status_code == 200
+    act1 = res1.json()["action"]
+    assert res1.json()["message"] == "Executed successfully"
+
+    # Second execution on identical target with identical playbook
+    res2 = await client.post(
+        "/api/v1/response/execute",
+        json={
+            "playbookId": "PB-TEST-01",
+            "actionName": "iptables drop",
+            "target": "203.0.113.88"
+        },
+        headers=setup_playbook_and_auth
+    )
+    assert res2.status_code == 200
+    act2 = res2.json()["action"]
+    assert "idempotent" in res2.json()["message"].lower()
+    assert act1["id"] == act2["id"]
+
+
+@pytest.mark.asyncio
+async def test_action_expiration_and_rollback_denial(client: AsyncClient, setup_playbook_and_auth: dict, db_session):
+    from datetime import datetime, timezone, timedelta
+    from backend.app.models.response import ResponseActionModel
+    from backend.app.services.response import response_service
+
+    # Create action backdated by 120 minutes
+    two_hours_ago = datetime.now(timezone.utc) - timedelta(minutes=120)
+    old_action = ResponseActionModel(
+        id="ACT-EXP-001",
+        playbook_id="PB-TEST-01",
+        action_name="iptables drop",
+        target="198.51.100.99",
+        status="simulated_success",
+        execution_mode="simulated",
+        timestamp=two_hours_ago,
+        duration_ms=100,
+        details="Stale action for TTL test",
+        verification_status="verified",
+        rollback_available=True,
+        is_simulated=True
+    )
+    db_session.add(old_action)
+    await db_session.commit()
+
+    # Run expiration service with TTL=60 minutes
+    expired_count = await response_service.expire_stale_actions(ttl_minutes=60, db=db_session)
+    assert expired_count >= 1
+
+    # Verify action status transitioned to expired and rollback is disabled
+    await db_session.refresh(old_action)
+    assert old_action.status == "expired"
+    assert old_action.rollback_available is False
+
+    # Attempt to rollback expired action via API -> must fail
+    res_rollback = await client.post(
+        f"/api/v1/response/actions/{old_action.id}/rollback",
+        headers=setup_playbook_and_auth
+    )
+    assert res_rollback.status_code == 400
+    assert "expired" in res_rollback.json()["detail"]["message"].lower()
+

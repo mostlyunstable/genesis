@@ -59,16 +59,16 @@ export const SecurityActivityPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E0]">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] font-sans">
-            Security Activity Stream
+            Security Activity
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Real-time telemetry observed by Genysis across authentication and network forwarders.
+            Raw and normalized event telemetry observed across ingestion forwarders.
           </p>
         </div>
 
         <div className="flex items-center gap-2 font-mono text-xs text-[#77736D]">
           <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
-          <span>Ingesting: <strong>{filteredEvents.length}</strong> events</span>
+          <span>Active Stream: <strong>{filteredEvents.length}</strong> signals</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export const SecurityActivityPage: React.FC = () => {
             icon={<Search className="w-3.5 h-3.5" />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search events, IPs, usernames..."
+            placeholder="Filter telemetry by address, user, or event..."
           />
         </div>
 
@@ -111,7 +111,12 @@ export const SecurityActivityPage: React.FC = () => {
 
       {/* Readable Event Stream */}
       <div className="bg-white border border-[#E9E6E0] rounded-2xl shadow-sm overflow-hidden divide-y divide-[#F0ECE6]">
-        {filteredEvents.slice(0, 25).map((evt) => {
+        {filteredEvents.length === 0 ? (
+          <div className="p-12 text-center text-xs text-[#77736D] font-mono">
+            No telemetry received matching criteria.
+          </div>
+        ) : (
+          filteredEvents.slice(0, 25).map((evt) => {
           const isExpanded = expandedId === evt.id;
           const isCompromise = evt.id === 'EVT-2026-SSH-036';
 
@@ -178,7 +183,7 @@ export const SecurityActivityPage: React.FC = () => {
               )}
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );
