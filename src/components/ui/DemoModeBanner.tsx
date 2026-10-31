@@ -15,7 +15,7 @@ export const DemoModeBanner: React.FC = () => {
             DEMO MODE
           </span>
           <span className="text-[#171717] font-medium hidden sm:inline">
-            Autonomous Security Intelligence v2.0
+            Genysis AI Security Intelligence v2.0
           </span>
           <span className="text-[#A5A19A] hidden md:inline">•</span>
           <span className="text-[#77736D] hidden md:inline">

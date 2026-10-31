@@ -143,14 +143,14 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Sentinel Autonomous Pulse Beacon */}
+      {/* Genysis Autonomous Pulse Beacon */}
       <div className="p-3 border-t border-[#F0ECE6]">
         {!sidebarCollapsed ? (
           <div className="p-2.5 rounded-lg bg-[#FAFAF8] border border-[#E9E6E0] text-xs">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#171717]">
                 <span className="w-2 h-2 rounded-full bg-[#258A62] animate-pulse" />
-                Sentinel Agent
+                Genysis Agent
               </span>
               <span className="text-[10px] font-mono text-[#77736D]">v2.0</span>
             </div>
@@ -160,7 +160,7 @@ export const Sidebar: React.FC = () => {
           </div>
         ) : (
           <div className="flex justify-center p-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Sentinel Agent Online" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#258A62] animate-pulse" title="Genysis Agent Online" />
           </div>
         )}
       </div>

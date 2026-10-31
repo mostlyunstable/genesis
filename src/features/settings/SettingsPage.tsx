@@ -130,7 +130,7 @@ export const SettingsPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-[#77736D] mt-1 leading-relaxed">
-              When disengaged, Sentinel AI is immediately restricted from executing automated dry runs or countermeasure policies.
+              When disengaged, Genysis AI is immediately restricted from executing automated dry runs or countermeasure policies.
             </p>
           </div>
 

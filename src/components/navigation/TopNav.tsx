@@ -16,7 +16,7 @@ import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, { title: string; section: string }> = {
-  '/': { title: 'Sentinel Assistant', section: 'Primary' },
+  '/': { title: 'Genysis Assistant', section: 'Primary' },
   '/investigations': { title: 'Security Investigations', section: 'Primary' },
   '/activity': { title: 'Security Activity Stream', section: 'Primary' },
   '/threats': { title: 'Threat Detections', section: 'Security' },
@@ -40,7 +40,7 @@ export const TopNav: React.FC = () => {
     : { label: 'MONITORING', color: 'text-[#258A62] bg-[#F0FDF4] border-[#258A62]/20' };
 
   const routeInfo = routeTitleMap[location.pathname] || {
-    title: 'SENTINEL AI',
+    title: 'GENYSIS AI',
     section: 'Workspace'
   };
 

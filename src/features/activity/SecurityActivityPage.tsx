@@ -62,7 +62,7 @@ export const SecurityActivityPage: React.FC = () => {
             Security Activity Stream
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Real-time telemetry observed by Sentinel across authentication and network forwarders.
+            Real-time telemetry observed by Genysis across authentication and network forwarders.
           </p>
         </div>
 

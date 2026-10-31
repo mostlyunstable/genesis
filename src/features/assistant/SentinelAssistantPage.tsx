@@ -64,7 +64,7 @@ export const SentinelAssistantPage: React.FC = () => {
       id: 'welcome-01',
       sender: 'sentinel',
       timestamp: 'Just now',
-      content: `Hello, I'm **Sentinel AI**. I'm actively monitoring your telemetry for authentication attacks, brute-force anomalies, and policy breaches.\n\nAsk me to investigate an IP address, correlate evidence for an incident, or execute an autonomous defensive playbook.`,
+      content: `Hello, I'm **Genysis AI**. I'm actively monitoring your telemetry for authentication attacks, brute-force anomalies, and policy breaches.\n\nAsk me to investigate an IP address, correlate evidence for an incident, or execute an autonomous defensive playbook.`,
       structured: {
         title: 'Initial Security Telemetry Synthesis',
         summary: '35 consecutive SSH authentication failures were observed against bastion-01 followed within 4.0 seconds by an accepted login for user "deploy" from external IP 198.51.100.42.',
@@ -223,7 +223,7 @@ export const SentinelAssistantPage: React.FC = () => {
           Your security operations, under intelligent watch.
         </h2>
         <p className="text-xs sm:text-sm text-[#77736D] mt-1.5 max-w-xl mx-auto font-sans leading-relaxed">
-          Ask Sentinel to investigate suspicious activity, analyze authentication logs, identify threats or explain what is happening across your environment.
+          Ask Genysis to investigate suspicious activity, analyze authentication logs, identify threats or explain what is happening across your environment.
         </p>
 
         {/* Suggested Prompt Chips */}
@@ -263,7 +263,7 @@ export const SentinelAssistantPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-3 border-b border-[#F0ECE6] pb-3">
                     <div>
                       <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#F15A24]">
-                        SENTINEL INVESTIGATION
+                        GENYSIS INVESTIGATION
                       </div>
                       <h4 className="text-sm font-bold text-[#171717] mt-0.5">
                         {msg.structured?.title || 'Security Telemetry Analysis'}
@@ -398,7 +398,7 @@ export const SentinelAssistantPage: React.FC = () => {
         {isTyping && (
           <div className="flex items-center gap-3 text-xs text-[#77736D] p-3 font-mono">
             <Sparkles className="w-4 h-4 text-[#F15A24] animate-spin" />
-            <span>Sentinel is correlating evidence across telemetry forwarders...</span>
+            <span>Genysis is correlating evidence across telemetry forwarders...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -417,7 +417,7 @@ export const SentinelAssistantPage: React.FC = () => {
                 handleSendMessage();
               }
             }}
-            placeholder="Ask Sentinel anything about your security environment..."
+            placeholder="Ask Genysis anything about your security environment..."
             className="w-full bg-transparent border-none text-xs sm:text-sm text-[#171717] placeholder-[#A5A19A] focus:outline-none resize-none font-sans px-2"
           />
 

@@ -56,7 +56,7 @@ export const ThreatsPage: React.FC = () => {
             Threat Detections
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Behavioral anomaly detections identified by Sentinel rule engines.
+            Behavioral anomaly detections identified by Genysis rule engines.
           </p>
         </div>
 

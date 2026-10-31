@@ -34,7 +34,7 @@ export const IntegrationsPage: React.FC = () => {
             Telemetry Integrations
           </h2>
           <p className="text-xs text-[#77736D] font-sans mt-0.5">
-            Distributed Syslog, WinLogBeat, and Kubernetes PAM collectors streaming to Sentinel.
+            Distributed Syslog, WinLogBeat, and Kubernetes PAM collectors streaming to Genysis.
           </p>
         </div>
 

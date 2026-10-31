@@ -1,17 +1,17 @@
-# SENTINEL AI — Autonomous Security Intelligence
+# GENYSIS AI — Autonomous Security Intelligence
 **Design Philosophy:** MetaMask-Inspired Minimalism × Autonomous AI Security  
 **Version:** 2.0.0  
 
-SENTINEL AI is an autonomous generative-AI-powered cybersecurity analyst. It continuously monitors security events, identifies threats, investigates suspicious activity, correlates evidence, assesses risk, and executes policy-approved defensive dry runs.
+GENYSIS AI is an autonomous generative-AI-powered cybersecurity analyst. It continuously monitors security events, identifies threats, investigates suspicious activity, correlates evidence, assesses risk, and executes policy-approved defensive dry runs.
 
 ---
 
 ## 🦊 Design Philosophy & Aesthetics
 
-SENTINEL AI v2.0 takes inspiration from the visual restraint, clean typography, iconic branding, and approachable product presentation of **MetaMask** (`metamask.io`):
+GENYSIS AI v2.0 takes inspiration from the visual restraint, clean typography, iconic branding, and approachable product presentation of **MetaMask** (`metamask.io`):
 - **AI-First Hero Workspace**: The central AI assistant is the default home screen (`/`), not an analytical dashboard grid.
 - **Warm Canvas Light Theme**: Natural warm background (`#FAFAF8`), subtle borders (`#E9E6E0`), pure white elevated surfaces, and recognizable **Brand Orange** (`#F15A24` and soft `#FFF0E8`) accents.
-- **Iconic Sentinel Beacon**: A geometric protective perimeter mark enclosing an intelligent observation point in brand orange.
+- **Iconic Genysis Hexagonal Emblem**: A protective perimeter mark enclosing an intelligent observation point in brand orange.
 - **Restrained 8-Item Navigation**:
   - **Primary**: Assistant (`/`), Investigations (`/investigations`), Activity (`/activity`)
   - **Security**: Threats (`/threats`), Incidents (`/incidents`), Response (`/response`)
@@ -22,7 +22,7 @@ SENTINEL AI v2.0 takes inspiration from the visual restraint, clean typography, 
 
 ## 🛡️ Core Experiences
 
-### 1. Sentinel Assistant (`/`)
+### 1. Genysis Assistant (`/`)
 - Central AI workspace featuring the greeting *"Your security operations, under intelligent watch."*
 - Interactive suggested prompt chips:
   - *Investigate recent SSH attacks*
