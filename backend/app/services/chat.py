@@ -18,6 +18,7 @@ from backend.app.models.threat_intel import ThreatIntelModel
 from backend.app.models.source import LogSourceModel
 from backend.app.models.response import ResponsePlaybookModel, ResponseActionModel
 from backend.app.services.threat_intel import knowledge_retriever, threat_intel_service
+from backend.app.services.cyber_knowledge import cyber_knowledge_engine
 from backend.app.services.response import PolicyEngine, response_service
 from backend.app.services.audit import audit_service
 from backend.app.services.analyst import ai_analyst_service
@@ -505,7 +506,7 @@ class ChatCopilotService:
             response_sections.append(
                 f"A brute-force attack is an automated attempt to guess credentials by systematically testing passwords or passphrases until the correct one is discovered.\n\n"
                 f"**Example**: An attacker script rapidly submitting common passwords against an SSH service on port 22 (`admin`, `root`, `123456`).\n\n"
-                f"Sentinel detects brute force by monitoring failed authentication velocity (e.g., 10+ failed attempts within 120 seconds), username rotation patterns, and anomalous source IPs.{db_bf_mention}"
+                f"Genesis detects brute force by monitoring failed authentication velocity (e.g., 10+ failed attempts within 120 seconds), username rotation patterns, and anomalous source IPs.{db_bf_mention}"
             )
 
         # SCENARIO 0D: Technical Question: SYN Flood
@@ -520,6 +521,21 @@ class ChatCopilotService:
                 "- **SYN Cookies**: Encode connection state into the initial TCP sequence number without allocating memory until the client's final `ACK` arrives.\n"
                 "- **Firewall Rate-Limiting**: Enforce syn-flood thresholds (`iptables -m limit --limit 50/s`).\n"
                 "- **TCP Backlog Tuning**: Reduce `tcp_synack_retries` and increase `tcp_max_syn_backlog`."
+            )
+
+        # SCENARIO 0D2: Technical Question: Slowloris & Mitigation
+        elif is_slowloris:
+            response_sections.append(
+                "### DoS Slowloris Attack Mechanics & Remediation (MITRE T1499.003)\n\n"
+                "Slowloris is an asymmetric, low-and-slow application-layer Denial of Service attack designed to exhaust web server thread pools using minimal bandwidth.\n\n"
+                "**Mechanism**:\n"
+                "1. The attacker opens hundreds of concurrent HTTP connections to the web server.\n"
+                "2. It transmits partial HTTP header lines at slow, periodic intervals (e.g., `X-a: b\\r\\n` every 15 seconds) without ever transmitting the terminating double CRLF (`\\r\\n\\r\\n`).\n"
+                "3. Thread-per-connection web servers (e.g. Apache with `mpm_prefork` or `mpm_worker`) hold worker sockets open awaiting completion until `MaxRequestWorkers` is exhausted, dropping legitimate connections.\n\n"
+                "**Mitigation Strategies**:\n"
+                "- **Apache `mod_reqtimeout`**: Enforce aggressive read timeouts: `RequestReadTimeout header=10-20,MinRate=500 body=10,MinRate=500`.\n"
+                "- **Reverse Proxy Fronting**: Deploy event-driven proxies like Nginx or Envoy in front of application servers to buffer complete requests before proxying upstream.\n"
+                "- **Connection Limiting**: Restrict concurrent connections per IP address via iptables (`iptables -A INPUT -p tcp --dport 80 -m connlimit --connlimit-above 20 -j REJECT`)."
             )
 
         # SCENARIO 0E: Technical Question: IDS vs IPS
@@ -647,10 +663,17 @@ class ChatCopilotService:
                     f"- **Primary Application**: {res['primaryApplication']}"
                 )
             else:
+                extra_lines = []
+                if res.get("attackClasses"):
+                    extra_lines.append(f"- **Attack Classes**:\n" + "\n".join([f"  - {c}" for c in res["attackClasses"]]))
+                if res.get("primaryFeatures"):
+                    extra_lines.append(f"- **Features**: {', '.join(res['primaryFeatures'])}")
+                extra_str = ("\n" + "\n".join(extra_lines) + "\n") if extra_lines else "\n"
                 response_sections.append(
                     f"### Dataset Overview: **{res['datasetName']}**\n\n"
-                    f"- **Source**: {res.get('source', 'LogPAI')}\n"
-                    f"- **Scale**: {res.get('scale', 'Multiple Datasets')}\n"
+                    f"- **Source**: {res.get('source', 'Security Benchmark')}\n"
+                    f"- **Scale**: {res.get('scale', 'Multiple Datasets')}"
+                    f"{extra_str}\n"
                     f"- **Primary Application**: {res.get('primaryApplication', 'Log Analysis')}"
                 )
 
@@ -681,7 +704,7 @@ class ChatCopilotService:
             response_sections.append(
                 "### Security Safeguard: Request Declined\n\n"
                 "I cannot assist with generating malware, disabling security controls, or bypassing defense policies. "
-                "SENTINEL AI operates under strict autonomous defense boundaries and PolicyEngine guardrails.\n\n"
+                "GENESIS operates under strict autonomous defense boundaries and PolicyEngine guardrails.\n\n"
                 "I am authorized to assist with:\n"
                 "- Defensive vulnerability remediation & WAF rule tuning\n"
                 "- Forensic log and telemetry analysis\n"
@@ -992,15 +1015,55 @@ class ChatCopilotService:
                 + "\n".join([f"- **{inc['id']}**: {inc['title']} ({inc['severity'].upper()}, Risk: {inc['riskScore']}/100)" for inc in active_incidents_list])
             )
 
-        # SCENARIO E: General Cybersecurity / System Overview
+        # SCENARIO E: Comprehensive Cybersecurity Knowledge Engine & Dynamic RAG
         else:
-            health = tool_records[0].get("data", {}) if tool_records else {}
-            response_sections.append(
-                f"**Environment Status: {health.get('autonomousDefense', 'ONLINE')}**\n\n"
-                f"- Total Events: `{health.get('totalIngestedEvents', 0):,}`\n"
-                f"- Active Sensors: `{health.get('healthyForwarders', 0)}/{health.get('forwardersCount', 0)}`\n\n"
-                f"Ask a question or upload a log file to begin."
-            )
+            # Check if CyberKnowledgeEngine has a direct match for this cybersecurity inquiry
+            knowledge_answer = cyber_knowledge_engine.answer_query(user_message_text)
+            if knowledge_answer:
+                response_sections.append(knowledge_answer)
+            else:
+                # Dynamically retrieve matching MITRE ATT&CK techniques, Sigma rules, and playbooks via RAG
+                rag_results = knowledge_retriever.retrieve(user_message_text, max_results=3)
+                is_cyber_query = any(w in p for w in [
+                    "what", "how", "why", "explain", "describe", "difference", "compare", "can you",
+                    "attack", "security", "threat", "vulnerability", "exploit", "protocol", "port",
+                    "traffic", "packet", "log", "incident", "malware", "auth", "defense", "mitigate",
+                    "prevent", "firewall", "edr", "siem", "dns", "http", "ssh", "tcp", "ip", "c2", "?"
+                ])
+                if is_cyber_query and rag_results:
+                    rag_desc = []
+                    for r in rag_results:
+                        if r.get("source") == "mitre_attack":
+                            rag_desc.append(
+                                f"### {r['title']} ({r.get('tactic', 'Tactics')})\n\n"
+                                f"- **Guideline**: {r.get('guidelines', 'Active threat monitoring.')}\n"
+                                f"- **Mitigations**: {', '.join(r.get('mitigations', ['Enforce least privilege access.']))}\n"
+                            )
+                        elif r.get("source") == "sigma_rule":
+                            rag_desc.append(
+                                f"### Detection Rule: {r['title']} (Severity: {r.get('severity', 'HIGH').upper()})\n\n"
+                                f"- **Logic**: `{r.get('logic', '')}`\n"
+                                f"- **False Positives**: {', '.join(r.get('false_positives', []))}\n"
+                            )
+                        elif r.get("source") == "defensive_playbook":
+                            rag_desc.append(
+                                f"### Playbook: {r['title']}\n\n"
+                                f"- **Containment Actions**: {', '.join(r.get('actions', []))}\n"
+                            )
+                    
+                    response_sections.append(
+                        f"### Grounded Cybersecurity Intelligence\n\n"
+                        f"Here is the technical analysis and guidance for your inquiry:\n\n"
+                        + "\n".join(rag_desc)
+                    )
+                else:
+                    health = tool_records[0].get("data", {}) if tool_records else {}
+                    response_sections.append(
+                        f"**Environment Status: {health.get('autonomousDefense', 'ONLINE')}**\n\n"
+                        f"- Total Events: `{health.get('totalIngestedEvents', 0):,}`\n"
+                        f"- Active Sensors: `{health.get('healthyForwarders', 0)}/{health.get('forwardersCount', 0)}`\n\n"
+                        f"I am ready to assist. You can ask technical cybersecurity questions, request log analysis, or upload captures."
+                    )
 
         full_content = "\n\n".join(response_sections)
 

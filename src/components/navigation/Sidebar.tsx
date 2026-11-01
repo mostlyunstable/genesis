@@ -62,7 +62,7 @@ export const Sidebar: React.FC = () => {
             onClick={() => setMobileSidebarOpen(false)}
             className="flex items-center gap-2 group overflow-hidden"
           >
-            <SentinelLogo size="md" showWordmark={!sidebarCollapsed || mobileSidebarOpen} brandName="SENTINEL" />
+            <SentinelLogo size="md" showWordmark={!sidebarCollapsed || mobileSidebarOpen} brandName="GENESIS" />
           </NavLink>
 
           {/* Desktop Collapse / Mobile Close Button */}
@@ -124,13 +124,13 @@ export const Sidebar: React.FC = () => {
             <div className="px-3 py-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC] text-xs flex items-center justify-between">
               <span className="flex items-center gap-2 text-[11px] font-medium text-[#20251F] font-sans">
                 <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-                Sentinel Ready
+                Genesis Ready
               </span>
               <span className="text-[10px] font-mono text-[#969B91]">v2.5</span>
             </div>
           ) : (
             <div className="flex justify-center p-1">
-              <span className="w-2 h-2 rounded-full bg-[#54765C]" title="Sentinel Active" />
+              <span className="w-2 h-2 rounded-full bg-[#54765C]" title="Genesis Active" />
             </div>
           )}
         </div>

@@ -291,7 +291,7 @@ export const SecurityCopilotPage: React.FC = () => {
         <div className="p-3 border-t border-[#E3E5DC] bg-[#FAFAF7] text-[11px] text-[#73796F] flex items-center justify-between shrink-0">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#54765C]" />
-            <span>Copilot Ready</span>
+            <span>Genesis Ready</span>
           </span>
           <span className="font-mono text-[#73796F] text-[10px]">v2.5</span>
         </div>
@@ -359,9 +359,14 @@ export const SecurityCopilotPage: React.FC = () => {
         {/* Message Thread Scroll Area */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
           {messages.length === 0 && !isStreaming ? (
-            /* Refined, Minimal Initial State */
-            <div className="max-w-xl mx-auto py-16 sm:py-20 text-center space-y-8">
-              <div className="space-y-2.5">
+            /* Refined, Minimal Initial State with Genesis Logo */
+            <div className="max-w-xl mx-auto py-12 sm:py-16 text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-black flex items-center justify-center p-1.5 shadow-origin-md border border-purple-950/40 ring-1 ring-purple-500/20">
+                  <img src="/genesis-logo-mark.png" alt="Genesis AI" className="w-full h-full object-contain" />
+                </div>
+              </div>
+              <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-display font-medium text-[#20251F] tracking-tight">
                   Hi. What would you like to investigate?
                 </h2>
@@ -427,8 +432,8 @@ export const SecurityCopilotPage: React.FC = () => {
                   className={`flex gap-3.5 max-w-4xl mx-auto ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isUser && (
-                    <div className="w-8 h-8 rounded-full bg-[#54765C] text-white flex items-center justify-center shrink-0 shadow-2xs mt-1">
-                      <Sparkles className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-black flex items-center justify-center shrink-0 shadow-2xs mt-1 border border-purple-950/40 ring-1 ring-purple-500/20">
+                      <img src="/genesis-logo-mark.png" alt="Genesis AI" className="w-full h-full object-contain" />
                     </div>
                   )}
 
@@ -515,8 +520,8 @@ export const SecurityCopilotPage: React.FC = () => {
 
               {streamingContent && (
                 <div className="flex gap-3.5">
-                  <div className="w-8 h-8 rounded-full bg-[#54765C] text-white flex items-center justify-center shrink-0 shadow-2xs mt-1 animate-pulse">
-                    <Sparkles className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-black flex items-center justify-center shrink-0 shadow-2xs mt-1 border border-purple-950/40 ring-1 ring-purple-500/30 animate-pulse">
+                    <img src="/genesis-logo-mark.png" alt="Genesis AI" className="w-full h-full object-contain" />
                   </div>
                   <div className="p-4 rounded-2xl rounded-tl-xs bg-white border border-[#54765C]/30 text-xs sm:text-sm text-[#20251F] shadow-2xs flex-1">
                     <MarkdownRenderer
@@ -613,7 +618,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask Copilot anything about your security data..."
+                placeholder="Ask Genesis anything about your security data..."
                 rows={1}
                 disabled={isStreaming}
                 className="w-full resize-none py-3 pl-1 pr-14 bg-transparent text-xs sm:text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none max-h-36 overflow-y-auto"
