@@ -202,29 +202,29 @@ export const SecurityCopilotPage: React.FC = () => {
       {/* ---------------------------------------------------- */}
       <aside className="w-72 md:w-80 border-r border-[#DFE5E2] bg-white flex flex-col shrink-0">
         {/* Top Action Bar */}
-        <div className="p-3.5 border-b border-[#E5EBE8] space-y-2.5">
+        <div className="p-3.5 border-b border-[#E3E5DC] space-y-2">
           <button
             onClick={() => createNewConversation()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#26796C] hover:bg-[#1E6157] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#54765C] hover:bg-[#436049] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>New Investigation</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Chat</span>
           </button>
 
           {/* Search Box */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C9E98]" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#969B91]" />
             <input
               type="text"
-              placeholder="Search conversations..."
+              placeholder="Search chats..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#E5EBE8] text-xs text-[#192622] placeholder-[#8C9E98] focus:outline-none focus:border-[#26796C] focus:bg-white transition-all"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#F0F1EB] border border-[#E3E5DC] text-xs text-[#20251F] placeholder-[#969B91] focus:outline-none focus:border-[#54765C] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C9E98] hover:text-[#192622]"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#969B91] hover:text-[#20251F]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -265,12 +265,12 @@ export const SecurityCopilotPage: React.FC = () => {
         </div>
 
         {/* Footer Status */}
-        <div className="p-3 border-t border-[#E5EBE8] bg-[#FAF9F5] text-[11px] text-[#6B7D78] flex items-center justify-between">
+        <div className="p-3 border-t border-[#E3E5DC] bg-[#FAFAF7] text-[11px] text-[#73796F] flex items-center justify-between">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Copilot Guardrails: Active</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#54765C]" />
+            <span>Copilot Ready</span>
           </span>
-          <span className="font-mono text-[#26796C] font-medium">v2.5</span>
+          <span className="font-mono text-[#73796F] text-[10px]">v2.5</span>
         </div>
       </aside>
 
@@ -278,36 +278,32 @@ export const SecurityCopilotPage: React.FC = () => {
       {/* COLUMN 2: CENTER CHAT & INVESTIGATION WORKSPACE      */}
       {/* ---------------------------------------------------- */}
       <main 
-        className="flex-1 flex flex-col h-full bg-[#FFFEFA] overflow-hidden relative"
+        className="flex-1 flex flex-col h-full bg-[#F7F7F2] overflow-hidden relative"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {/* Drag-and-drop file overlay */}
         {isDragging && (
-          <div className="absolute inset-0 bg-[#26796C]/15 border-2 border-dashed border-[#26796C] z-30 rounded-2xl flex flex-col items-center justify-center p-6 backdrop-blur-xs pointer-events-none">
-            <UploadCloud className="w-12 h-12 text-[#26796C] mb-2 animate-bounce" />
-            <p className="text-base font-bold text-[#142C29]">Drop security log file here to analyze</p>
-            <p className="text-xs text-[#5A6B66]">Supports OpenSSH, RFC 5424 Syslog, Windows Security, PAM, JSON, CSV</p>
+          <div className="absolute inset-0 bg-[#54765C]/10 border-2 border-dashed border-[#54765C] z-30 rounded-2xl flex flex-col items-center justify-center p-6 backdrop-blur-xs pointer-events-none">
+            <UploadCloud className="w-10 h-10 text-[#54765C] mb-2 animate-bounce" />
+            <p className="text-sm font-semibold text-[#20251F]">Drop log file to analyze</p>
+            <p className="text-xs text-[#73796F]">Supports OpenSSH, Syslog RFC 5424, Windows 4625, JSON, CSV</p>
           </div>
         )}
 
         {/* Workspace Top Header */}
-        <header className="px-5 py-3 border-b border-[#DFE5E2] bg-white flex items-center justify-between shrink-0">
+        <header className="px-5 py-3 border-b border-[#E3E5DC] bg-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#26796C]/10 border border-[#26796C]/20 flex items-center justify-center text-[#26796C] shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-bold text-[#142C29] truncate">
-                {activeConversation?.title || 'Security Copilot Workspace'}
+              <h2 className="text-sm font-bold text-[#20251F] truncate">
+                {activeConversation?.title && activeConversation.title !== 'New Security Investigation'
+                  ? activeConversation.title 
+                  : 'Copilot'}
               </h2>
-              <div className="flex items-center gap-2 text-[11px] text-[#6B7D78]">
-                <span className="inline-flex items-center gap-1 text-[#26796C] font-medium">
-                  <ShieldCheck className="w-3 h-3" /> Grounded RAG & MITRE ATT&CK
-                </span>
-                <span>•</span>
-                <span>Human-in-the-Loop Safe Containment</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-[#73796F]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#54765C]" />
+                <span>Ready</span>
               </div>
             </div>
           </div>
@@ -315,17 +311,17 @@ export const SecurityCopilotPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setEvidencePanelOpen(!isEvidencePanelOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
                 isEvidencePanelOpen
-                  ? 'bg-[#26796C]/10 text-[#26796C] border-[#26796C]/30'
-                  : 'bg-white text-[#5A6B66] border-[#DFE5E2] hover:bg-[#FAF9F5]'
+                  ? 'bg-[#EAF0E6] text-[#54765C] border-[#CFDCC9]'
+                  : 'bg-white text-[#73796F] border-[#E3E5DC] hover:bg-[#F0F1EB]'
               }`}
               title="Toggle Evidence Drawer"
             >
               {isEvidencePanelOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Evidence Drawer</span>
+              <span>Evidence</span>
               {evidenceReferences.length > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#26796C] text-white">
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#54765C] text-white">
                   {evidenceReferences.length}
                 </span>
               )}
@@ -349,88 +345,61 @@ export const SecurityCopilotPage: React.FC = () => {
         {/* Message Thread Scroll Area */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
           {messages.length === 0 && !isStreaming ? (
-            /* Welcome / Briefing Empty State */
-            <div className="max-w-2xl mx-auto py-8 text-center space-y-6">
-              <div className="w-14 h-14 rounded-2xl bg-[#26796C]/10 border border-[#26796C]/20 flex items-center justify-center text-[#26796C] mx-auto shadow-xs">
-                <Bot className="w-7 h-7" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-[#142C29]">SENTINEL AI Security Copilot</h3>
-                <p className="text-xs sm:text-sm text-[#5A6B66] max-w-lg mx-auto leading-relaxed">
-                  Your autonomous cybersecurity pair-analyst. Query telemetry, investigate active incidents, correlate multi-source attacks, cross-reference MITRE techniques, and evaluate safe response actions.
+            /* Refined, Minimal Initial State */
+            <div className="max-w-xl mx-auto py-16 sm:py-20 text-center space-y-8">
+              <div className="space-y-2.5">
+                <h2 className="text-2xl sm:text-3xl font-display font-medium text-[#20251F] tracking-tight">
+                  Hi. What would you like to investigate?
+                </h2>
+                <p className="text-sm text-[#73796F]">
+                  Ask a security question or upload a log file to get started.
                 </p>
               </div>
 
-              {/* Upload Log Hero Card */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="p-4 rounded-xl border-2 border-dashed border-[#26796C]/30 bg-[#26796C]/5 hover:bg-[#26796C]/10 hover:border-[#26796C] transition-all text-center cursor-pointer group"
-              >
-                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[#142C29] group-hover:text-[#26796C]">
-                  {isUploading ? (
-                    <Loader2 className="w-5 h-5 text-[#26796C] animate-spin" />
-                  ) : (
-                    <UploadCloud className="w-5 h-5 text-[#26796C]" />
-                  )}
-                  <span>{isUploading ? 'Ingesting and parsing log file...' : 'Ingest Security Log File for Autonomous Analysis'}</span>
-                </div>
-                <p className="text-[11px] text-[#5A6B66] mt-1">
-                  Drag & drop or click to ingest OpenSSH, RFC 5424 Syslog, Windows 4625/4624, PAM, JSON, or CSV
-                </p>
-              </div>
-
-              {/* Prompt Suggestions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left pt-2">
+              {/* 4 Understated Prompt Suggestions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto text-left pt-2">
                 <button
-                  onClick={() => handleSubmit("Summarize active incidents and prioritize high-risk credential attacks")}
-                  className="p-3.5 rounded-xl border border-[#DFE5E2] bg-white hover:border-[#26796C] hover:shadow-xs transition-all text-xs group cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3.5 rounded-2xl border border-[#E3E5DC] bg-white hover:border-[#54765C] hover:bg-[#F0F1EB]/40 transition-all text-xs cursor-pointer group shadow-2xs"
                 >
-                  <div className="flex items-center gap-2 font-semibold text-[#142C29] group-hover:text-[#26796C] mb-1">
-                    <Flame className="w-4 h-4 text-amber-500" />
-                    <span>Active Incident Triage</span>
+                  <div className="flex items-center justify-between font-medium text-[#20251F] group-hover:text-[#54765C]">
+                    <span>Analyze a security log</span>
+                    <FileUp className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] transition-colors" />
                   </div>
-                  <p className="text-[11px] text-[#6B7D78] leading-normal">
-                    Summarize active incidents and prioritize high-risk credential attacks
-                  </p>
+                  <p className="text-[11px] text-[#73796F] mt-1">Upload syslog, auth log, or CSV</p>
                 </button>
 
                 <button
-                  onClick={() => handleSubmit("Inspect authentication events from suspicious IP 198.51.100.42")}
-                  className="p-3.5 rounded-xl border border-[#DFE5E2] bg-white hover:border-[#26796C] hover:shadow-xs transition-all text-xs group cursor-pointer"
+                  onClick={() => handleSubmit("Investigate IP address 198.51.100.42")}
+                  className="p-3.5 rounded-2xl border border-[#E3E5DC] bg-white hover:border-[#54765C] hover:bg-[#F0F1EB]/40 transition-all text-xs cursor-pointer group shadow-2xs"
                 >
-                  <div className="flex items-center gap-2 font-semibold text-[#142C29] group-hover:text-[#26796C] mb-1">
-                    <Radio className="w-4 h-4 text-emerald-500" />
-                    <span>Telemetry Correlation</span>
+                  <div className="flex items-center justify-between font-medium text-[#20251F] group-hover:text-[#54765C]">
+                    <span>Investigate an IP address</span>
+                    <Search className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] transition-colors" />
                   </div>
-                  <p className="text-[11px] text-[#6B7D78] leading-normal">
-                    Inspect authentication events from suspicious IP 198.51.100.42
-                  </p>
+                  <p className="text-[11px] text-[#73796F] mt-1">Check host telemetry & reputation</p>
                 </button>
 
                 <button
-                  onClick={() => handleSubmit("Investigate incident INC-COPILOT-001 and recommend defensive playbooks")}
-                  className="p-3.5 rounded-xl border border-[#DFE5E2] bg-white hover:border-[#26796C] hover:shadow-xs transition-all text-xs group cursor-pointer"
+                  onClick={() => handleSubmit("Explain brute-force attack detection and thresholds")}
+                  className="p-3.5 rounded-2xl border border-[#E3E5DC] bg-white hover:border-[#54765C] hover:bg-[#F0F1EB]/40 transition-all text-xs cursor-pointer group shadow-2xs"
                 >
-                  <div className="flex items-center gap-2 font-semibold text-[#142C29] group-hover:text-[#26796C] mb-1">
-                    <ShieldAlert className="w-4 h-4 text-rose-500" />
-                    <span>Incident Deep Dive</span>
+                  <div className="flex items-center justify-between font-medium text-[#20251F] group-hover:text-[#54765C]">
+                    <span>Explain a detection</span>
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] transition-colors" />
                   </div>
-                  <p className="text-[11px] text-[#6B7D78] leading-normal">
-                    Investigate incident INC-COPILOT-001 and recommend defensive playbooks
-                  </p>
+                  <p className="text-[11px] text-[#73796F] mt-1">Understand detection heuristics</p>
                 </button>
 
                 <button
-                  onClick={() => handleSubmit("Check system operational health, forwarders status, and policy boundaries")}
-                  className="p-3.5 rounded-xl border border-[#DFE5E2] bg-white hover:border-[#26796C] hover:shadow-xs transition-all text-xs group cursor-pointer"
+                  onClick={() => handleSubmit("Summarize active incidents")}
+                  className="p-3.5 rounded-2xl border border-[#E3E5DC] bg-white hover:border-[#54765C] hover:bg-[#F0F1EB]/40 transition-all text-xs cursor-pointer group shadow-2xs"
                 >
-                  <div className="flex items-center gap-2 font-semibold text-[#142C29] group-hover:text-[#26796C] mb-1">
-                    <Sliders className="w-4 h-4 text-[#26796C]" />
-                    <span>Operational Health</span>
+                  <div className="flex items-center justify-between font-medium text-[#20251F] group-hover:text-[#54765C]">
+                    <span>Summarize active incidents</span>
+                    <Flame className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] transition-colors" />
                   </div>
-                  <p className="text-[11px] text-[#6B7D78] leading-normal">
-                    Check system operational health, forwarders status, and policy boundaries
-                  </p>
+                  <p className="text-[11px] text-[#73796F] mt-1">Review open priority threats</p>
                 </button>
               </div>
             </div>
@@ -444,7 +413,7 @@ export const SecurityCopilotPage: React.FC = () => {
                   className={`flex gap-3.5 max-w-4xl mx-auto ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isUser && (
-                    <div className="w-8 h-8 rounded-lg bg-[#26796C] text-white flex items-center justify-center shrink-0 shadow-xs mt-1">
+                    <div className="w-8 h-8 rounded-full bg-[#54765C] text-white flex items-center justify-center shrink-0 shadow-2xs mt-1">
                       <Sparkles className="w-4 h-4" />
                     </div>
                   )}
@@ -453,8 +422,8 @@ export const SecurityCopilotPage: React.FC = () => {
                     <div
                       className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                         isUser
-                          ? 'bg-[#142C29] text-white rounded-tr-xs shadow-xs'
-                          : 'bg-white border border-[#DFE5E2] rounded-tl-xs shadow-xs text-[#192622]'
+                          ? 'bg-[#20251F] text-white rounded-tr-xs shadow-2xs'
+                          : 'bg-white border border-[#E3E5DC] rounded-tl-xs shadow-2xs text-[#20251F]'
                       }`}
                     >
                       {isUser ? (
@@ -468,20 +437,20 @@ export const SecurityCopilotPage: React.FC = () => {
 
                           {/* Grounded Evidence References Chips */}
                           {msg.evidenceReferences && msg.evidenceReferences.length > 0 && (
-                            <div className="mt-4 pt-3 border-t border-[#E5EBE8] space-y-1.5">
-                              <span className="text-[11px] font-semibold text-[#6B7D78] uppercase tracking-wider block">
-                                Grounded Security References ({msg.evidenceReferences.length})
+                            <div className="mt-4 pt-3 border-t border-[#E3E5DC] space-y-1.5">
+                              <span className="text-[10px] font-bold text-[#73796F] uppercase tracking-wider block font-mono">
+                                Evidence References ({msg.evidenceReferences.length})
                               </span>
                               <div className="flex flex-wrap gap-1.5">
                                 {msg.evidenceReferences.map((ref, rIdx) => (
                                   <button
                                     key={rIdx}
                                     onClick={() => setSelectedEvidence(ref)}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-[#FAF9F5] border border-[#DFE5E2] hover:border-[#26796C] hover:bg-white text-[#192622] transition-colors cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] hover:bg-white text-[#20251F] transition-colors cursor-pointer"
                                   >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#26796C]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#54765C]" />
                                     <span>{ref.id}</span>
-                                    <span className="text-[10px] text-[#8C9E98]">({ref.type})</span>
+                                    <span className="text-[10px] text-[#969B91]">({ref.type})</span>
                                   </button>
                                 ))}
                               </div>
@@ -502,27 +471,27 @@ export const SecurityCopilotPage: React.FC = () => {
 
                     {/* Message Action Footer */}
                     {!isUser && (
-                      <div className="flex items-center gap-3 px-1 text-[11px] text-[#8C9E98]">
+                      <div className="flex items-center gap-3 px-1 text-[11px] text-[#969B91]">
                         <button
                           onClick={() => handleCopyMessage(msg.content, msg.id)}
-                          className="flex items-center gap-1 hover:text-[#192622] transition-colors cursor-pointer"
+                          className="flex items-center gap-1 hover:text-[#20251F] transition-colors cursor-pointer"
                         >
                           {copiedMessageId === msg.id ? (
                             <>
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="text-emerald-600">Copied</span>
+                              <Check className="w-3.5 h-3.5 text-[#54765C]" />
+                              <span className="text-[#54765C]">Copied</span>
                             </>
                           ) : (
                             <>
                               <Copy className="w-3.5 h-3.5" />
-                              <span>Copy response</span>
+                              <span>Copy</span>
                             </>
                           )}
                         </button>
                         <span>•</span>
                         <button
                           onClick={retryLastMessage}
-                          className="flex items-center gap-1 hover:text-[#192622] transition-colors cursor-pointer"
+                          className="flex items-center gap-1 hover:text-[#20251F] transition-colors cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Retry</span>
@@ -538,7 +507,7 @@ export const SecurityCopilotPage: React.FC = () => {
                   </div>
 
                   {isUser && (
-                    <div className="w-8 h-8 rounded-lg bg-[#FAF9F5] border border-[#DFE5E2] text-[#142C29] flex items-center justify-center shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-[#F0F1EB] border border-[#E3E5DC] text-[#20251F] flex items-center justify-center shrink-0 mt-1">
                       <User className="w-4 h-4" />
                     </div>
                   )}
@@ -554,15 +523,15 @@ export const SecurityCopilotPage: React.FC = () => {
 
               {streamingContent && (
                 <div className="flex gap-3.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#26796C] text-white flex items-center justify-center shrink-0 shadow-xs mt-1 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-[#54765C] text-white flex items-center justify-center shrink-0 shadow-2xs mt-1 animate-pulse">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <div className="p-4 rounded-2xl rounded-tl-xs bg-white border border-[#26796C]/30 text-xs sm:text-sm text-[#192622] shadow-xs flex-1">
+                  <div className="p-4 rounded-2xl rounded-tl-xs bg-white border border-[#54765C]/30 text-xs sm:text-sm text-[#20251F] shadow-2xs flex-1">
                     <MarkdownRenderer
                       content={streamingContent}
                       onChipClick={handleChipClick}
                     />
-                    <span className="inline-block w-2 h-4 ml-1 bg-[#26796C] animate-pulse align-middle" />
+                    <span className="inline-block w-2 h-4 ml-1 bg-[#54765C] animate-pulse align-middle" />
                   </div>
                 </div>
               )}
@@ -573,11 +542,11 @@ export const SecurityCopilotPage: React.FC = () => {
         </div>
 
         {/* Input Composer Area */}
-        <div className="p-4 border-t border-[#DFE5E2] bg-white">
-          <div className="max-w-4xl mx-auto space-y-2.5">
+        <div className="p-4 border-t border-[#E3E5DC] bg-white">
+          <div className="max-w-3xl mx-auto space-y-2">
             {/* Upload Error Alert */}
             {uploadError && (
-              <div className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
+              <div className="px-3 py-1.5 rounded-xl bg-[#F9ECEB] border border-[#F2D5D3] text-[#B94C43] text-xs flex items-center justify-between">
                 <span>Upload error: {uploadError}</span>
               </div>
             )}
@@ -585,43 +554,38 @@ export const SecurityCopilotPage: React.FC = () => {
             {/* Attached Log Files Tray */}
             {uploadedFiles.length > 0 && (
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                <span className="text-[11px] font-semibold text-[#6B7D78] uppercase tracking-wider shrink-0 flex items-center gap-1">
-                  <FileText className="w-3.5 h-3.5 text-[#26796C]" />
-                  <span>Attached Logs ({uploadedFiles.length}):</span>
+                <span className="text-[10px] font-bold text-[#73796F] uppercase tracking-wider shrink-0 flex items-center gap-1 font-mono">
+                  <FileText className="w-3.5 h-3.5 text-[#54765C]" />
+                  <span>Attached:</span>
                 </span>
                 {uploadedFiles.map((file) => {
                   const isActive = activeFileId === file.id;
                   return (
                     <div
                       key={file.id}
-                      className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs transition-all shrink-0 ${
+                      className={`flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs transition-all shrink-0 ${
                         isActive
-                          ? 'bg-[#26796C]/10 border-[#26796C] text-[#142C29]'
-                          : 'bg-[#FAF9F5] border-[#DFE5E2] text-[#5A6B66] hover:bg-white'
+                          ? 'bg-[#EAF0E6] border-[#CFDCC9] text-[#20251F]'
+                          : 'bg-[#FAFAF7] border-[#E3E5DC] text-[#73796F] hover:bg-white'
                       }`}
                     >
                       <button
                         onClick={() => setActiveFileId(isActive ? null : file.id)}
                         className="flex items-center gap-1.5 font-medium cursor-pointer"
-                        title={isActive ? 'Active context file (click to deselect)' : 'Click to select as active context file'}
+                        title={isActive ? 'Active context' : 'Set active'}
                       >
-                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#26796C]' : 'bg-[#8C9E98]'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-[#54765C]' : 'bg-[#969B91]'}`} />
                         <span className="font-mono text-xs truncate max-w-[130px]">{file.filename}</span>
                       </button>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white border border-[#DFE5E2] text-[#26796C] uppercase font-semibold">
-                        {file.formatDetected}
-                      </span>
-                      <span className="text-[10px] text-[#8C9E98]">
+                      <span className="text-[10px] text-[#969B91]">
                         {file.parsedCount} evts
                       </span>
                       <button
-                        onClick={() => handleSubmit(`Analyze uploaded log file ${file.filename} and perform full autonomous forensic investigation.`)}
+                        onClick={() => handleSubmit(`Analyze uploaded log file ${file.filename} and perform investigation.`)}
                         disabled={isStreaming}
-                        className="ml-1 px-2 py-0.5 rounded bg-[#26796C] hover:bg-[#1E6157] text-white text-[10px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Analyze with Copilot"
+                        className="ml-1 px-2 py-0.5 rounded-full bg-[#54765C] hover:bg-[#436049] text-white text-[10px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       >
-                        <Sparkles className="w-3 h-3" />
-                        <span>Analyze</span>
+                        Analyze
                       </button>
                     </div>
                   );
@@ -629,17 +593,17 @@ export const SecurityCopilotPage: React.FC = () => {
               </div>
             )}
 
-            <div className="relative flex items-end rounded-xl border border-[#DFE5E2] bg-[#FAF9F5] focus-within:border-[#26796C] focus-within:bg-white transition-all shadow-xs">
+            <div className="relative flex items-end rounded-2xl border border-[#E3E5DC] bg-[#F7F7F2] focus-within:border-[#54765C] focus-within:bg-white transition-all shadow-inner">
               {/* Paperclip attachment button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isStreaming || isUploading}
-                className="p-3 text-[#6B7D78] hover:text-[#26796C] transition-colors cursor-pointer disabled:opacity-40 shrink-0"
+                className="p-3 text-[#73796F] hover:text-[#54765C] transition-colors cursor-pointer disabled:opacity-40 shrink-0"
                 title="Attach log file (.log, .txt, .csv, .json, .jsonl)"
               >
                 {isUploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-[#26796C]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[#54765C]" />
                 ) : (
                   <Paperclip className="w-4 h-4" />
                 )}
@@ -657,10 +621,10 @@ export const SecurityCopilotPage: React.FC = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask Security Copilot... (e.g. 'Investigate incident INC-001' or 'Analyze brute force attempts from 198.51.100.42')"
+                placeholder="Ask Copilot anything about your security data..."
                 rows={1}
                 disabled={isStreaming}
-                className="w-full resize-none py-3 pl-1 pr-14 bg-transparent text-xs sm:text-sm text-[#192622] placeholder-[#8C9E98] focus:outline-none max-h-36 overflow-y-auto"
+                className="w-full resize-none py-3 pl-1 pr-14 bg-transparent text-xs sm:text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none max-h-36 overflow-y-auto"
                 style={{ minHeight: '44px' }}
               />
 
@@ -668,32 +632,32 @@ export const SecurityCopilotPage: React.FC = () => {
                 {isStreaming ? (
                   <button
                     onClick={stopStreaming}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-                    title="Stop Generation"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#B94C43] hover:bg-[#A33C34] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                    title="Stop generation"
                   >
-                    <Square className="w-3.5 h-3.5 fill-current" />
+                    <Square className="w-3 h-3 fill-current" />
                     <span>Stop</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!inputMessage.trim()}
-                    className="p-2 rounded-lg bg-[#26796C] hover:bg-[#1E6157] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
+                    className="p-2 rounded-full bg-[#54765C] hover:bg-[#436049] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
                     title="Send message (Enter)"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* Quick Prompts Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-[11px] text-[#6B7D78]">
-              <span className="shrink-0 font-medium text-[#142C29]">Quick queries:</span>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-[11px] text-[#73796F]">
+              <span className="shrink-0 font-medium text-[#20251F]">Suggestions:</span>
               {uploadedFiles.length > 0 && (
                 <button
                   onClick={() => handleSubmit(`Analyze uploaded log file ${uploadedFiles[0].filename} and investigate suspicious activities`)}
-                  className="px-2.5 py-1 rounded-full bg-[#26796C]/10 text-[#26796C] border border-[#26796C]/30 hover:bg-[#26796C]/20 font-medium whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-full bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] hover:bg-[#DCE7D6] font-medium whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>Analyze {uploadedFiles[0].filename}</span>
@@ -701,21 +665,21 @@ export const SecurityCopilotPage: React.FC = () => {
               )}
               <button
                 onClick={() => handleSubmit("Summarize active incidents")}
-                className="px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#E5EBE8] hover:border-[#26796C] hover:text-[#26796C] whitespace-nowrap transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] hover:text-[#20251F] whitespace-nowrap transition-colors cursor-pointer"
               >
                 Active Incidents
               </button>
               <button
-                onClick={() => handleSubmit("Check system forwarder and health status")}
-                className="px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#E5EBE8] hover:border-[#26796C] hover:text-[#26796C] whitespace-nowrap transition-colors cursor-pointer"
+                onClick={() => handleSubmit("Check system operational health and forwarders")}
+                className="px-2.5 py-1 rounded-full bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] hover:text-[#20251F] whitespace-nowrap transition-colors cursor-pointer"
               >
-                Forwarder Health
+                System Status
               </button>
               <button
-                onClick={() => handleSubmit("List recent credential spraying detections")}
-                className="px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#E5EBE8] hover:border-[#26796C] hover:text-[#26796C] whitespace-nowrap transition-colors cursor-pointer"
+                onClick={() => handleSubmit("Explain brute force attack detection")}
+                className="px-2.5 py-1 rounded-full bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] hover:text-[#20251F] whitespace-nowrap transition-colors cursor-pointer"
               >
-                Password Spraying
+                Brute Force Heuristics
               </button>
               <button
                 onClick={() => handleSubmit("Explain MITRE technique T1110.001 mitigation")}
@@ -778,8 +742,8 @@ export const SecurityCopilotPage: React.FC = () => {
         key={c.id}
         className={`group relative rounded-xl px-3 py-2 text-xs transition-all cursor-pointer flex items-center justify-between ${
           isActive
-            ? 'bg-[#26796C]/10 text-[#142C29] font-medium border border-[#26796C]/25 shadow-xs'
-            : 'text-[#5A6B66] hover:bg-[#FAF9F5] hover:text-[#192622]'
+            ? 'bg-[#EAF0E6] text-[#20251F] font-semibold border border-[#CFDCC9] shadow-2xs'
+            : 'text-[#73796F] hover:bg-[#F0F1EB] hover:text-[#20251F]'
         }`}
         onClick={() => !isEditing && selectConversation(c.id)}
       >
@@ -792,23 +756,23 @@ export const SecurityCopilotPage: React.FC = () => {
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && saveEditedTitle(c.id)}
                 autoFocus
-                className="w-full text-xs py-0.5 px-1 rounded border border-[#26796C] bg-white text-[#192622]"
+                className="w-full text-xs py-0.5 px-1 rounded border border-[#54765C] bg-white text-[#20251F]"
               />
-              <button onClick={() => saveEditedTitle(c.id)} className="text-[#26796C]">
+              <button onClick={() => saveEditedTitle(c.id)} className="text-[#54765C]">
                 <Check className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setEditingTitleId(null)} className="text-[#8C9E98]">
+              <button onClick={() => setEditingTitleId(null)} className="text-[#969B91]">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <>
               <div className="flex items-center gap-1.5">
-                {c.isPinned && <Pin className="w-3 h-3 text-[#26796C] shrink-0" />}
+                {c.isPinned && <Pin className="w-3 h-3 text-[#54765C] shrink-0" />}
                 <span className="truncate font-medium">{c.title}</span>
               </div>
               {c.lastMessageSnippet && (
-                <p className="text-[10px] text-[#8C9E98] truncate mt-0.5">
+                <p className="text-[10px] text-[#969B91] truncate mt-0.5">
                   {c.lastMessageSnippet}
                 </p>
               )}
@@ -824,8 +788,8 @@ export const SecurityCopilotPage: React.FC = () => {
                 e.stopPropagation();
                 updateConversation(c.id, { isPinned: !c.isPinned });
               }}
-              className={`p-1 rounded hover:bg-white text-[#8C9E98] hover:text-[#26796C] ${
-                c.isPinned ? 'text-[#26796C]' : ''
+              className={`p-1 rounded hover:bg-white text-[#969B91] hover:text-[#54765C] ${
+                c.isPinned ? 'text-[#54765C]' : ''
               }`}
               title={c.isPinned ? 'Unpin' : 'Pin'}
             >
@@ -836,7 +800,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 e.stopPropagation();
                 startEditingTitle(c.id, c.title);
               }}
-              className="p-1 rounded hover:bg-white text-[#8C9E98] hover:text-[#192622]"
+              className="p-1 rounded hover:bg-white text-[#969B91] hover:text-[#20251F]"
               title="Rename"
             >
               <Edit2 className="w-3 h-3" />
@@ -846,7 +810,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 e.stopPropagation();
                 setDeleteConfirmId(c.id);
               }}
-              className="p-1 rounded hover:bg-white text-[#8C9E98] hover:text-rose-600"
+              className="p-1 rounded hover:bg-white text-[#969B91] hover:text-[#B94C43]"
               title="Delete"
             >
               <Trash2 className="w-3 h-3" />

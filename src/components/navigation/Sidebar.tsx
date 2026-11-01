@@ -48,54 +48,47 @@ export const Sidebar: React.FC = () => {
   const activeIncidentsCount = incidents.filter(i => i.status === 'active').length;
   const criticalThreatsCount = detections.filter(d => d.severity === 'critical' && d.status === 'open').length;
 
-  // The 3 Core Navigation Modules
+  // Navigation Sections
   const navigationSections: NavSection[] = [
     {
-      title: 'INTELLIGENCE',
+      title: 'OPERATIONS',
       items: [
-        { name: 'Intelligence Briefing', path: '/', id: 'overview', icon: LayoutDashboard },
+        { name: 'Overview', path: '/', id: 'overview', icon: LayoutDashboard },
+        { name: 'Copilot', path: '/copilot', id: 'security-copilot', icon: Sparkles },
         { 
-          name: 'Security Copilot', 
-          path: '/copilot', 
-          id: 'security-copilot', 
-          icon: Sparkles,
-          badge: 'AI',
-          badgeType: 'info'
-        },
-        { 
-          name: 'Threat Landscape', 
-          path: '/threats', 
-          id: 'threat-intelligence', 
-          icon: ShieldAlert,
-          badge: criticalThreatsCount > 0 ? criticalThreatsCount : undefined,
-          badgeType: 'critical'
-        },
-        { name: 'Security Events', path: '/events', id: 'security-events', icon: Radio },
-        { 
-          name: 'Incidents Queue', 
+          name: 'Incidents', 
           path: '/incidents', 
           id: 'incidents', 
           icon: Flame,
           badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
           badgeType: 'warning'
         },
-        { name: 'AI Investigator', path: '/investigator', id: 'ai-investigator', icon: Search }
+        { name: 'Events', path: '/events', id: 'security-events', icon: Radio },
+        { name: 'Detections', path: '/detections', id: 'detection-engine', icon: Cpu }
       ]
     },
     {
-      title: 'KNOWLEDGE & ASSETS',
+      title: 'INVESTIGATION',
       items: [
-        { name: 'Assets & Topology', path: '/assets', id: 'assets', icon: Server },
+        { 
+          name: 'Threat Intel', 
+          path: '/threats', 
+          id: 'threat-intelligence', 
+          icon: ShieldAlert,
+          badge: criticalThreatsCount > 0 ? criticalThreatsCount : undefined,
+          badgeType: 'critical'
+        },
+        { name: 'Investigator', path: '/investigator', id: 'ai-investigator', icon: Search },
         { name: 'MITRE ATT&CK', path: '/mitre', id: 'mitre', icon: Activity },
-        { name: 'Detection Engine', path: '/detections', id: 'detection-engine', icon: Cpu }
+        { name: 'Assets', path: '/assets', id: 'assets', icon: Server }
       ]
     },
     {
-      title: 'DEFENSE & GOVERNANCE',
+      title: 'SYSTEM',
       items: [
-        { name: 'Response Center', path: '/response', id: 'response-operations', icon: ShieldCheck },
-        { name: 'Audit Trail', path: '/audit', id: 'audit-trail', icon: FileText },
-        { name: 'System Settings', path: '/settings', id: 'system-configuration', icon: Settings }
+        { name: 'Response', path: '/response', id: 'response-operations', icon: ShieldCheck },
+        { name: 'Audit Log', path: '/audit', id: 'audit-trail', icon: FileText },
+        { name: 'Settings', path: '/settings', id: 'system-configuration', icon: Settings }
       ]
     }
   ];

@@ -80,23 +80,12 @@ export const DetectionEnginePage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C] flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5" />
-                CORRELATION ENGINE HEURISTICS
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">
-                AUTONOMOUS DETECTIONS ({detections.length})
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              Behavioral Detection Engine
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl text-[#20251F] tracking-tight">
+              Detections
             </h1>
-            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
-              Real-time heuristic anomaly detection, threshold velocity tracking, and automated rule evaluation.
+            <p className="text-sm text-[#73796F]">
+              Behavioral detection rules and active security findings ({detections.length} total).
             </p>
           </div>
 

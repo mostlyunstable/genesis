@@ -155,19 +155,11 @@ export const AIInvestigatorPage: React.FC = () => {
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#54765C]" />
-                FORENSIC EVIDENCE &amp; INVESTIGATION
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">SENTINEL CORRELATION ENGINE</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-[#20251F] tracking-tight">
-              AI Investigator Workspace
+            <h1 className="text-2xl sm:text-3xl font-display font-medium text-[#20251F] tracking-tight">
+              Investigator
             </h1>
             <p className="text-xs sm:text-sm text-[#73796F]">
-              Automated root-cause deduction, forensic evidence verification, and attack trajectory synthesis.
+              Forensic evidence and incident investigation workspace.
             </p>
           </div>
 

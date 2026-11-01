@@ -83,23 +83,12 @@ export const IncidentsPage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#C47A45]" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#C47A45] flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5" />
-                INCIDENT OPERATIONS CENTER
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">
-                CORRELATED ENGAGEMENTS ({incidents.length})
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              Incident Command
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl text-[#20251F] tracking-tight">
+              Incidents
             </h1>
-            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
-              Active multi-signal adversary operations, asset compromise triage, and governed containment lifecycle.
+            <p className="text-sm text-[#73796F]">
+              Active incidents and investigation lifecycle ({incidents.length} total).
             </p>
           </div>
 

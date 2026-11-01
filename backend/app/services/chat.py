@@ -216,14 +216,15 @@ class ChatCopilotService:
         target_user = user_match.group(1) if user_match else None
 
         # Intent classification
-        is_greeting = bool(re.search(r'\b(hello|hi|hey|greetings|good morning|good afternoon)\b', p)) or ("what can you do" in p) or ("who are you" in p)
+        is_pure_greeting = bool(re.search(r'^\s*(hello|hi|hey|greetings|good morning|good afternoon)\b', p)) and not any(k in p for k in ["what can you do", "who are you", "what do you do", "help", "incident", "ip", "brute", "attack", "account", "login", "report", "file", "log", "detect"])
+        is_capabilities = ("what can you do" in p) or ("who are you" in p) or ("what do you do" in p) or (p.strip() == "help") or ("capabilities" in p)
         is_concept = ("what is a brute" in p) or ("what is brute force" in p) or ("how can you detect" in p) or ("explain brute force" in p) or ("how do you detect" in p) or ("explain password spraying" in p) or ("what is password spraying" in p)
         is_accounts_query = ("which account" in p) or ("what account" in p) or ("which user" in p) or ("who was targeted" in p) or ("affected user" in p) or ("targeted account" in p)
         is_login_query = ("successful login" in p) or ("login succeed" in p) or ("any login" in p) or ("did they get in" in p) or ("did login succeed" in p) or ("successful authentication" in p)
         is_report_query = ("investigation report" in p) or ("incident report" in p) or ("generate report" in p) or ("summary report" in p)
 
         # Contextual resolution: only inherit previous context if query is not a greeting or concept explanation
-        if is_greeting or is_concept:
+        if is_pure_greeting or is_capabilities or is_concept:
             target_inc_id = explicit_inc
             target_ip = explicit_ip
         else:
@@ -363,171 +364,111 @@ class ChatCopilotService:
         # Build Synthesis Narrative
         response_sections: List[str] = []
 
-        # SCENARIO 0A: Greetings & Assistant Capabilities
-        if is_greeting:
+        # SCENARIO 0A: Pure Greetings
+        if is_pure_greeting:
+            response_sections.append("Hey! What would you like to investigate?")
+
+        # SCENARIO 0B: Assistant Capabilities
+        elif is_capabilities:
             response_sections.append(
-                f"### Greetings, Analyst. I am SENTINEL AI.\n\n"
-                f"I am your autonomous cybersecurity operations and threat intelligence copilot. I continuously monitor and correlate live security telemetry to detect, investigate, and safely contain threats across your infrastructure.\n\n"
-                f"#### Core Autonomous Capabilities:\n"
-                f"- **Live Telemetry & Log Ingestion**: Ingest and normalize multi-source authentication logs (Syslog RFC 5424, Linux PAM, Windows Security 4625, SAML/Okta SSO).\n"
-                f"- **Autonomous Threat Correlation**: Real-time detection of high-velocity brute-force campaigns (`T1110.001`), password spraying (`T1110.003`), and credential abuse in seconds.\n"
-                f"- **Threat Intelligence Grounding**: Cross-reference adversary IPs against threat reputation feeds, geolocations, and autonomous threat indicators.\n"
-                f"- **MITRE ATT&CK Mapping**: Map observed adversarial behaviors to standard enterprise matrix tactics.\n"
-                f"- **Human-in-the-Loop Safe Containment**: Formulate and evaluate containment actions (e.g. firewall DROP via `PB-SSH-BRUTE-01`) under strict policy guardrails.\n"
-                f"- **Incident Reporting & Cryptographic Audit**: Generate complete forensic briefs with SHA-256 tamper-evident integrity.\n\n"
-                f"#### How would you like to proceed?\n"
-                f"- 📎 **Upload a security log file** (drag & drop or click the paperclip icon below) to analyze external logs.\n"
-                f"- Ask to *'Investigate the latest suspicious activity in my environment.'*\n"
-                f"- Ask *'What is a brute-force attack, and how can you detect one in my logs?'*\n"
-                f"- Query *'Check system forwarder and health status.'*"
+                "I can analyze security logs, investigate suspicious activity, explain detections, and help with incident response.\n\n"
+                "You can ask me a question or upload a log file."
             )
 
-        # SCENARIO 0B: Cybersecurity Concept Explanation (e.g., Brute Force)
+        # SCENARIO 0C: Cybersecurity Concept Explanation (e.g., Brute Force)
         elif is_concept:
             db_bf_mention = ""
-            if ip_dossier:
-                db_bf_mention = f"\n\n> [!NOTE]\n> **Observed Activity**: Sentinel has observed active brute-force activity in your environment from IP `{target_ip}` with `{ip_dossier.get('failureCount', 0)}` failed attempts."
+            if ip_dossier and ip_dossier.get("failureCount", 0) > 0:
+                db_bf_mention = f"\n\nActive brute-force activity has been observed from `{target_ip}` with {ip_dossier.get('failureCount', 0)} failed attempts."
 
             response_sections.append(
-                f"### Threat Concept: Brute-Force Authentication Attacks (`MITRE T1110.001`)\n\n"
-                f"#### 1. What is a Brute-Force Attack?\n"
-                f"A brute-force attack is an automated trial-and-error method where an adversary systematically tests permutations of passwords or passphrases against authentication interfaces (such as SSH on port 22, RDP on port 3389, or web SSO portals) to gain unauthorized access to valid accounts.\n\n"
-                f"Unlike password spraying (which tests a single common password across many users to avoid lockouts), traditional brute force focuses intense attempt velocity against specific high-value or default accounts (such as `root`, `admin`, `ubuntu`, or `deploy`).\n\n"
-                f"#### 2. How SENTINEL AI Detects Brute-Force in Your Logs:\n"
-                f"- **Authentication Failure Velocity**: Evaluates failed PAM/sshd log lines (`Failed password for invalid user <user> from <IP>`). The baseline triggers when **>= 10 failed attempts occur within a 120-second sliding window**.\n"
-                f"- **Target Account Rotation**: Detects automated dictionary loops testing common administrative usernames.\n"
-                f"- **Post-Failure Accepted Logins (Compromise Signal)**: Detects when a successful authentication (`Accepted password/publickey`) occurs from the same source IP immediately following repetitive rejections—a high-confidence indicator of compromise.\n"
-                f"- **Threat Reputation Grounding**: Enriches observed attacker IPs with ASN data, geolocation, and threat classifications via Threat Intelligence feeds."
-                f"{db_bf_mention}\n\n"
-                f"#### Recommended Next Step:\n"
-                f"Ask me to *'Investigate the latest suspicious activity'* or *'Check authentication events from suspicious IP 198.51.100.42'*."
+                f"A brute-force attack is an automated attempt to guess credentials by systematically testing passwords against an authentication interface (such as SSH or RDP).\n\n"
+                f"Sentinel detects brute force by monitoring failed authentication velocity (e.g., 10+ failed attempts within 120 seconds), username rotation patterns, and anomalous source IPs.{db_bf_mention}"
             )
 
-        # SCENARIO 0C: Follow-up Investigation: Targeted Accounts
+        # SCENARIO 0D: Follow-up Investigation: Targeted Accounts
         elif is_accounts_query:
             if ip_dossier and ip_dossier.get("targetedUsers"):
                 users = ip_dossier["targetedUsers"]
                 response_sections.append(
-                    f"### Targeted Accounts Investigation: `{target_ip}`\n\n"
-                    f"Forensic inspection of correlated telemetry from adversary source `{target_ip}` identified **{len(users)} distinct targeted accounts**:\n\n"
-                    + "\n".join([f"- **`{u}`**: Targeted during automated password exhaustion sequence" for u in users]) + "\n\n"
-                    f"#### Compromise Evaluation:\n"
-                    f"- High-privilege targets identified: `root`" + (", `deploy`" if "deploy" in users else "") + "\n"
-                    f"- Attack pattern matches dictionary rotation across common administrative identities."
+                    f"Correlated telemetry from `{target_ip}` identified **{len(users)} targeted accounts**:\n\n"
+                    + "\n".join([f"- `{u}`" for u in users]) + "\n\n"
+                    f"Pattern indicates dictionary rotation across administrative credentials."
                 )
             elif active_file and file_summary:
                 u_users = file_summary.get("analysisSummary", {}).get("uniqueAccounts", [])
                 response_sections.append(
-                    f"### Targeted Accounts in Uploaded Log `{active_file.filename}`\n\n"
-                    f"Analysis of parsed events identified **{len(u_users)} accounts** targeted across authentication records:\n\n"
-                    + "\n".join([f"- **`{u}`**" for u in u_users])
+                    f"Uploaded log `{active_file.filename}` contains **{len(u_users)} targeted accounts**:\n\n"
+                    + "\n".join([f"- `{u}`" for u in u_users])
                 )
             else:
                 response_sections.append(
-                    f"### Targeted Accounts Analysis\n\n"
-                    f"No specific target account records were found in the current context. You can specify a target IP (e.g. *'Which accounts were targeted by 198.51.100.42?'*) or query active incidents."
+                    "No targeted accounts found in the current context. You can specify a target IP (e.g., *'Which accounts were targeted by 198.51.100.42?'*)."
                 )
 
-        # SCENARIO 0D: Follow-up Investigation: Successful Login / Compromise
+        # SCENARIO 0E: Follow-up Investigation: Successful Login / Compromise
         elif is_login_query:
             if ip_dossier:
                 succs = ip_dossier.get("successCount", 0)
                 fails = ip_dossier.get("failureCount", 0)
                 if succs > 0:
                     response_sections.append(
-                        f"### Authentication Outcome Analysis: `{target_ip}`\n\n"
-                        f"> [!CAUTION]\n"
-                        f"> **CRITICAL: Successful Authentication Detected**\n"
-                        f"> A valid session was accepted following `{fails}` consecutive authentication failures from `{target_ip}`.\n\n"
-                        f"#### Breach Forensics:\n"
-                        f"- **Compromised Identity**: `deploy`\n"
-                        f"- **Access Vector**: SSH Port 22 public-key acceptance\n"
-                        f"- **Active Host Session**: Bash shell spawned under PID 12436\n"
-                        f"- **Assessment**: Probable credential compromise following credential exhaustion attack.\n\n"
-                        f"#### Immediate Containment Recommendation:\n"
-                        f"Recommend applying defensive playbook `PB-SSH-BRUTE-01` to revoke active sessions and enforce an immediate boundary DROP on `{target_ip}`. "
-                        f"You can ask me: *'Can you block the suspicious IP?'* to authorize containment."
+                        f"**Successful authentication detected**\n\n"
+                        f"A valid session was accepted for user `deploy` following `{fails}` consecutive failures from `{target_ip}`.\n\n"
+                        f"- Identity: `deploy`\n"
+                        f"- Vector: SSH (Port 22)\n\n"
+                        f"Recommended action: apply playbook `PB-SSH-BRUTE-01` to isolate source `{target_ip}`."
                     )
                 else:
                     response_sections.append(
-                        f"### Authentication Outcome Analysis: `{target_ip}`\n\n"
-                        f"> [!NOTE]\n"
-                        f"> **No Successful Authentications Observed**\n"
-                        f"> All `{fails}` observed authentication attempts from `{target_ip}` were rejected by PAM policy. "
-                        f"No breach breakthrough was achieved."
+                        f"No successful logins observed from `{target_ip}`. All `{fails}` authentication attempts were rejected."
                     )
             else:
                 response_sections.append(
-                    f"### Authentication Success Inspection\n\n"
-                    f"No specific host or IP context is active. Please specify the host or IP to inspect (e.g., *'Was there any successful login from 198.51.100.42?'*)."
+                    "No host or IP context is active. Please specify a host or IP (e.g., *'Was there any successful login from 198.51.100.42?'*)."
                 )
 
-        # SCENARIO 0E: Forensic Investigation Report
+        # SCENARIO 0F: Forensic Investigation Report
         elif is_report_query:
             inc_id = target_inc_id or (retrieved_incident.get("incidentId") if retrieved_incident else "INC-2026-991B")
             response_sections.append(
-                f"### 📋 Autonomous Forensic Investigation Report: **{inc_id}**\n\n"
-                f"**Classification**: `HIGH SEVERITY` | **Confidence**: `85%` | **Report Hash**: `sha256:{hashlib.sha256(inc_id.encode()).hexdigest()[:16]}`\n\n"
-                f"#### 1. Executive Summary\n"
-                f"An automated high-velocity credential exhaustion campaign was detected targeting SSH authentication on production infrastructure from adversary source `{target_ip or '198.51.100.42'}`. "
-                f"The attacker initiated dictionary rotation across privileged administrative accounts (`root`, `deploy`), culminating in an accepted session for user `deploy`.\n\n"
-                f"#### 2. Forensic Evidence Chain\n"
-                f"- **Adversary IP**: `{target_ip or '198.51.100.42'}` (RFC 5737 Test Range / ASN64496)\n"
-                f"- **Failure Velocity**: 14 failed PAM authentication attempts recorded\n"
-                f"- **Compromised Account**: `deploy` (1 successful authentication, PID 12436)\n"
-                f"- **Total Correlated Records**: 15 telemetry events\n\n"
-                f"#### 3. MITRE ATT&CK Mapping\n"
-                f"- **T1110.001**: Password Guessing (Credential Access)\n"
-                f"- **T1021.004**: SSH Remote Services (Lateral Movement / Initial Access)\n\n"
-                f"#### 4. Containment Status & Audit Chain\n"
-                f"- **Assigned SOAR Playbook**: `PB-SSH-BRUTE-01` (SSH Brute Force Mitigation)\n"
-                f"- **Policy Guardrails**: Human-in-the-Loop authorization required before kernel iptables dispatch.\n"
-                f"- **Audit Status**: Cryptographically verified in tamper-evident ledger."
+                f"### Incident Report: {inc_id}\n\n"
+                f"**Severity**: High | **Confidence**: 85% | **Hash**: `sha256:{hashlib.sha256(inc_id.encode()).hexdigest()[:16]}`\n\n"
+                f"**Summary**: High-velocity SSH credential exhaustion campaign originating from `{target_ip or '198.51.100.42'}`. "
+                f"Dictionary rotation targeting administrative accounts resulted in an accepted session for `deploy`.\n\n"
+                f"**Evidence**:\n"
+                f"- Adversary IP: `{target_ip or '198.51.100.42'}` (ASN64496)\n"
+                f"- Failed Attempts: 14\n"
+                f"- Accepted Logins: 1 (`deploy`)\n"
+                f"- MITRE Tactics: T1110.001 (Password Guessing), T1021.004 (SSH)\n\n"
+                f"**Response Status**: Playbook `PB-SSH-BRUTE-01` pending operator confirmation."
             )
 
         # SCENARIO A: Target Incident Query (found vs not found)
         elif target_inc_id:
             if not retrieved_incident:
                 response_sections.append(
-                    f"### Incident Investigation: `{target_inc_id}`\n\n"
-                    f"> [!WARNING]\n"
-                    f"> **Incident Not Found**: No incident with identifier `{target_inc_id}` exists in the environment. "
-                    f"Please verify the incident ID or query current active incidents."
+                    f"Incident `{target_inc_id}` was not found in the environment."
                 )
             else:
                 inc = retrieved_incident
                 inc_stat = inc.get("incidentStatus") or inc.get("status") or "ACTIVE"
                 response_sections.append(
-                    f"### Incident Status Report: **{inc['incidentId']}**\n\n"
-                    f"**Title**: {inc['title']}\n"
-                    f"- **Severity**: `{inc['severity'].upper()}` | **Status**: `{str(inc_stat).upper()}`\n"
+                    f"### Incident: **{inc['incidentId']}** — {inc['title']}\n\n"
+                    f"- **Status**: `{str(inc_stat).upper()}` | **Severity**: `{inc['severity'].upper()}`\n"
                     f"- **Risk Score**: `{inc['riskScore']}/100` | **Confidence**: `{inc['confidenceScore']}%`\n"
-                    f"- **Associated Attack Sources**: {', '.join([f'`{ip}`' for ip in inc['sourceIps']]) if inc['sourceIps'] else 'None'}\n"
-                    f"- **Targeted Identities**: {', '.join([f'`{u}`' for u in inc['targetAccounts']]) if inc['targetAccounts'] else 'None'}\n"
-                    f"- **Correlated Event Count**: `{inc['eventCount']} records`\n"
+                    f"- **Adversary IPs**: {', '.join([f'`{ip}`' for ip in inc['sourceIps']]) if inc['sourceIps'] else 'None'}\n"
+                    f"- **Target Accounts**: {', '.join([f'`{u}`' for u in inc['targetAccounts']]) if inc['targetAccounts'] else 'None'}\n"
+                    f"- **Evidence**: `{inc['eventCount']} correlated events`"
                 )
                 if ip_dossier:
                     response_sections.append(
-                        f"#### Correlated Telemetry & Forensics\n"
-                        f"- Observed **{ip_dossier['totalObservedEvents']} events** from source `{target_ip}`.\n"
-                        f"- **Authentication Failures**: `{ip_dossier['failureCount']}` | **Successful Logins**: `{ip_dossier['successCount']}`\n"
+                        f"Observed `{ip_dossier['failureCount']}` failures and `{ip_dossier['successCount']}` successes from `{target_ip}`."
                     )
                 if threat_intel_data:
                     response_sections.append(
-                        f"#### Threat Intelligence Profile (`{threat_intel_data['ip']}`)\n"
-                        f"- **Classification**: {threat_intel_data['threatClassification']}\n"
-                        f"- **Reputation Score**: `{threat_intel_data['reputationScore']}/100` | **Origin**: `{threat_intel_data['country']} ({threat_intel_data['asn']})`\n"
+                        f"Threat profile for `{threat_intel_data['ip']}`: {threat_intel_data['threatClassification']} (Score: {threat_intel_data['reputationScore']}/100, {threat_intel_data['country']})."
                     )
-                if inc.get("mitreAttack"):
-                    m_list = [f"- **{m.get('techniqueId')}** ({m.get('techniqueName', 'Tactic')}): {m.get('tactic', '')}" for m in inc["mitreAttack"]]
-                    response_sections.append("\n#### MITRE ATT&CK Mapping\n" + "\n".join(m_list))
-
-                response_sections.append(
-                    f"\n#### Recommended Investigative Steps\n"
-                    f"1. Review raw authentication failures from `{inc['sourceIps'][0] if inc['sourceIps'] else 'attacker'}`.\n"
-                    f"2. Check if any credentials succeeded following repetitive failures.\n"
-                    f"3. Apply defensive containment playbook `{inc.get('assignedPlaybookId', 'PB-SSH-BRUTE-01')}`.\n"
-                )
 
         # SCENARIO B: Uploaded File Analysis
         elif file_summary:
@@ -536,39 +477,22 @@ class ChatCopilotService:
             u_users = fstats.get("uniqueAccounts", [])
             dets_count = fstats.get("detectionsCount", 0)
             inc_count = fstats.get("incidentsCreated", 0)
+            fails = fstats.get("failureCount", 0)
+            succs = fstats.get("successCount", 0)
 
             response_sections.append(
-                f"### Autonomous Log Investigation: `{file_summary['filename']}`\n\n"
-                f"Processed uploaded cybersecurity dataset with SHA-256 fingerprint `{file_summary['fileHash'][:16]}...`.\n\n"
-                f"#### Ingestion & Normalization Metrics\n"
-                f"- **Format Detected**: `{file_summary['formatDetected'].upper()}` (`{file_summary['logSource']}`)\n"
-                f"- **Total Records Analyzed**: `{fstats.get('totalRecords', 0)}`\n"
-                f"- **Successfully Parsed Events**: `{fstats.get('parsedRecords', 0)}`\n"
-                f"- **Failed / Malformed Records**: `{fstats.get('failedRecords', 0)}`\n"
-                f"- **Deduplicated Records**: `{fstats.get('skippedDuplicates', 0)}`\n\n"
-                f"#### Forensic Authentication Findings\n"
-                f"- **Failed Logon Attempts**: `{fstats.get('failureCount', 0)}`\n"
-                f"- **Successful Authentications**: `{fstats.get('successCount', 0)}`" + (f" (CRITICAL: Potential breach observed!)" if fstats.get('successCount', 0) > 0 and fstats.get('failureCount', 0) >= 3 else "") + "\n"
-                f"- **Active Adversary Source IPs**: {', '.join([f'`{ip}`' for ip in u_ips]) if u_ips else 'None'}\n"
-                f"- **Targeted User Accounts**: {', '.join([f'`{u}`' for u in u_users]) if u_users else 'None'}\n\n"
-                f"#### Threat Detections & Incident Correlation\n"
-                f"- **Deterministic Detections Triggered**: `{dets_count}`\n"
-                f"- **Incidents Formally Correlated**: `{inc_count}`\n"
+                f"### Log Analysis: `{file_summary['filename']}`\n\n"
+                f"Analyzed `{fstats.get('totalRecords', 0)}` records ({file_summary['formatDetected'].upper()}).\n\n"
+                f"- **Failed Attempts**: `{fails}`\n"
+                f"- **Successful Logins**: `{succs}`" + (" *(Compromise signal)*" if succs > 0 and fails >= 3 else "") + "\n"
+                f"- **Adversary IPs**: {', '.join([f'`{ip}`' for ip in u_ips]) if u_ips else 'None'}\n"
+                f"- **Targeted Accounts**: {', '.join([f'`{u}`' for u in u_users]) if u_users else 'None'}\n"
+                f"- **Detections Triggered**: `{dets_count}` | **Incidents**: `{inc_count}`"
             )
-
-            if fstats.get("detectionNames"):
-                det_list = [f"- **{name}**" for name in fstats["detectionNames"]]
-                response_sections.append("#### Triggered Heuristic Rules\n" + "\n".join(det_list) + "\n")
-
-            if mitre_res.get("techniques"):
-                m_list = [f"- **{k['id']}**: {k.get('title', 'Technique')} ({k.get('tactic', 'Tactic')})" for k in mitre_res["techniques"][:2]]
-                response_sections.append("#### MITRE ATT&CK Alignment\n" + "\n".join(m_list) + "\n")
 
             if dets_count > 0 and u_ips:
                 response_sections.append(
-                    f"\n#### Recommended Response Action\n"
-                    f"Credential brute-force velocity exceeds baseline thresholds. Recommend applying playbook `PB-SSH-BRUTE-01` "
-                    f"to isolate source `{u_ips[0]}`. Review the proposed action card below to authorize execution."
+                    f"Authentication failure rate exceeds baseline. Proposed action: apply playbook `PB-SSH-BRUTE-01` to isolate `{u_ips[0]}`."
                 )
 
         # SCENARIO C: IP Address Investigation
@@ -578,69 +502,43 @@ class ChatCopilotService:
             users = ip_dossier.get("targetedUsers", [])
 
             response_sections.append(
-                f"### Security Forensic Dossier: `{target_ip}`\n\n"
-                f"Evaluated telemetry for host `{target_ip}` against internal events, detection heuristics, and threat intel.\n\n"
-                f"#### Authentication Telemetry\n"
-                f"- **Total Observed Events**: `{ip_dossier['totalObservedEvents']}`\n"
-                f"- **Authentication Failures**: `{fails}` attempts observed\n"
-                f"- **Successful Authentications**: `{succs}`" + (f" (CRITICAL: Valid credentials acquired!)" if succs > 0 and fails >= 3 else " (No breach breakthrough)") + "\n"
-                f"- **Targeted Accounts ({len(users)})**: {', '.join([f'`{u}`' for u in users[:6]]) if users else 'None'}\n"
+                f"### Host Dossier: `{target_ip}`\n\n"
+                f"- **Observed Events**: `{ip_dossier['totalObservedEvents']}`\n"
+                f"- **Authentication Failures**: `{fails}`\n"
+                f"- **Successful Logins**: `{succs}`" + (" *(Compromise signal)*" if succs > 0 and fails >= 3 else " *(No breakthrough)*") + "\n"
+                f"- **Targeted Accounts**: {', '.join([f'`{u}`' for u in users[:6]]) if users else 'None'}"
             )
 
             if ip_dossier.get("isProtected"):
                 response_sections.append(
-                    f"> [!WARNING]\n"
-                    f"> **Protected Exclusion Subnet**: `{target_ip}` is located in an authorized internal network CIDR. "
-                    f"Automated containment is prohibited by PolicyEngine guardrails.\n"
+                    f"> [!WARNING]\n> `{target_ip}` is an internal protected subnet. Automated containment is blocked."
                 )
 
             if threat_intel_data:
                 response_sections.append(
-                    f"#### Threat Intelligence Profile\n"
-                    f"- **Classification**: {threat_intel_data['threatClassification']}\n"
-                    f"- **Reputation Score**: `{threat_intel_data['reputationScore']}/100` | **Confidence**: `{threat_intel_data['confidence']}%`\n"
-                    f"- **Origin**: `{threat_intel_data['country']} ({threat_intel_data['asn']})`\n"
-                    f"- **Threat Tags**: {', '.join([f'`{t}`' for t in threat_intel_data['tags']]) if threat_intel_data['tags'] else 'None'}\n"
+                    f"**Threat Intel**: {threat_intel_data['threatClassification']} (Score: {threat_intel_data['reputationScore']}/100, {threat_intel_data['country']} / {threat_intel_data['asn']})"
                 )
-
-            if mitre_res.get("techniques"):
-                m_list = [f"- **{k['id']}**: {k.get('title', 'Technique')} ({k.get('tactic', 'Tactic')})" for k in mitre_res["techniques"][:2]]
-                response_sections.append("#### MITRE ATT&CK Grounding (RAG)\n" + "\n".join(m_list) + "\n")
 
             if fails >= 5 and not ip_dossier.get("isProtected"):
                 response_sections.append(
-                    f"\n#### Autonomous Response Recommendation\n"
-                    f"High-frequency credential probing detected from `{target_ip}`. Recommend applying playbook `PB-SSH-BRUTE-01` "
-                    f"to enforce boundary firewall DROP. Review the proposed action card below."
+                    f"Recommended action: apply playbook `PB-SSH-BRUTE-01` to block `{target_ip}`."
                 )
 
         # SCENARIO D: Active Incidents Overview
         elif active_incidents_list:
             response_sections.append(
-                f"### Active Incidents Queue ({len(active_incidents_list)})\n\n"
-                f"The following correlated incidents require security analyst investigation:\n\n"
-            )
-            for inc in active_incidents_list:
-                response_sections.append(
-                    f"- **{inc['id']}**: {inc['title']} (Severity: `{inc['severity'].upper()}`, Risk Score: `{inc['riskScore']}/100`)\n"
-                    f"  - Attacker Sources: {', '.join([f'`{ip}`' for ip in inc['sourceIps']]) if inc['sourceIps'] else 'None'}\n"
-                )
-            response_sections.append(
-                f"\nYou can ask: *'Investigate incident {active_incidents_list[0]['id']}'* to conduct an in-depth forensic investigation."
+                f"### Active Incidents ({len(active_incidents_list)})\n\n"
+                + "\n".join([f"- **{inc['id']}**: {inc['title']} ({inc['severity'].upper()}, Risk: {inc['riskScore']}/100)" for inc in active_incidents_list])
             )
 
         # SCENARIO E: General Cybersecurity / System Overview
         else:
             health = tool_records[0].get("data", {}) if tool_records else {}
             response_sections.append(
-                f"### SENTINEL AI Operational Overview\n\n"
-                f"- **Total Ingested Events**: `{health.get('totalIngestedEvents', 0):,}`\n"
-                f"- **Forwarder Sensors**: `{health.get('healthyForwarders', 0)}/{health.get('forwardersCount', 0)} online`\n"
-                f"- **Autonomous Defense Status**: `{health.get('autonomousDefense', 'ONLINE')}`\n\n"
-                f"How would you like to proceed? You can:\n"
-                f"- **Upload a security log file** (CSV, JSON, JSONL, Syslog, OpenSSH, Windows 4625) to perform autonomous threat analysis.\n"
-                f"- Ask to *'Investigate suspicious IP 198.51.100.42'* or *'Check active incidents'*.\n"
-                f"- Ask questions about attack tactics or MITRE techniques (e.g. *'How does T1110.001 work?'*).\n"
+                f"**Environment Status: {health.get('autonomousDefense', 'ONLINE')}**\n\n"
+                f"- Total Events: `{health.get('totalIngestedEvents', 0):,}`\n"
+                f"- Active Sensors: `{health.get('healthyForwarders', 0)}/{health.get('forwardersCount', 0)}`\n\n"
+                f"Ask a question or upload a log file to begin."
             )
 
         full_content = "\n\n".join(response_sections)

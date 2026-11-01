@@ -113,23 +113,12 @@ export const AuditTrailPage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#54765C] flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" />
-                TAMPER-EVIDENT CRYPTOGRAPHIC AUDIT LOG
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">
-                SHA-256 BLOCK CHAINING ({auditRecords.length} ENTRIES)
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              Cryptographic Audit Trail
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl text-[#20251F] tracking-tight">
+              Audit Log
             </h1>
-            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
-              Immutable journal of all automated decisions, policy overrides, and containment executions backed by persisted hash chains.
+            <p className="text-sm text-[#73796F]">
+              Immutable activity log with SHA-256 integrity verification ({auditRecords.length} entries).
             </p>
           </div>
 

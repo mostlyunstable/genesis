@@ -83,22 +83,12 @@ export const AutonomousResponsePage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${autonomousResponseGlobalEnabled ? 'bg-[#54765C] animate-pulse' : 'bg-[#B94C43]'}`} />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C]">
-                AUTONOMOUS RESPONSE CENTER
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">
-                PLAYBOOK DISPATCH &amp; MITIGATION ({actions.length} EXECUTIONS)
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              Autonomous SOAR &amp; Containment
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl text-[#20251F] tracking-tight">
+              Response
             </h1>
-            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
-              Deterministic defensive containment playbooks, automated iptables drops, session revocations, and rollback ledger.
+            <p className="text-sm text-[#73796F]">
+              Containment playbooks and action history ({actions.length} executions).
             </p>
           </div>
 
@@ -109,7 +99,7 @@ export const AutonomousResponsePage: React.FC = () => {
               onClick={toggleAutonomousGlobal}
               icon={<Power className="w-4 h-4" />}
             >
-              {autonomousResponseGlobalEnabled ? 'ENGAGE EMERGENCY HALT' : 'RESTORE AUTONOMOUS DEFENSE'}
+              {autonomousResponseGlobalEnabled ? 'Emergency Halt' : 'Enable Defense'}
             </Button>
 
             <button

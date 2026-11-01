@@ -154,263 +154,174 @@ export const OverviewPage: React.FC = () => {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          1. EDITORIAL INTELLIGENCE BRIEFING MASTHEAD (Light Botanical)
+          1. ENVIRONMENT STATUS & COPILOT PROMPT MASTHEAD
           ───────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl bg-white border border-[#E3E5DC] p-6 sm:p-10 shadow-origin-sm">
-        {/* Subtle Warm Atmosphere */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#EAF0E6]/60 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#F0F1EB]/50 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-6">
-          {/* Top metadata kicker */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E3E5DC] pb-4 text-xs font-mono">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${overviewMetrics?.systemHealth.databaseConnected ? 'bg-[#54765C] animate-pulse' : 'bg-[#B94C43]'}`} />
-              <span className="text-[10px] tracking-[0.16em] uppercase font-bold text-[#54765C]">
-                SENTINEL AUTONOMOUS INTELLIGENCE BRIEFING
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <span className={`w-2 h-2 rounded-full ${overviewMetrics?.systemHealth.databaseConnected ? 'bg-[#54765C]' : 'bg-[#B94C43]'}`} />
+              <span className="font-semibold text-[#54765C]">
+                {criticalIncident ? 'INCIDENT ACTIVE' : 'ENVIRONMENT SECURE'}
               </span>
               <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[#73796F] text-[11px]">
-                {lastUpdated ? `SYNC: ${new Date(lastUpdated).toLocaleTimeString()} UTC` : 'INITIALIZING...'}
+              <span className="text-[#73796F]">
+                {lastUpdated ? `Synced ${new Date(lastUpdated).toLocaleTimeString()}` : 'Connecting...'}
               </span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                autonomousResponseGlobalEnabled 
-                  ? 'bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9]' 
-                  : 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]'
-              }`}>
-                <Cpu className="w-3 h-3" />
-                {autonomousResponseGlobalEnabled ? 'DEFENSE ARMED' : 'DEFENSE HALTED'}
-              </span>
-              <button
-                onClick={handleManualRefresh}
-                disabled={isRefreshing}
-                className="text-[#73796F] hover:text-[#20251F] text-[10px] flex items-center gap-1 cursor-pointer"
-                title="Sync telemetry"
-              >
-                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span>SYNC</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Main Hero Serif Headline (Origin X Caprasimo) */}
-          <div className="max-w-3xl space-y-3">
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#20251F] leading-[1.08] tracking-tight">
-              Every signal. <span className="text-[#54765C]">One truth.</span>
+            <h1 className="text-2xl sm:text-3xl font-display font-medium text-[#20251F] tracking-tight">
+              {criticalIncident ? 'Action required on active incident' : 'Security posture is nominal'}
             </h1>
-            <p className="text-base sm:text-lg text-[#73796F] leading-relaxed font-sans max-w-2xl">
-              Real-time autonomous cybersecurity intelligence backed by live telemetry. Ingesting, correlating, and evaluating defensive actions without manufactured data.
+            <p className="text-sm text-[#73796F]">
+              {criticalIncident 
+                ? `Incident ${criticalIncident.id} requires review. ${criticalIncident.sourceIps.length} adversary sources identified.`
+                : 'All telemetry pipelines are reporting normally with zero critical alerts.'}
             </p>
           </div>
 
-          {/* Natural Language Investigation Directive Bar */}
-          <div className="pt-2">
-            <form onSubmit={handlePromptSubmit} className="relative flex items-center max-w-3xl">
-              <input
-                type="text"
-                value={promptInput}
-                onChange={(e) => setPromptInput(e.target.value)}
-                placeholder="Direct Sentinel: 'Investigate IP 198.51.100.42', 'Assess lateral exposure'..."
-                className="w-full bg-[#F0F1EB] border border-[#E3E5DC] hover:border-[#54765C]/60 focus:border-[#54765C] rounded-full px-5 py-3.5 pl-12 text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none transition-all shadow-inner font-sans"
-              />
-              <Search className="w-5 h-5 text-[#969B91] absolute left-4 pointer-events-none" />
-              <button
-                type="submit"
-                disabled={!promptInput.trim() || isSynthesizing}
-                className="absolute right-2 px-5 py-2 rounded-full bg-[#54765C] hover:bg-[#436049] text-white font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm disabled:opacity-40"
+          <div className="flex items-center gap-3 shrink-0">
+            {criticalIncident && (
+              <Button
+                variant="primary"
+                size="md"
+                icon={<ShieldCheck className="w-4 h-4" />}
+                onClick={() => {
+                  setSelectedIncidentId(criticalIncident.id);
+                  navigate('/investigator');
+                }}
               >
-                <span>{isSynthesizing ? 'Synthesizing...' : 'Investigate'}</span>
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </form>
+                Investigate & Contain
+              </Button>
+            )}
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="p-2.5 rounded-full border border-[#E3E5DC] text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
+              title="Refresh telemetry"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Natural Language Query Bar */}
+        <div>
+          <form onSubmit={handlePromptSubmit} className="relative flex items-center">
+            <input
+              type="text"
+              value={promptInput}
+              onChange={(e) => setPromptInput(e.target.value)}
+              placeholder="Ask Copilot anything about your security data..."
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] hover:border-[#54765C]/60 focus:border-[#54765C] rounded-full px-5 py-3 pl-12 text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none transition-all shadow-inner font-sans"
+            />
+            <Search className="w-4 h-4 text-[#969B91] absolute left-4.5 pointer-events-none" />
+            <button
+              type="submit"
+              disabled={!promptInput.trim() || isSynthesizing}
+              className="absolute right-1.5 px-4 py-1.5 rounded-full bg-[#54765C] hover:bg-[#436049] text-white font-semibold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-40"
+            >
+              <span>{isSynthesizing ? 'Searching...' : 'Ask'}</span>
+              <Send className="w-3 h-3" />
+            </button>
+          </form>
+        </div>
+
+        {/* 4 Clean Metric Cards */}
+        <div className="pt-2 grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-[#E3E5DC]">
+          <div 
+            onClick={() => navigate('/events')}
+            className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
+          >
+            <div className="text-xs text-[#73796F] font-medium flex items-center justify-between">
+              <span>Events (24h)</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#54765C]" />
+            </div>
+            <div className="text-2xl font-mono font-bold text-[#20251F] mt-1.5">
+              {overviewMetrics ? overviewMetrics.totalEvents.toLocaleString() : (isLoading ? '...' : '0')}
+            </div>
           </div>
 
-          {/* Clean 4-Phase Telemetry Pipeline Ribbon (REAL DATA ONLY) */}
-          <div className="pt-6 border-t border-[#E3E5DC] grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* 1. OBSERVE */}
-            <div 
-              onClick={() => navigate('/events')}
-              className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
-            >
-              <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#547D70] flex items-center justify-between uppercase">
-                <span>1. OBSERVE</span>
-                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#547D70]" />
-              </div>
-              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {overviewMetrics ? overviewMetrics.totalEvents.toLocaleString() : (isLoading ? '...' : '0')}
-              </div>
-              <div className="text-xs text-[#73796F] mt-0.5">
-                {overviewMetrics?.totalEvents === 0 ? 'No events ingested yet' : 'Telemetry Ingested (24h)'}
-              </div>
+          <div 
+            onClick={() => navigate('/detections')}
+            className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
+          >
+            <div className="text-xs text-[#73796F] font-medium flex items-center justify-between">
+              <span>Detections</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#54765C]" />
             </div>
-
-            {/* 2. DETECT */}
-            <div 
-              onClick={() => navigate('/detections')}
-              className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
-            >
-              <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#B94C43] flex items-center justify-between uppercase">
-                <span>2. DETECT</span>
-                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#B94C43]" />
-              </div>
-              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {overviewMetrics ? overviewMetrics.totalDetections : (isLoading ? '...' : '0')}
-                {overviewMetrics && overviewMetrics.criticalDetections > 0 && (
-                  <span className="text-xs text-[#B94C43] font-normal ml-1">
-                    ({overviewMetrics.criticalDetections} Critical)
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-[#73796F] mt-0.5">
-                {overviewMetrics?.totalDetections === 0 ? '0 Behavioral Detections' : 'Behavioral Detections'}
-              </div>
-            </div>
-
-            {/* 3. INVESTIGATE */}
-            <div 
-              onClick={() => navigate('/incidents')}
-              className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
-            >
-              <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#C47A45] flex items-center justify-between uppercase">
-                <span>3. INVESTIGATE</span>
-                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#C47A45]" />
-              </div>
-              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {overviewMetrics ? overviewMetrics.activeIncidents : (isLoading ? '...' : '0')}
-                <span className="text-xs text-[#C47A45] font-normal ml-1">
-                  {overviewMetrics?.activeIncidents === 0 ? 'Active (Clean)' : 'Active'}
+            <div className="text-2xl font-mono font-bold text-[#20251F] mt-1.5">
+              {overviewMetrics ? overviewMetrics.totalDetections : (isLoading ? '...' : '0')}
+              {overviewMetrics && overviewMetrics.criticalDetections > 0 && (
+                <span className="text-xs text-[#B94C43] font-normal ml-1.5">
+                  ({overviewMetrics.criticalDetections} critical)
                 </span>
-              </div>
-              <div className="text-xs text-[#73796F] mt-0.5">
-                {overviewMetrics?.activeIncidents === 0 ? 'No incidents detected' : 'Correlated Incidents'}
-              </div>
+              )}
             </div>
+          </div>
 
-            {/* 4. RESPOND */}
-            <div 
-              onClick={() => navigate('/response')}
-              className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
-            >
-              <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#64856C] flex items-center justify-between uppercase">
-                <span>4. RESPOND</span>
-                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#64856C]" />
-              </div>
-              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {overviewMetrics ? overviewMetrics.totalActionsTaken : (isLoading ? '...' : '0')}
-                <span className="text-xs text-[#64856C] font-normal ml-1">Actions</span>
-              </div>
-              <div className="text-xs text-[#73796F] mt-0.5">
-                {overviewMetrics?.totalActionsTaken === 0 ? 'No actions executed' : 'Defensive Actions Taken'}
-              </div>
+          <div 
+            onClick={() => navigate('/incidents')}
+            className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
+          >
+            <div className="text-xs text-[#73796F] font-medium flex items-center justify-between">
+              <span>Active Incidents</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#54765C]" />
+            </div>
+            <div className="text-2xl font-mono font-bold text-[#20251F] mt-1.5">
+              {overviewMetrics ? overviewMetrics.activeIncidents : (isLoading ? '...' : '0')}
+            </div>
+          </div>
+
+          <div 
+            onClick={() => navigate('/response')}
+            className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
+          >
+            <div className="text-xs text-[#73796F] font-medium flex items-center justify-between">
+              <span>Actions Taken</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#54765C]" />
+            </div>
+            <div className="text-2xl font-mono font-bold text-[#20251F] mt-1.5">
+              {overviewMetrics ? overviewMetrics.totalActionsTaken : (isLoading ? '...' : '0')}
             </div>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. OPERATOR ACTION REQUIRED STRIP (Real Pending Critical Action)
+          2. MAIN OPERATIONAL GRID: INCIDENTS & RECENT TELEMETRY
           ───────────────────────────────────────────────────────────── */}
-      {criticalIncident ? (
-        <section className="bg-white border-l-4 border-l-[#C47A45] border-y border-r border-[#E3E5DC] rounded-r-3xl p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-origin-sm">
-          <div className="space-y-1.5 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#C47A45] flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-[#C47A45]" />
-                OPERATOR ACTION REQUIRED
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]">
-                CRITICAL INCIDENT {criticalIncident.id}
-              </span>
-            </div>
-            <h3 className="font-display text-xl sm:text-2xl text-[#20251F]">
-              {criticalIncident.title}
-            </h3>
-            <p className="text-sm text-[#73796F] leading-relaxed">
-              Target: <strong className="font-mono text-[#20251F]">{criticalIncident.targetAccounts.join(', ') || 'N/A'}</strong> | Adversary: <strong className="font-mono text-[#B94C43]">{criticalIncident.sourceIps.join(', ') || 'Unknown'}</strong>. {criticalIncident.aiSummary?.executiveSummary}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <Button
-              variant="primary"
-              size="md"
-              icon={<ShieldCheck className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedIncidentId(criticalIncident.id);
-                navigate('/investigator');
-              }}
-            >
-              Investigate &amp; Contain
-            </Button>
-          </div>
-        </section>
-      ) : (
-        <section className="bg-white border border-[#E3E5DC] rounded-3xl p-5 px-6 flex items-center justify-between text-xs font-mono shadow-origin-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-[#EAF0E6] flex items-center justify-center text-[#54765C]">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-bold text-[#20251F]">Autonomous Security Posture: Baseline Secure</span>
-              <p className="text-[#73796F] text-[11px] font-sans">
-                No active critical incidents requiring manual intervention. Automated correlation rules are active.
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] uppercase font-bold text-[#54765C] bg-[#EAF0E6] px-3 py-1 rounded-full border border-[#CFDCC9]">
-            NOMINAL STATE
-          </span>
-        </section>
-      )}
-
-      {/* ─────────────────────────────────────────────────────────────
-          3. MAIN INTELLIGENCE GRID: INCIDENTS & REASONING
-          ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column (7 cols): Priority Incidents & Telemetry Stream */}
-        <div className="lg:col-span-7 space-y-8">
+        {/* Left Column (7 cols): Incidents & Events */}
+        <div className="lg:col-span-7 space-y-6">
           
-          {/* Priority Incidents Real Queue */}
+          {/* Priority Incidents */}
           <section className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-origin-sm">
-            <div className="p-6 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
+            <div className="p-5 px-6 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-[#C47A45]" />
-                <h2 className="font-display text-lg text-[#20251F]">
-                  Priority Correlated Incidents
+                <h2 className="font-display text-base font-semibold text-[#20251F]">
+                  Active Incidents
                 </h2>
               </div>
               <button
                 onClick={() => navigate('/incidents')}
-                className="text-xs font-mono font-semibold text-[#54765C] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs font-mono font-medium text-[#54765C] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>All Incidents ({incidents.length})</span>
+                <span>View all ({incidents.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {incidents.length === 0 ? (
-              <div className="p-10 text-center space-y-3 bg-white">
-                <div className="w-12 h-12 rounded-full bg-[#EAF0E6] text-[#54765C] mx-auto flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6" />
+              <div className="p-8 text-center space-y-2 bg-white">
+                <div className="w-10 h-10 rounded-full bg-[#EAF0E6] text-[#54765C] mx-auto flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-                <h3 className="font-display text-lg text-[#20251F]">No incidents detected</h3>
-                <p className="text-sm text-[#73796F] max-w-md mx-auto">
-                  Sentinel AI is actively monitoring normalized telemetry. Correlated incidents will appear here when event clusters meet escalation thresholds.
+                <h3 className="font-display text-base text-[#20251F]">No incidents detected</h3>
+                <p className="text-xs text-[#73796F] max-w-sm mx-auto">
+                  Sentinel is monitoring telemetry. Incidents will appear here when event clusters meet escalation criteria.
                 </p>
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/events')}
-                    icon={<Radio className="w-3.5 h-3.5" />}
-                  >
-                    View Telemetry Stream
-                  </Button>
-                </div>
               </div>
             ) : (
               <div className="divide-y divide-[#E3E5DC]">
@@ -421,13 +332,13 @@ export const OverviewPage: React.FC = () => {
                       setSelectedIncidentId(incident.id);
                       navigate('/incidents');
                     }}
-                    className="p-6 hover:bg-[#F0F1EB] transition-colors cursor-pointer space-y-3 group"
+                    className="p-5 hover:bg-[#F0F1EB] transition-colors cursor-pointer space-y-2.5 group"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-[#54765C]">{incident.id}</span>
                         <SeverityBadge severity={incident.severity} />
-                        <span className="text-[10px] font-mono text-[#969B91] uppercase">Risk: {incident.riskScore}/100</span>
+                        <span className="text-[10px] font-mono text-[#969B91]">Risk: {incident.riskScore}/100</span>
                       </div>
                       <span className="text-xs font-mono text-[#969B91] flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -435,20 +346,20 @@ export const OverviewPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <h3 className="font-display text-xl text-[#20251F] group-hover:text-[#54765C] transition-colors">
+                    <h3 className="font-display text-lg text-[#20251F] group-hover:text-[#54765C] transition-colors">
                       {incident.title}
                     </h3>
 
-                    <p className="text-sm text-[#73796F] leading-relaxed line-clamp-2">
-                      {incident.aiSummary?.executiveSummary || incident.detectionExplanation || 'No executive summary provided.'}
+                    <p className="text-xs text-[#73796F] leading-relaxed line-clamp-2">
+                      {incident.aiSummary?.executiveSummary || incident.detectionExplanation || 'No summary provided.'}
                     </p>
 
-                    <div className="flex items-center gap-3 pt-1 text-xs font-mono text-[#73796F] flex-wrap">
+                    <div className="flex items-center gap-3 pt-0.5 text-xs font-mono text-[#73796F] flex-wrap">
                       <span>Target: <strong className="text-[#20251F]">{incident.targetAccounts?.join(', ') || 'N/A'}</strong></span>
                       <span>•</span>
-                      <span>Adversary: <strong className="text-[#B94C43]">{incident.sourceIps?.join(', ') || 'N/A'}</strong></span>
+                      <span>Source: <strong className="text-[#B94C43]">{incident.sourceIps?.join(', ') || 'N/A'}</strong></span>
                       <span>•</span>
-                      <span>Evidence: <strong className="text-[#20251F]">{incident.eventCount} evts</strong></span>
+                      <span>{incident.eventCount} events</span>
                     </div>
                   </div>
                 ))}
@@ -456,47 +367,37 @@ export const OverviewPage: React.FC = () => {
             )}
           </section>
 
-          {/* Live Normalized Event Stream */}
+          {/* Recent Events */}
           <section className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-origin-sm">
-            <div className="p-6 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
+            <div className="p-5 px-6 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
               <div className="flex items-center gap-2">
-                <Radio className="w-4 h-4 text-[#54765C] animate-pulse" />
-                <h2 className="font-display text-lg text-[#20251F]">
-                  Live Normalized Telemetry Stream
+                <Radio className="w-4 h-4 text-[#54765C]" />
+                <h2 className="font-display text-base font-semibold text-[#20251F]">
+                  Recent Events
                 </h2>
               </div>
               <button
                 onClick={() => navigate('/events')}
-                className="text-xs font-mono font-semibold text-[#54765C] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs font-mono font-medium text-[#54765C] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>Full Stream ({events.length})</span>
+                <span>View all ({events.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {events.length === 0 ? (
-              <div className="p-10 text-center space-y-3 bg-white">
-                <div className="w-12 h-12 rounded-full bg-[#F0F1EB] text-[#73796F] mx-auto flex items-center justify-center">
-                  <Inbox className="w-6 h-6" />
+              <div className="p-8 text-center space-y-2 bg-white">
+                <div className="w-10 h-10 rounded-full bg-[#F0F1EB] text-[#73796F] mx-auto flex items-center justify-center">
+                  <Inbox className="w-5 h-5" />
                 </div>
-                <h3 className="font-display text-lg text-[#20251F]">Waiting for incoming telemetry</h3>
-                <p className="text-sm text-[#73796F] max-w-md mx-auto">
-                  No security events have been ingested yet. Send Syslog (RFC 5424), Windows Event Logs, or structured JSON to the ingestion endpoint.
+                <h3 className="font-display text-base text-[#20251F]">No events ingested yet</h3>
+                <p className="text-xs text-[#73796F] max-w-sm mx-auto">
+                  Forward syslog (RFC 5424) or auth logs to begin streaming.
                 </p>
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/integrations')}
-                    icon={<Server className="w-3.5 h-3.5" />}
-                  >
-                    Configure Ingestion Sources
-                  </Button>
-                </div>
               </div>
             ) : (
               <div className="divide-y divide-[#E3E5DC] font-mono text-xs">
-                {events.slice(0, 6).map((evt) => (
+                {events.slice(0, 5).map((evt) => (
                   <div key={evt.id} className="p-4 hover:bg-[#F0F1EB] transition-colors flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <OutcomeBadge outcome={evt.outcome} />
@@ -522,120 +423,112 @@ export const OverviewPage: React.FC = () => {
 
         </div>
 
-        {/* Right Column (5 cols): AI Investigation & Sensor Topology */}
-        <div className="lg:col-span-5 space-y-8">
+        {/* Right Column (5 cols): Investigation & Sensors */}
+        <div className="lg:col-span-5 space-y-6">
           
-          {/* AI Investigation Working Hypothesis Card */}
-          <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-7 space-y-5 shadow-origin-sm">
-            <div className="flex items-center justify-between border-b border-[#E3E5DC] pb-4">
+          {/* Investigation Summary Card */}
+          <section className="bg-white border border-[#E3E5DC] rounded-3xl p-5 sm:p-6 space-y-4 shadow-origin-sm">
+            <div className="flex items-center justify-between border-b border-[#E3E5DC] pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#54765C]" />
-                <h2 className="font-display text-lg text-[#20251F]">
-                  AI Investigation Reasoning
+                <h2 className="font-display text-base font-semibold text-[#20251F]">
+                  Investigation Summary
                 </h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] uppercase">
-                {primaryIncident ? 'ACTIVE SYNTHESIS' : 'IDLE'}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] uppercase">
+                {primaryIncident ? 'Active' : 'Standby'}
               </span>
             </div>
 
             {primaryIncident ? (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#54765C] font-bold">
-                    Case {primaryIncident.id} &bull; {primaryIncident.confidenceScore}% Confidence
+              <div className="space-y-3.5">
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#54765C] font-semibold">
+                    Incident {primaryIncident.id} • {primaryIncident.confidenceScore}% confidence
                   </div>
-                  <h3 className="font-display text-xl text-[#20251F] leading-snug">
+                  <h3 className="font-display text-lg text-[#20251F] leading-snug">
                     {primaryIncident.title}
                   </h3>
-                  <p className="text-sm text-[#73796F] leading-relaxed">
-                    {primaryIncident.aiSummary?.rootCauseAnalysis || primaryIncident.detectionExplanation || 'Continuous analysis active.'}
+                  <p className="text-xs text-[#73796F] leading-relaxed">
+                    {primaryIncident.aiSummary?.rootCauseAnalysis || primaryIncident.detectionExplanation || 'Analysis in progress.'}
                   </p>
                 </div>
 
-                <div className="space-y-2.5 pt-2 border-t border-[#E3E5DC] text-xs font-mono">
-                  <div className="text-[10px] text-[#969B91] uppercase tracking-wider font-bold">
-                    Confirmed Telemetry Evidence:
+                <div className="space-y-1.5 pt-2 border-t border-[#E3E5DC] text-xs font-mono">
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[#73796F]">Adversary IP:</span>
+                    <span className="text-[#B94C43] font-bold">{primaryIncident.sourceIps?.join(', ') || 'N/A'}</span>
                   </div>
-                  <div className="space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                      <span className="text-[#73796F]">Source Adversary:</span>
-                      <span className="text-[#B94C43] font-bold">{primaryIncident.sourceIps?.join(', ') || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                      <span className="text-[#73796F]">Target Accounts:</span>
-                      <span className="text-[#20251F] font-bold">{primaryIncident.targetAccounts?.join(', ') || 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                      <span className="text-[#73796F]">Correlated Events:</span>
-                      <span className="text-[#20251F] font-bold">{primaryIncident.eventCount} events</span>
-                    </div>
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[#73796F]">Target Identity:</span>
+                    <span className="text-[#20251F] font-bold">{primaryIncident.targetAccounts?.join(', ') || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[#73796F]">Evidence Count:</span>
+                    <span className="text-[#20251F] font-bold">{primaryIncident.eventCount} events</span>
                   </div>
                 </div>
 
                 <Button
                   variant="secondary"
-                  size="md"
-                  className="w-full"
+                  size="sm"
+                  className="w-full text-xs"
                   onClick={() => {
                     setSelectedIncidentId(primaryIncident.id);
                     navigate('/investigator');
                   }}
-                  icon={<Search className="w-4 h-4" />}
+                  icon={<Search className="w-3.5 h-3.5" />}
                 >
                   Open Investigation Dossier
                 </Button>
               </div>
             ) : (
-              <div className="py-6 text-center space-y-2 text-[#73796F]">
-                <p className="text-sm">
-                  Autonomous Reasoning Standby. No active incidents require analytical synthesis.
-                </p>
-                <p className="text-xs text-[#969B91]">
-                  AI hypotheses and root-cause analysis will automatically construct upon threat detection.
+              <div className="py-6 text-center space-y-1.5 text-[#73796F]">
+                <p className="text-xs">
+                  No active incidents requiring analysis.
                 </p>
               </div>
             )}
           </section>
 
-          {/* Telemetry Sensor Forwarder Matrix */}
-          <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-7 space-y-5 shadow-origin-sm">
-            <div className="flex items-center justify-between border-b border-[#E3E5DC] pb-4">
+          {/* Sensor Matrix */}
+          <section className="bg-white border border-[#E3E5DC] rounded-3xl p-5 sm:p-6 space-y-4 shadow-origin-sm">
+            <div className="flex items-center justify-between border-b border-[#E3E5DC] pb-3">
               <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 text-[#54765C]" />
-                <h2 className="font-display text-lg text-[#20251F]">
-                  Ingestion Sensors ({logSources.length})
+                <h2 className="font-display text-base font-semibold text-[#20251F]">
+                  Sensors ({logSources.length})
                 </h2>
               </div>
-              <span className="text-[10px] font-mono text-[#54765C] font-bold uppercase tracking-wider">
-                {overviewMetrics?.systemHealth.databaseConnected ? 'SYSTEM ONLINE' : 'DISCONNECTED'}
+              <span className="text-[10px] font-mono text-[#54765C] font-semibold uppercase">
+                {overviewMetrics?.systemHealth.databaseConnected ? 'Connected' : 'Offline'}
               </span>
             </div>
 
             {logSources.length === 0 ? (
-              <div className="py-6 text-center text-xs text-[#969B91]">
-                No ingestion sensors configured yet.
+              <div className="py-4 text-center text-xs text-[#969B91]">
+                No sensors configured.
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {logSources.map((source) => (
                   <div 
                     key={source.id} 
-                    className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] flex items-center justify-between text-xs font-mono"
+                    className="p-3 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] flex items-center justify-between text-xs font-mono"
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${source.status === 'active' ? 'bg-[#54765C]' : 'bg-[#B94C43]'}`} />
                       <div>
-                        <div className="text-[#20251F] font-bold text-xs">{source.name}</div>
+                        <div className="text-[#20251F] font-semibold text-xs">{source.name}</div>
                         <div className="text-[10px] text-[#969B91]">{source.host}:{source.port}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[#20251F] text-xs font-bold">
+                      <div className="text-[#20251F] text-xs font-semibold">
                         {source.eventsProcessed24h.toLocaleString()} evts
                       </div>
-                      <div className="text-[9px] text-[#54765C] font-bold uppercase">
-                        {source.status.toUpperCase()}
+                      <div className="text-[9px] text-[#54765C] uppercase">
+                        {source.status}
                       </div>
                     </div>
                   </div>
@@ -649,7 +542,7 @@ export const OverviewPage: React.FC = () => {
               className="w-full text-xs font-mono"
               onClick={() => navigate('/integrations')}
             >
-              Configure Sensor Forwarders
+              Configure Sensors
             </Button>
           </section>
 

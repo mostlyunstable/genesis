@@ -57,22 +57,12 @@ export const ThreatsPage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#54765C]">
-                ADVERSARY INTELLIGENCE DATABASE
-              </span>
-              <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">
-                PERSISTED IOC REPOSITORIES ({threatIntel.length})
-              </span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              Threat Landscape
+          <div className="space-y-1">
+            <h1 className="font-display text-2xl sm:text-3xl text-[#20251F] tracking-tight">
+              Threat Intel
             </h1>
-            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
-              Global threat actor profiles, IOC reputation scores, autonomous behavioral profiling, and ATT&amp;CK technique mapping.
+            <p className="text-sm text-[#73796F]">
+              Adversary indicators, reputation scores, and observed threat actors ({threatIntel.length} tracked).
             </p>
           </div>
 

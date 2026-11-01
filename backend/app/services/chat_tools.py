@@ -1,3 +1,5 @@
+import os
+import csv
 import asyncio
 import re
 import time
@@ -167,6 +169,31 @@ class ExecuteApprovedResponseActionInput(BaseModel):
     playbook_id: str
     incident_id: Optional[str] = None
     actor: str = "analyst"
+
+
+class AnalyzeNetworkTrafficDatasetInput(BaseModel):
+    file_path: Optional[str] = "data/cic_ids2017/cic_ids2017_sample.csv"
+    protocol_filter: Optional[str] = None
+
+
+class AnalyzePhishingDatasetInput(BaseModel):
+    file_path: Optional[str] = "data/phishing/phishing_emails_sample.csv"
+    target_brand: Optional[str] = None
+
+
+class AnalyzeLanlCyberEventsInput(BaseModel):
+    auth_file_path: Optional[str] = "data/lanl/auth_sample.csv"
+    redteam_file_path: Optional[str] = "data/lanl/redteam_sample.csv"
+    target_user: Optional[str] = None
+
+
+class AnalyzeSystemLogDatasetInput(BaseModel):
+    system_type: str = "openssh"  # openssh, linux, hdfs
+    file_path: Optional[str] = None
+
+
+class GetDatasetOverviewInput(BaseModel):
+    dataset_name: str  # cic-ids2017, phishing, lanl-cyber1, hdfs-v1, loghub
 
 
 # -----------------------------------------------------------------------------

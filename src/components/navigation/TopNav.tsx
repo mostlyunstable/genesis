@@ -14,21 +14,21 @@ import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, { title: string; section: string }> = {
-  '/': { title: 'Intelligence Briefing', section: 'INTELLIGENCE' },
-  '/command': { title: 'Operational Command', section: 'COMMAND' },
-  '/threats': { title: 'Threat Intelligence', section: 'INTELLIGENCE' },
-  '/events': { title: 'Security Events Stream', section: 'INTELLIGENCE' },
-  '/activity': { title: 'Security Events Stream', section: 'INTELLIGENCE' },
-  '/detections': { title: 'Detection Engine', section: 'OPERATIONS' },
-  '/incidents': { title: 'Incident Command', section: 'INTELLIGENCE' },
-  '/investigator': { title: 'AI Investigator Workspace', section: 'INVESTIGATION' },
-  '/investigations': { title: 'AI Investigator Workspace', section: 'INVESTIGATION' },
-  '/assets': { title: 'Infrastructure Assets & Topology', section: 'KNOWLEDGE' },
-  '/mitre': { title: 'MITRE ATT&CK Matrix', section: 'KNOWLEDGE' },
-  '/response': { title: 'Response Operations', section: 'DEFENSE' },
-  '/audit': { title: 'Cryptographic Audit Trail', section: 'GOVERNANCE' },
-  '/settings': { title: 'System Configuration', section: 'SYSTEM' },
-  '/integrations': { title: 'Telemetry Forwarders', section: 'SYSTEM' }
+  '/': { title: 'Overview', section: 'OPERATIONS' },
+  '/copilot': { title: 'Copilot', section: 'OPERATIONS' },
+  '/threats': { title: 'Threat Intel', section: 'INVESTIGATION' },
+  '/events': { title: 'Events', section: 'OPERATIONS' },
+  '/activity': { title: 'Events', section: 'OPERATIONS' },
+  '/detections': { title: 'Detections', section: 'OPERATIONS' },
+  '/incidents': { title: 'Incidents', section: 'OPERATIONS' },
+  '/investigator': { title: 'Investigator', section: 'INVESTIGATION' },
+  '/investigations': { title: 'Investigator', section: 'INVESTIGATION' },
+  '/assets': { title: 'Assets', section: 'INVESTIGATION' },
+  '/mitre': { title: 'MITRE ATT&CK', section: 'INVESTIGATION' },
+  '/response': { title: 'Response', section: 'SYSTEM' },
+  '/audit': { title: 'Audit Log', section: 'SYSTEM' },
+  '/settings': { title: 'Settings', section: 'SYSTEM' },
+  '/integrations': { title: 'Sensors', section: 'SYSTEM' }
 };
 
 export const TopNav: React.FC = () => {
@@ -45,10 +45,10 @@ export const TopNav: React.FC = () => {
 
   const activeIncidents = incidents.filter(i => i.status === 'active');
   const systemState = !autonomousResponseGlobalEnabled 
-    ? { label: 'DEFENSE HALTED', color: 'text-[#B94C43] bg-[#F9ECEB] border-[#F2D5D3]' }
+    ? { label: 'DEFENSE PAUSED', color: 'text-[#B94C43] bg-[#F9ECEB] border-[#F2D5D3]' }
     : activeIncidents.length > 0 
-    ? { label: 'THREAT DETECTED', color: 'text-[#C47A45] bg-[#FAF2EC] border-[#F4E2D5]' }
-    : { label: 'ARMED • SECURE', color: 'text-[#54765C] bg-[#EAF0E6] border-[#CFDCC9]' };
+    ? { label: 'ATTENTION REQUIRED', color: 'text-[#C47A45] bg-[#FAF2EC] border-[#F4E2D5]' }
+    : { label: 'SECURE', color: 'text-[#54765C] bg-[#EAF0E6] border-[#CFDCC9]' };
 
   const routeInfo = routeTitleMap[location.pathname] || {
     title: 'SENTINEL',
