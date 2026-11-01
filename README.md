@@ -1,4 +1,4 @@
-# SENTINEL AI — Autonomous Cybersecurity Intelligence Platform & SOC Copilot
+# GENESIS AI — Autonomous Cybersecurity Intelligence Platform & SOC Copilot
 
 [![Tests Passing](https://img.shields.io/badge/Backend%20Tests-159%2F159%20Passing-success?style=flat-square&logo=pytest)](file:///Users/mayankkumar/genysis/backend/tests)
 [![Python Version](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square&logo=python)](file:///Users/mayankkumar/genysis/backend)
@@ -9,7 +9,7 @@
 [![MITRE ATT&CK](https://img.shields.io/badge/Threat%20Intel-MITRE%20ATT%26CK%20v14-red?style=flat-square)](file:///Users/mayankkumar/genysis/backend/app/services/chat_tools.py)
 [![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ED?style=flat-square&logo=docker)](file:///Users/mayankkumar/genysis/docker-compose.yml)
 
-**SENTINEL AI** is an enterprise-grade autonomous cybersecurity intelligence platform and conversational Security Operations Center (SOC) Copilot. It continuously ingests multi-source security telemetry, applies deterministic heuristic and behavioral detection algorithms, correlates incidents into multi-stage attack chronologies, conducts 6-stage autonomous AI investigations with grounded evidence attribution, and orchestrates policy-governed defensive countermeasures with human-in-the-loop safeguards.
+**GENESIS AI** is an enterprise-grade autonomous cybersecurity intelligence platform and conversational Security Operations Center (SOC) Copilot. It continuously ingests multi-source security telemetry, applies deterministic heuristic and behavioral detection algorithms, correlates incidents into multi-stage attack chronologies, conducts 6-stage autonomous AI investigations with grounded evidence attribution, and orchestrates policy-governed defensive countermeasures with human-in-the-loop safeguards.
 
 ---
 
@@ -39,7 +39,7 @@ Modern Security Operations Centers face critical operational bottlenecks: alert 
 
 While generic LLMs have been proposed for security analysis, directly connecting an ungrounded LLM produces **numerical hallucinations, fabricated IOCs, and catastrophic errors**.
 
-SENTINEL AI resolves this through a **Hybrid Deterministic + Generative Architecture**:
+GENESIS AI resolves this through a **Hybrid Deterministic + Generative Architecture**:
 - **Deterministic Detection & Calculation**: Precise parsing, velocity calculation, graph-based lateral movement tracing, and policy evaluation are executed by compiled backend Python services with mathematical certainty.
 - **Generative AI & Reasoning**: Natural dialogue management, multi-turn investigation planning, context tracking, forensic hypothesis generation, and evidence-grounded synthesis.
 - **Zero Hallucination Guarantee**: Every IP, port, account, and incident cited in analysis is strictly verified against real database records or bounded RFC 5737 test ranges (`198.51.100.0/24`, `203.0.113.0/24`).
@@ -107,7 +107,7 @@ flowchart TD
 
 ## 3. Security Copilot (Autonomous Conversational SOC Analyst)
 
-The **Security Copilot** is the central investigative operational surface of SENTINEL AI. It is located at the primary root navigation route (`/`).
+The **Security Copilot** is the central investigative operational surface of GENESIS AI. It is located at the primary root navigation route (`/`).
 
 ### 6-Stage Cognitive Investigation Pipeline
 
@@ -196,7 +196,7 @@ Located in [`backend/app/services/detection.py`](file:///Users/mayankkumar/genys
 
 ## 6. Supported Forensic Benchmark Datasets & Tool Registry
 
-SENTINEL AI integrates 8 real-world forensic benchmark datasets and dedicated analysis tools implemented in [`backend/app/services/chat_tools.py`](file:///Users/mayankkumar/genysis/backend/app/services/chat_tools.py):
+GENESIS AI integrates 8 real-world forensic benchmark datasets and dedicated analysis tools implemented in [`backend/app/services/chat_tools.py`](file:///Users/mayankkumar/genysis/backend/app/services/chat_tools.py):
 
 | Dataset Name | Domain / Format | Key Features & Threat Patterns | Forensic Analysis Tool |
 | :--- | :--- | :--- | :--- |
@@ -213,7 +213,7 @@ SENTINEL AI integrates 8 real-world forensic benchmark datasets and dedicated an
 
 ## 7. Cryptographic Tamper-Evident Audit Chain
 
-In compliance with SOC 2, ISO 27001, and NIST 800-53 standards, SENTINEL AI enforces an append-only cryptographic audit trail in [`backend/app/services/audit.py`](file:///Users/mayankkumar/genysis/backend/app/services/audit.py):
+In compliance with SOC 2, ISO 27001, and NIST 800-53 standards, GENESIS AI enforces an append-only cryptographic audit trail in [`backend/app/services/audit.py`](file:///Users/mayankkumar/genysis/backend/app/services/audit.py):
 
 - **Hash Formula**: Each audit record $i$ computes a SHA-256 hash chaining back to entry $i-1$:
   $$H_i = \text{SHA256}\Big(H_{i-1} \parallel \text{EntryID}_i \parallel \text{Timestamp}_i \parallel \text{Action}_i \parallel \text{ActorID}_i \parallel \text{PayloadHash}_i\Big)$$
@@ -224,7 +224,7 @@ In compliance with SOC 2, ISO 27001, and NIST 800-53 standards, SENTINEL AI enfo
 
 ## 8. PolicyEngine & Autonomous Defensive Response
 
-Defensive orchestration in SENTINEL AI enforces strict **PolicyEngine Guardrails** before any countermeasure can execute:
+Defensive orchestration in GENESIS AI enforces strict **PolicyEngine Guardrails** before any countermeasure can execute:
 
 ```text
 [Playbook Triggered] --> [PolicyEngine Verification] --> [Protected Subnet Check]
@@ -386,8 +386,8 @@ Base URL: `http://localhost:8000/api/v1` (Swagger documentation at `http://local
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/mayank-kumar/sentinel-ai.git
-cd sentinel-ai
+git clone https://github.com/mayank-kumar/genysis.git
+cd genysis
 ```
 
 ### Step 2: Set Up Backend
@@ -428,7 +428,7 @@ npm run dev
 
 ## 13. Production Deployment (Docker Compose)
 
-SENTINEL AI provides a fully orchestratable multi-container stack defined in [`docker-compose.yml`](file:///Users/mayankkumar/genysis/docker-compose.yml):
+GENESIS AI provides a fully orchestratable multi-container stack defined in [`docker-compose.yml`](file:///Users/mayankkumar/genysis/docker-compose.yml):
 
 ```bash
 docker compose up --build -d
@@ -445,7 +445,7 @@ docker compose up --build -d
 
 ## 14. Testing, Verification & Quality Assurance Suite
 
-SENTINEL AI maintains a 100% passing automated test suite spanning unit, integration, benchmark, and regression tests.
+GENESIS AI maintains a 100% passing automated test suite spanning unit, integration, benchmark, and regression tests.
 
 ### Run All 159 Backend Tests
 ```bash
@@ -510,7 +510,7 @@ backend/tests/test_phase3_redis.py ..                                    [100%]
 ## 15. Responsible AI, Security Boundaries & Compliance
 
 ### Grounding & Zero Hallucination
-- SENTINEL AI refuses to fabricate indicators of compromise. If an incident ID does not exist in the database, the bot explicitly reports: *"Incident INC-XXXX was not found in the environment"*, citing zero hallucinatory evidence.
+- GENESIS AI refuses to fabricate indicators of compromise. If an incident ID does not exist in the database, the bot explicitly reports: *"Incident INC-XXXX was not found in the environment"*, citing zero hallucinatory evidence.
 - Network flows and authentication records strictly reflect ingested telemetry or standardized RFC 5737 documentation test blocks.
 
 ### Adversarial & Prompt Injection Defense
