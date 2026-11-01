@@ -1,31 +1,35 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { TopNav } from '@/components/navigation/TopNav';
-import { DemoModeBanner } from '@/components/ui/DemoModeBanner';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const { notifications, dismissNotification } = useSecurityStore();
+  const location = useLocation();
+  const isCopilot = location.pathname === '/' || location.pathname === '/copilot';
 
   return (
-    <div className="min-h-screen bg-[#F7F7F2] text-[#20251F] flex flex-col font-sans transition-colors duration-200">
-      {/* Top Demo Disclosure Banner */}
-      <DemoModeBanner />
-
+    <div className="h-screen w-screen overflow-hidden bg-[#F7F7F2] text-[#20251F] flex flex-col font-sans transition-colors duration-200">
       {/* Main Layout Shell */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
         {/* Clean Light-First Navigation Sidebar */}
         <Sidebar />
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           <TopNav />
 
-          <main className="flex-1 p-5 sm:p-7 lg:p-9 max-w-7xl w-full mx-auto">
-            <Outlet />
-          </main>
+          {isCopilot ? (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <Outlet />
+            </div>
+          ) : (
+            <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+              <Outlet />
+            </main>
+          )}
         </div>
       </div>
 

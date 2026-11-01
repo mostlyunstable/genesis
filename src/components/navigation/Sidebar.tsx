@@ -1,20 +1,13 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard,
-  ShieldAlert, 
-  Radio, 
-  Cpu, 
-  Flame, 
-  Search, 
   ShieldCheck, 
   FileText, 
   Settings, 
   ChevronLeft, 
   ChevronRight,
-  Activity,
-  Server,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SentinelLogo } from '@/components/ui/SentinelLogo';
@@ -24,179 +17,120 @@ interface NavItem {
   name: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
-  badge?: number | string;
-  badgeType?: 'critical' | 'warning' | 'info';
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
 }
 
 export const Sidebar: React.FC = () => {
   const { 
     sidebarCollapsed, 
     toggleSidebar, 
-    incidents, 
-    detections,
-    logSources,
-    totalEventsCount,
-    autonomousResponseGlobalEnabled
+    mobileSidebarOpen, 
+    setMobileSidebarOpen 
   } = useSecurityStore();
   const location = useLocation();
 
-  const activeIncidentsCount = incidents.filter(i => i.status === 'active').length;
-  const criticalThreatsCount = detections.filter(d => d.severity === 'critical' && d.status === 'open').length;
-
-  // Navigation Sections
-  const navigationSections: NavSection[] = [
-    {
-      title: 'OPERATIONS',
-      items: [
-        { name: 'Overview', path: '/', id: 'overview', icon: LayoutDashboard },
-        { name: 'Copilot', path: '/copilot', id: 'security-copilot', icon: Sparkles },
-        { 
-          name: 'Incidents', 
-          path: '/incidents', 
-          id: 'incidents', 
-          icon: Flame,
-          badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
-          badgeType: 'warning'
-        },
-        { name: 'Events', path: '/events', id: 'security-events', icon: Radio },
-        { name: 'Detections', path: '/detections', id: 'detection-engine', icon: Cpu }
-      ]
-    },
-    {
-      title: 'INVESTIGATION',
-      items: [
-        { 
-          name: 'Threat Intel', 
-          path: '/threats', 
-          id: 'threat-intelligence', 
-          icon: ShieldAlert,
-          badge: criticalThreatsCount > 0 ? criticalThreatsCount : undefined,
-          badgeType: 'critical'
-        },
-        { name: 'Investigator', path: '/investigator', id: 'ai-investigator', icon: Search },
-        { name: 'MITRE ATT&CK', path: '/mitre', id: 'mitre', icon: Activity },
-        { name: 'Assets', path: '/assets', id: 'assets', icon: Server }
-      ]
-    },
-    {
-      title: 'SYSTEM',
-      items: [
-        { name: 'Response', path: '/response', id: 'response-operations', icon: ShieldCheck },
-        { name: 'Audit Log', path: '/audit', id: 'audit-trail', icon: FileText },
-        { name: 'Settings', path: '/settings', id: 'system-configuration', icon: Settings }
-      ]
-    }
+  // Exactly the 4 items requested: Copilot, Response, Audit Trail, Settings
+  const navItems: NavItem[] = [
+    { name: 'Copilot', path: '/copilot', id: 'copilot', icon: Sparkles },
+    { name: 'Response', path: '/response', id: 'response', icon: ShieldCheck },
+    { name: 'Audit Trail', path: '/audit', id: 'audit', icon: FileText },
+    { name: 'Settings', path: '/settings', id: 'settings', icon: Settings }
   ];
 
   return (
     <>
       {/* Mobile Backdrop when open on small screens */}
-      {!sidebarCollapsed && (
+      {mobileSidebarOpen && (
         <div 
-          onClick={toggleSidebar}
-          className="fixed inset-0 bg-black/20 z-20 md:hidden backdrop-blur-xs transition-opacity"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-black/30 z-40 md:hidden backdrop-blur-xs transition-opacity"
         />
       )}
 
       <aside
-        className={`bg-white border-r border-[#E3E5DC] flex flex-col transition-all duration-200 z-30 select-none ${
-          sidebarCollapsed ? 'hidden md:flex w-[72px]' : 'fixed md:relative inset-y-0 left-0 w-[250px] shadow-sm md:shadow-none'
+        className={`bg-white border-r border-[#E3E5DC] flex flex-col shrink-0 min-h-0 h-full transition-all duration-200 z-50 select-none ${
+          mobileSidebarOpen
+            ? 'fixed inset-y-0 left-0 w-[240px] shadow-xl flex md:relative md:shadow-none'
+            : sidebarCollapsed
+            ? 'hidden md:flex w-[72px]'
+            : 'hidden md:flex w-[240px]'
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-[#E3E5DC]">
-          <NavLink to="/" className="flex items-center gap-2 group overflow-hidden">
-            <SentinelLogo size="md" showWordmark={!sidebarCollapsed} brandName="SENTINEL" />
+        <div className="h-14 px-4 flex items-center justify-between border-b border-[#E3E5DC] shrink-0">
+          <NavLink 
+            to="/copilot" 
+            onClick={() => setMobileSidebarOpen(false)}
+            className="flex items-center gap-2 group overflow-hidden"
+          >
+            <SentinelLogo size="md" showWordmark={!sidebarCollapsed || mobileSidebarOpen} brandName="SENTINEL" />
           </NavLink>
 
-          <button
-            onClick={toggleSidebar}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-          </button>
+          {/* Desktop Collapse / Mobile Close Button */}
+          <div className="flex items-center">
+            {/* Mobile close button */}
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Desktop collapse toggle */}
+            <button
+              onClick={toggleSidebar}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="hidden md:inline-flex p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
 
-        {/* Navigation Sections */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-          {navigationSections.map((section) => (
-            <div key={section.title} className="space-y-1">
-              {!sidebarCollapsed && (
-                <div className="px-3 pb-1 text-[10px] font-bold text-[#969B91] tracking-[0.16em] uppercase font-mono">
-                  {section.title}
-                </div>
-              )}
-              <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = item.path === '/' 
-                    ? location.pathname === '/' 
-                    : location.pathname.startsWith(item.path);
+        {/* Navigation List */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.path === '/copilot'
+              ? location.pathname === '/' || location.pathname.startsWith('/copilot')
+              : location.pathname.startsWith(item.path);
 
-                  return (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      title={sidebarCollapsed ? item.name : undefined}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-full text-xs font-medium transition-all ${
-                        isActive
-                          ? 'bg-[#EAF0E6] text-[#54765C] font-semibold border border-[#CFDCC9]'
-                          : 'text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] border border-transparent'
-                      } ${sidebarCollapsed ? 'justify-center px-0' : ''}`}
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#54765C]' : 'text-[#73796F]'}`} />
-                      
-                      {!sidebarCollapsed && (
-                        <span className="truncate flex-1 tracking-tight font-sans">{item.name}</span>
-                      )}
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileSidebarOpen(false)}
+                title={sidebarCollapsed && !mobileSidebarOpen ? item.name : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-full text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-[#EAF0E6] text-[#54765C] font-semibold border border-[#CFDCC9]'
+                    : 'text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] border border-transparent'
+                } ${sidebarCollapsed && !mobileSidebarOpen ? 'justify-center px-0' : ''}`}
+              >
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#54765C]' : 'text-[#73796F]'}`} />
+                
+                {(!sidebarCollapsed || mobileSidebarOpen) && (
+                  <span className="truncate flex-1 tracking-tight font-sans">{item.name}</span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
 
-                      {!sidebarCollapsed && item.badge !== undefined && (
-                        <span className={`px-2 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                          item.badgeType === 'critical' ? 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]' :
-                          'bg-[#FAF2EC] text-[#C47A45] border border-[#F4E2D5]'
-                        }`}>
-                          {item.badge}
-                        </span>
-                      )}
-
-                      {sidebarCollapsed && item.badge !== undefined && (
-                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#B94C43]" />
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Autonomous Operational Health Status */}
-        <div className="p-3 border-t border-[#E3E5DC]">
-          {!sidebarCollapsed ? (
-            <div className="p-3 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] text-xs">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#20251F] font-sans">
-                  <span className="w-2 h-2 rounded-full bg-[#54765C] animate-pulse" />
-                  Sentinel Engine
-                </span>
-                <span className="text-[10px] font-mono font-bold text-[#54765C]">
-                  {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
-                </span>
-              </div>
-              <p className="text-[10px] text-[#73796F] mt-1 leading-tight font-mono">
-                {logSources.length} sensors • {totalEventsCount.toLocaleString()} evts
-              </p>
+        {/* Status Indicator */}
+        <div className="p-3 border-t border-[#E3E5DC] shrink-0">
+          {!sidebarCollapsed || mobileSidebarOpen ? (
+            <div className="px-3 py-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC] text-xs flex items-center justify-between">
+              <span className="flex items-center gap-2 text-[11px] font-medium text-[#20251F] font-sans">
+                <span className="w-2 h-2 rounded-full bg-[#54765C]" />
+                Sentinel Ready
+              </span>
+              <span className="text-[10px] font-mono text-[#969B91]">v2.5</span>
             </div>
           ) : (
             <div className="flex justify-center p-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#54765C] animate-pulse" title="Sentinel Engine Active" />
+              <span className="w-2 h-2 rounded-full bg-[#54765C]" title="Sentinel Active" />
             </div>
           )}
         </div>

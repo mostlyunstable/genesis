@@ -49,9 +49,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     e.username.toLowerCase().includes(q)
   ).slice(0, 3) : [];
 
-  const handleSelectIncident = (id: string) => {
-    setSelectedIncidentId(id);
-    navigate('/incidents');
+  const handleSelectIncident = (id: string, title: string) => {
+    navigate(`/copilot?q=${encodeURIComponent(`Investigate incident ${id}: ${title}`)}`);
     onClose();
   };
 
@@ -90,7 +89,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                 {matchedIncidents.map(inc => (
                   <button
                     key={inc.id}
-                    onClick={() => handleSelectIncident(inc.id)}
+                    onClick={() => handleSelectIncident(inc.id, inc.title)}
                     className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
                   >
                     <div className="flex items-center gap-2 truncate">
@@ -119,7 +118,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={det.id}
                     onClick={() => {
-                      navigate('/threats');
+                      navigate(`/copilot?q=${encodeURIComponent(`Analyze detection ${det.id}: ${det.name} from ${det.sourceIp}`)}`);
                       onClose();
                     }}
                     className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
@@ -148,7 +147,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={evt.id}
                     onClick={() => {
-                      navigate('/events');
+                      navigate(`/copilot?q=${encodeURIComponent(`Inspect event ${evt.id}: ${evt.eventType} for user ${evt.username} from IP ${evt.sourceIp}`)}`);
                       onClose();
                     }}
                     className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
@@ -174,8 +173,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         </div>
 
         <div className="px-6 py-3 bg-[#FAFAF7] border-t border-[#E3E5DC] flex items-center justify-between text-[11px] text-[#73796F] font-mono">
-          <span>Press <kbd className="text-[#20251F] font-semibold">↵ Enter</kbd> to inspect entity</span>
-          <span>Scope: Local Synthetic Sandbox</span>
+          <span>Press <kbd className="text-[#20251F] font-semibold">↵ Enter</kbd> to inspect in Copilot</span>
+          <span>Security Intelligence</span>
         </div>
       </div>
     </div>

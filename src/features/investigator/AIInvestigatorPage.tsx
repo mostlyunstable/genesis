@@ -156,7 +156,7 @@ export const AIInvestigatorPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-display font-medium text-[#20251F] tracking-tight">
-              Investigator
+              AI Investigator Workspace
             </h1>
             <p className="text-xs sm:text-sm text-[#73796F]">
               Forensic evidence and incident investigation workspace.

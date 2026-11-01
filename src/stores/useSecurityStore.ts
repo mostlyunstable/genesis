@@ -49,6 +49,7 @@ interface SecurityState {
   selectedEventId: string | null;
   notifications: ToastNotification[];
   sidebarCollapsed: boolean;
+  mobileSidebarOpen: boolean;
   globalSearchQuery: string;
 
   // Sync Actions with Real Backend
@@ -68,6 +69,8 @@ interface SecurityState {
   toggleEnvironment: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
+  setMobileSidebarOpen: (open: boolean) => void;
+  toggleMobileSidebar: () => void;
   setGlobalSearchQuery: (query: string) => void;
   setSelectedIncidentId: (id: string | null) => void;
   setSelectedDetectionId: (id: string | null) => void;
@@ -129,6 +132,7 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   selectedEventId: null,
   notifications: [],
   sidebarCollapsed: false,
+  mobileSidebarOpen: false,
   globalSearchQuery: '',
 
   // -------------------------------------------------------------
@@ -299,6 +303,8 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+  toggleMobileSidebar: () => set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
   setGlobalSearchQuery: (query) => set({ globalSearchQuery: query }),
   setSelectedIncidentId: (id) => set({ selectedIncidentId: id }),
   setSelectedDetectionId: (id) => set({ selectedDetectionId: id }),

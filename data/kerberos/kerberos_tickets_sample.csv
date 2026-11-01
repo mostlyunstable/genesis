@@ -1,0 +1,7 @@
+timestamp,event_id,user_principal,service_name,client_ip,ticket_encryption_type,ticket_options,status_code,is_suspicious
+2026-11-01T10:10:00Z,4768,svc_backup@CORP.LAN,krbtgt/CORP.LAN,10.0.1.5,0x12,0x40810010,0x0,false
+2026-11-01T10:11:15Z,4769,jsmith@CORP.LAN,MSSQLSvc/db01.corp.lan:1433,10.0.3.88,0x17,0x40810000,0x0,true
+2026-11-01T10:11:16Z,4769,jsmith@CORP.LAN,HTTP/webportal.corp.lan,10.0.3.88,0x17,0x40810000,0x0,true
+2026-11-01T10:11:17Z,4769,jsmith@CORP.LAN,TERMSRV/rds01.corp.lan,10.0.3.88,0x17,0x40810000,0x0,true
+2026-11-01T10:12:00Z,4768,legacy_test@CORP.LAN,krbtgt/CORP.LAN,10.0.3.88,0x17,0x40810010,0x0,true
+2026-11-01T10:15:30Z,4769,admin_ops@CORP.LAN,krbtgt/CORP.LAN,10.0.1.10,0x12,0x40810010,0x0,false

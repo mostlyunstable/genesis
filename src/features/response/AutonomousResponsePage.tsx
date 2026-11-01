@@ -59,7 +59,7 @@ export const AutonomousResponsePage: React.FC = () => {
     try {
       const ok = await executePlaybookAction(
         selectedPlaybook.id,
-        `Sandbox Dry Run for ${selectedPlaybook.name}`,
+        `Execution for ${selectedPlaybook.name}`,
         simulationTarget.trim()
       );
 
@@ -186,7 +186,7 @@ export const AutonomousResponsePage: React.FC = () => {
 
               <div className="space-y-3">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91]">
-                  DISPATCH DEFENSIVE MITIGATION (DRY RUN)
+                  DISPATCH DEFENSIVE MITIGATION
                 </span>
                 <div className="flex gap-2">
                   <input

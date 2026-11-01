@@ -1,0 +1,9 @@
+email_id,sender,subject,num_links,has_ip_in_url,urgency_keywords_count,attachments_count,spf_result,dkim_result,target_brand,label
+EML-001,security@paypal-verification-alert.com,Urgent: Your PayPal Account Has Been Suspended,3,1,4,1,FAIL,FAIL,PayPal,phishing
+EML-002,billing@aws.amazon.com,Monthly AWS Invoice Available for Download,1,0,0,1,PASS,PASS,AWS,legitimate
+EML-003,support@microsoft-office365-login.net,Password Expiring in 2 Hours - Reset Immediately,2,1,5,0,FAIL,FAIL,Microsoft 365,phishing
+EML-004,notifications@github.com,Security Alert: Dependabot detected vulnerability in repository,2,0,1,0,PASS,PASS,GitHub,legitimate
+EML-005,payroll@secure-workday-portal.org,Important: Direct Deposit Account Update Required,4,1,3,1,FAIL,FAIL,Workday,phishing
+EML-006,newsletter@sans.org,SANS NewsBites: Vol. 28 Num. 84,8,0,0,0,PASS,PASS,SANS Institute,legitimate
+EML-007,admin@internal-corp-vpn.cc,Immediate Action Required: Renew Corporate VPN Certificate,1,1,4,1,FAIL,FAIL,Cisco AnyConnect,phishing
+EML-008,alert@pagerduty.com,Triggered: [CRITICAL] High authentication failure rate on web-01,2,0,1,0,PASS,PASS,PagerDuty,legitimate

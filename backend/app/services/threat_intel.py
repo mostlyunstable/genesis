@@ -62,6 +62,86 @@ MITRE_ATTACK_KNOWLEDGE: List[Dict[str, Any]] = [
         "detection_guidelines": "Inspect east-west SSH connections between non-bastion internal subnets.",
         "mitigations": ["Segment internal networks", "Enforce SSH key-only authentication with passphrase protection"],
         "reference_url": "https://attack.mitre.org/techniques/T1021/004/"
+    },
+    {
+        "technique_id": "T1558.003",
+        "technique_name": "Steal or Forge Kerberos Tickets: Kerberoasting",
+        "tactic": "Credential Access",
+        "keywords": ["kerberoast", "kerberoasting", "spn", "tgs", "rc4", "active directory", "ticket"],
+        "description": "Adversaries may request service tickets (TGS) for target Service Principal Names (SPNs) using RC4-HMAC encryption to crack service account passwords offline.",
+        "detection_guidelines": "Monitor Event ID 4769 for abnormal volumes of TGS requests with ticket encryption type 0x17 (RC4-HMAC-MD5).",
+        "mitigations": ["Enforce AES-256 Kerberos encryption", "Require managed service accounts (gMSA) with 128-bit randomized passwords", "Audit SPN privileges"],
+        "reference_url": "https://attack.mitre.org/techniques/T1558/003/"
+    },
+    {
+        "technique_id": "T1558.004",
+        "technique_name": "Steal or Forge Kerberos Tickets: AS-REP Roasting",
+        "tactic": "Credential Access",
+        "keywords": ["as-rep", "asrep", "roasting", "preauth", "dont_req_preauth", "kerberos"],
+        "description": "Adversaries may request authentication tickets for domain accounts configured with Kerberos pre-authentication disabled to crack user password hashes offline.",
+        "detection_guidelines": "Audit Event ID 4768 where Pre-Authentication Type is 0 (no pre-authentication required).",
+        "mitigations": ["Audit and enable Kerberos Pre-Authentication on all user accounts", "Enforce 25+ character passphrases"],
+        "reference_url": "https://attack.mitre.org/techniques/T1558/004/"
+    },
+    {
+        "technique_id": "T1550.002",
+        "technique_name": "Use Alternate Authentication Material: Pass the Hash",
+        "tactic": "Lateral Movement, Defense Evasion",
+        "keywords": ["pass the hash", "pth", "ntlm", "hash", "lateral", "mimikatz"],
+        "description": "Adversaries may use the NTLM hash of a user's password to authenticate to remote servers without needing the cleartext password.",
+        "detection_guidelines": "Alert on NTLM logons (Logon Type 3) across internal network boundaries where Kerberos is expected.",
+        "mitigations": ["Disable NTLM in favor of Kerberos", "Add privileged users to Protected Users security group", "Deploy LAPS"],
+        "reference_url": "https://attack.mitre.org/techniques/T1550/002/"
+    },
+    {
+        "technique_id": "T1190",
+        "technique_name": "Exploit Public-Facing Application",
+        "tactic": "Initial Access",
+        "keywords": ["sqli", "sql injection", "xss", "ssrf", "waf", "rce", "exploit", "path traversal"],
+        "description": "Adversaries may exploit vulnerabilities in Internet-facing software (SQLi, SSRF, command injection, path traversal) to execute code or steal data.",
+        "detection_guidelines": "Inspect web application and WAF logs for SQL meta-characters, path traversal sequences ('../'), and cloud metadata queries (169.254.169.254).",
+        "mitigations": ["Enforce parameterized SQL queries and ORMs", "Deploy WAF with OWASP Core Rule Set", "Enforce IMDSv2 with token hops constraint"],
+        "reference_url": "https://attack.mitre.org/techniques/T1190/"
+    },
+    {
+        "technique_id": "T1048.003",
+        "technique_name": "Exfiltration Over Alternative Protocol: DNS Exfiltration",
+        "tactic": "Exfiltration, Command and Control",
+        "keywords": ["dns", "tunneling", "exfiltration", "txt", "shannon", "entropy", "subdomain"],
+        "description": "Adversaries may exfiltrate stolen data or establish command-and-control channels by encoding payloads into DNS query labels.",
+        "detection_guidelines": "Calculate Shannon entropy on DNS query subdomains (alerting on entropy > 3.8), anomalous subdomain lengths (>35 chars), and high frequency TXT record queries.",
+        "mitigations": ["Deploy DNS sinkholing and Response Policy Zones (RPZ)", "Enforce internal DNS forwarder resolvers", "Block direct external UDP 53 egress"],
+        "reference_url": "https://attack.mitre.org/techniques/T1048/003/"
+    },
+    {
+        "technique_id": "T1071.001",
+        "technique_name": "Application Layer Protocol: Web Protocols",
+        "tactic": "Command and Control",
+        "keywords": ["c2", "beaconing", "jitter", "command and control", "heartbeat", "dga"],
+        "description": "Adversaries may communicate with command and control infrastructure using standard HTTP/HTTPS protocols with randomized timing jitter.",
+        "detection_guidelines": "Analyze statistical periodicity, coefficient of variation in inter-request arrival times, and JA3/JA4 TLS fingerprint anomalies.",
+        "mitigations": ["Inspect TLS traffic via decrypting proxies", "Block dynamic DNS and newly registered domains (NRDs)", "Enforce strict egress proxy authentication"],
+        "reference_url": "https://attack.mitre.org/techniques/T1071/001/"
+    },
+    {
+        "technique_id": "T1498.001",
+        "technique_name": "Network Denial of Service: Direct Network Flood",
+        "tactic": "Impact",
+        "keywords": ["syn flood", "dos", "ddos", "flood", "tcp syn", "volumetric"],
+        "description": "Adversaries may flood network services with transport-layer packets (such as TCP SYN floods) to exhaust server resources.",
+        "detection_guidelines": "Monitor asymmetric SYN without ACK packet ratios and half-open TCP connection table saturation.",
+        "mitigations": ["Enable SYN cookies (tcp_syncookies=1)", "Tune tcp_max_syn_backlog", "Deploy upstream DDoS mitigation scrubbers"],
+        "reference_url": "https://attack.mitre.org/techniques/T1498/001/"
+    },
+    {
+        "technique_id": "T1499.003",
+        "technique_name": "Endpoint Denial of Service: Application Exhaustion",
+        "tactic": "Impact",
+        "keywords": ["slowloris", "slow http", "low and slow", "connection exhaustion"],
+        "description": "Adversaries may exploit application architecture by holding connection sockets open with incomplete HTTP requests (Slowloris).",
+        "detection_guidelines": "Alert on HTTP sessions with extended durations, low packet volume, and prolonged header inter-arrival times.",
+        "mitigations": ["Deploy Apache mod_reqtimeout", "Set aggressive client header timeout thresholds", "Use event-driven reverse proxies (Nginx/Envoy)"],
+        "reference_url": "https://attack.mitre.org/techniques/T1499/003/"
     }
 ]
 
@@ -89,6 +169,38 @@ SIGMA_RULES_KNOWLEDGE: List[Dict[str, Any]] = [
         "severity": "critical",
         "logic": "username in ('root', 'admin', 'administrator', 'domain_admin') and outcome == 'failure' >= 5 by source_ip",
         "false_positives": ["Administrator password typos during emergency maintenance"]
+    },
+    {
+        "rule_id": "SIGMA-KERBEROAST-TGS",
+        "title": "Suspicious Kerberos TGS Ticket Request with RC4 Encryption",
+        "log_source": "windows_security_4769",
+        "severity": "high",
+        "logic": "event.id == 4769 and ticket_encryption_type == '0x17' and not service_name.endswith('$')",
+        "false_positives": ["Legacy enterprise services requiring RC4 compatibility"]
+    },
+    {
+        "rule_id": "SIGMA-DNS-TUNNEL",
+        "title": "High-Entropy DNS Query Subdomain Exfiltration",
+        "log_source": "dns_query_logs",
+        "severity": "high",
+        "logic": "shannon_entropy(query.subdomain) >= 3.8 and length(query.subdomain) >= 35",
+        "false_positives": ["Content delivery network hash routing (e.g. Akamai, Cloudflare)"]
+    },
+    {
+        "rule_id": "SIGMA-WEB-SQLI",
+        "title": "SQL Injection Meta-Character or Union Pattern in HTTP Request",
+        "log_source": "web_waf_access",
+        "severity": "critical",
+        "logic": "request_uri matches '(?i)(union\\s+select|or\\s+1=1|--|/\\*|sleep\\(\\d+\\))'",
+        "false_positives": ["Security vulnerability scanners in scheduled lab windows"]
+    },
+    {
+        "rule_id": "SIGMA-C2-BEACON",
+        "title": "Periodic HTTP/HTTPS Outbound Beaconing with Statistical Low Jitter",
+        "log_source": "egress_netflow",
+        "severity": "high",
+        "logic": "coefficient_of_variation(inter_arrival_time) <= 0.15 and connection_count >= 50 by destination_ip",
+        "false_positives": ["Software auto-updaters", "NTP synchronization clients"]
     }
 ]
 
