@@ -148,7 +148,7 @@ export const AuditTrailPage: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded-lg bg-[#F0F1EA] hover:bg-white border border-[#E2E4DC] text-[#5C645B] hover:text-[#111417] transition-colors cursor-pointer"
+            className="p-2.5 rounded-lg bg-white hover:bg-[#F0F1EA] border-2 border-[#CFD4C9] hover:border-[#111417] text-[#111417] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
             title="Refresh audit log"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -158,7 +158,7 @@ export const AuditTrailPage: React.FC = () => {
 
       {/* Verification Status Banner if executed */}
       {verificationResult && (
-        <div className="p-4 rounded-xl bg-[#EFF4FF] border border-[#D0DEFF] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono shadow-xs">
+        <div className="p-4 rounded-xl bg-[#EFF4FF] border-2 border-[#D0DEFF] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono shadow-xs">
           <div className="flex items-center gap-2 text-[#1E4BD8]">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span className="font-bold">
@@ -166,7 +166,7 @@ export const AuditTrailPage: React.FC = () => {
             </span>
           </div>
           {verificationResult.latestHash && (
-            <span className="text-[#5C645B] text-[11px] truncate max-w-xs">
+            <span className="text-[#5C645B] text-[11px] truncate max-w-xs font-mono">
               Root: {verificationResult.latestHash.slice(0, 20)}...
             </span>
           )}
@@ -181,15 +181,15 @@ export const AuditTrailPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search action, actor, target or record ID..."
-            className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 pl-9 text-xs text-[#111417] placeholder-[#889085] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10 font-sans"
+            className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 pl-10 text-xs text-[#111417] placeholder-[#889085] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10 font-sans shadow-2xs"
           />
-          <Search className="w-3.5 h-3.5 text-[#889085] absolute left-3 top-2.5 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#889085] absolute left-3.5 top-3 pointer-events-none" />
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3 py-2 text-xs text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10 cursor-pointer font-sans"
+          className="bg-white border-2 border-[#CFD4C9] hover:border-[#111417] rounded-xl px-3.5 py-2.5 text-xs text-[#111417] font-semibold focus:outline-none focus:border-[#1E4BD8] focus:ring-2 focus:ring-[#1E4BD8]/10 cursor-pointer font-sans shadow-2xs transition-colors"
         >
           <option value="all">Category: All Types</option>
           <option value="CONFIG_CHANGE">Configuration Changes</option>
@@ -223,9 +223,9 @@ export const AuditTrailPage: React.FC = () => {
                     onClick={() => setExpandedId(isExpanded ? null : rec.id)}
                     className="p-4 sm:p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer font-mono text-xs"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                        rec.result === 'SUCCESS' ? 'bg-[#EFF4FF] text-[#1E4BD8]' : 'bg-[#F0F1EA] text-[#5C645B]'
+                        rec.result === 'SUCCESS' ? 'bg-[#EFF4FF] text-[#1E4BD8] border border-[#D0DEFF]' : 'bg-[#F0F1EA] text-[#5C645B] border border-[#E2E4DC]'
                       }`}>
                         {rec.result}
                       </span>
@@ -233,19 +233,19 @@ export const AuditTrailPage: React.FC = () => {
                       <span className="text-[#889085] text-[11px] shrink-0">
                         {rec.timestamp ? new Date(rec.timestamp).toLocaleTimeString() : ''}
                       </span>
-                      <span className="text-[#111417] font-semibold truncate">
+                      <span className="text-[#111417] font-semibold">
                         {rec.action}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 shrink-0 text-xs">
+                    <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-4 shrink-0 text-xs">
                       <span className="text-[#5C645B]">
                         by: <strong className="text-[#111417]">{rec.actor}</strong>
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-[#F0F1EA] border border-[#E2E4DC] text-[#5C645B] text-[10px]">
                         {rec.category}
                       </span>
-                      <button className="text-[#889085] hover:text-[#111417]">
+                      <button className="text-[#889085] hover:text-[#111417] p-1 cursor-pointer">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
                     </div>

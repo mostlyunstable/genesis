@@ -227,10 +227,10 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-4xl space-y-6">
           
           {/* Status Eyebrow Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF4FF] border-2 border-[#D0DEFF] text-xs font-mono font-bold text-[#1E4BD8] shadow-2xs">
+          <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#EFF4FF] border-2 border-[#D0DEFF] text-[11px] sm:text-xs font-mono font-bold text-[#1E4BD8] shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-[#1E4BD8] animate-pulse" />
             <span>GENESIS AI • AUTONOMOUS SECURITY PLATFORM</span>
-            <span className="text-[#A7C1FF]">•</span>
+            <span className="text-[#A7C1FF] hidden sm:inline">•</span>
             <span className="text-[#1E4BD8]">CALIBRATED TELEMETRY</span>
           </div>
 
@@ -278,7 +278,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Telemetry Proof Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-8 mt-8 border-t border-[#E2E4DC] text-xs font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-8 mt-8 border-t border-[#E2E4DC] text-xs font-mono">
           <div className="p-4 rounded-xl bg-white border-2 border-[#E2E4DC] shadow-2xs space-y-1">
             <div className="text-[10px] uppercase text-[#889085] font-bold tracking-wider">Log Ingestion</div>
             <div className="font-bold text-[#111417]">RFC 5424 & OpenSSH</div>
@@ -578,14 +578,14 @@ export const LandingPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="text-[11px] text-[#5C645B] flex items-center justify-between">
-                  <span>MITRE ATT&CK: <strong className="text-[#111417]">{scenario.badge}</strong></span>
+                <div className="text-[11px] text-[#5C645B] flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <span>MITRE ATT&CK: <strong className="text-[#111417] font-mono">{scenario.badge}</strong></span>
                   <button
                     onClick={() => handleLaunchCopilot(scenario.copilotPrompt)}
-                    className="font-bold text-[#1E4BD8] hover:underline cursor-pointer inline-flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#EFF4FF] text-[#1E4BD8] font-bold border-2 border-[#D0DEFF] hover:border-[#1E4BD8] text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
                   >
                     <span>Investigate in Copilot</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -612,7 +612,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Pillar 1: Autonomous Copilot */}
           <div className="bg-white border-2 border-[#E2E4DC] rounded-xl p-6 shadow-xs flex flex-col justify-between space-y-5 hover:border-[#1E4BD8] transition-colors">
             <div className="space-y-3">
@@ -840,7 +840,7 @@ export const LandingPage: React.FC = () => {
       {/* ─────────────────────────────────────────────────────────────
           5. TECHNICAL INTEGRITY CALLOUT & GITHUB REPO
           ───────────────────────────────────────────────────────────── */}
-      <section className="bg-white border-2 border-[#E2E4DC] rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <section className="bg-white border-2 border-[#E2E4DC] rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-2 max-w-xl">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#1E4BD8]" />

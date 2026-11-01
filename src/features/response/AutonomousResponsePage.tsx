@@ -110,7 +110,7 @@ export const AutonomousResponsePage: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded-lg bg-[#F0F1EA] hover:bg-white border border-[#E2E4DC] text-[#5C645B] hover:text-[#111417] transition-colors cursor-pointer"
+            className="p-2.5 rounded-lg bg-white hover:bg-[#F0F1EA] border-2 border-[#CFD4C9] hover:border-[#111417] text-[#111417] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
             title="Refresh response operations"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -149,10 +149,10 @@ export const AutonomousResponsePage: React.FC = () => {
                   <div
                     key={pb.id}
                     onClick={() => setSelectedPlaybookId(pb.id)}
-                    className={`p-4.5 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-4.5 rounded-xl border-2 transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-white border-[#1E4BD8] shadow-xs ring-1 ring-[#1E4BD8]/30'
-                        : 'bg-white border-[#E2E4DC] hover:border-[#CFD4C9] hover:bg-[#F8F8F5]'
+                        : 'bg-white border-[#E2E4DC] hover:border-[#111417] hover:bg-[#F8F8F5]'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs font-mono">
@@ -179,7 +179,7 @@ export const AutonomousResponsePage: React.FC = () => {
         {/* Right Column (7 cols): Playbook Inspector & Action History */}
         <div className="lg:col-span-7 space-y-6">
           {selectedPlaybook && (
-            <div className="bg-white border border-[#E2E4DC] rounded-xl p-6 shadow-xs space-y-5">
+            <div className="bg-white border-2 border-[#E2E4DC] rounded-xl p-6 shadow-xs space-y-5">
               <div className="flex items-center justify-between border-b border-[#E2E4DC] pb-4">
                 <div>
                   <span className="text-xs font-mono font-bold text-[#1E4BD8]">{selectedPlaybook.id}</span>
@@ -193,13 +193,13 @@ export const AutonomousResponsePage: React.FC = () => {
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#889085]">
                   DISPATCH DEFENSIVE MITIGATION
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2.5">
                   <input
                     type="text"
                     value={simulationTarget}
                     onChange={(e) => setSimulationTarget(e.target.value)}
                     placeholder="Enter target IP or username (e.g., 198.51.100.42)..."
-                    className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-xs text-[#111417] placeholder-[#889085] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10 font-mono"
+                    className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-lg px-3.5 py-2.5 text-xs text-[#111417] placeholder-[#889085] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10 font-mono"
                   />
                   <Button
                     variant="primary"
@@ -208,6 +208,7 @@ export const AutonomousResponsePage: React.FC = () => {
                     isLoading={isSimulating}
                     disabled={!simulationTarget.trim()}
                     icon={<Play className="w-3.5 h-3.5" />}
+                    className="shrink-0"
                   >
                     Execute
                   </Button>
@@ -255,10 +256,11 @@ export const AutonomousResponsePage: React.FC = () => {
 
                     {act.rollbackAvailable && (
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         onClick={() => rollbackAction(act.id)}
                         icon={<RotateCcw className="w-3.5 h-3.5" />}
+                        className="shrink-0"
                       >
                         Rollback
                       </Button>

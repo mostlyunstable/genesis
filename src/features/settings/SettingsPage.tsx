@@ -120,11 +120,13 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           <Button
-            variant={autonomousResponseGlobalEnabled ? 'primary' : 'secondary'}
-            size="sm"
+            variant={autonomousResponseGlobalEnabled ? 'primary' : 'danger'}
+            size="md"
             onClick={toggleAutonomousGlobal}
+            icon={<Zap className="w-4 h-4" />}
+            className="self-start sm:self-auto shrink-0"
           >
-            {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
+            {autonomousResponseGlobalEnabled ? 'ARMED • ACTIVE' : 'HALTED • DISARMED'}
           </Button>
         </div>
       </section>
@@ -158,7 +160,7 @@ export const SettingsPage: React.FC = () => {
               type="number"
               value={localThresholds.sshFailedAttemptThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshFailedAttemptThreshold: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
+              className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
             />
             <span className="text-[10px] text-[#889085]">Failures before adversary IP isolation trigger</span>
           </div>
@@ -171,7 +173,7 @@ export const SettingsPage: React.FC = () => {
               type="number"
               value={localThresholds.sshWindowSeconds}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshWindowSeconds: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
+              className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
             />
             <span className="text-[10px] text-[#889085]">Sliding window for brute-force rate calculations</span>
           </div>
@@ -184,7 +186,7 @@ export const SettingsPage: React.FC = () => {
               type="number"
               value={localThresholds.passwordSprayUniqueUsersThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, passwordSprayUniqueUsersThreshold: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
+              className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
             />
             <span className="text-[10px] text-[#889085]">Unique usernames probed before spray detection</span>
           </div>
@@ -197,7 +199,7 @@ export const SettingsPage: React.FC = () => {
               type="number"
               value={localThresholds.temporaryIpBlockDurationMinutes}
               onChange={(e) => setLocalThresholds({ ...localThresholds, temporaryIpBlockDurationMinutes: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
+              className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
             />
             <span className="text-[10px] text-[#889085]">Ingress iptables DROP duration before auto-expiry</span>
           </div>
@@ -205,7 +207,7 @@ export const SettingsPage: React.FC = () => {
       </section>
 
       {/* 3. Real Backend API Connection Settings */}
-      <section className="bg-white border border-[#E2E4DC] rounded-xl p-6 shadow-xs space-y-4">
+      <section className="bg-white border-2 border-[#E2E4DC] rounded-xl p-6 shadow-xs space-y-4">
         <div className="flex items-center gap-2 border-b border-[#E2E4DC] pb-4">
           <Server className="w-4 h-4 text-[#1E4BD8]" />
           <h3 className="font-display text-base font-semibold text-[#111417]">
@@ -214,12 +216,12 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         <div className="space-y-2.5 font-mono text-xs">
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <input
               type="text"
               value={fastApiEndpoint}
               onChange={(e) => setFastApiEndpoint(e.target.value)}
-              className="w-full bg-[#F0F1EA] border border-[#E2E4DC] rounded-lg px-3.5 py-2 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
+              className="w-full bg-[#F0F1EA] border-2 border-[#E2E4DC] rounded-xl px-4 py-2.5 text-[#111417] focus:outline-none focus:border-[#1E4BD8] focus:bg-white focus:ring-2 focus:ring-[#1E4BD8]/10"
             />
             <div className="flex gap-2 shrink-0">
               <Button
@@ -230,7 +232,7 @@ export const SettingsPage: React.FC = () => {
                 Update Target
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="md"
                 onClick={handlePingBackend}
                 isLoading={isPinging}

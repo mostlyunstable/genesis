@@ -50,47 +50,29 @@ export const TopNav: React.FC = () => {
           </h1>
         </div>
 
-        {/* Global Search trigger bar (Center) */}
-        <div className="flex-1 max-w-md mx-6 hidden md:block">
+        {/* Global Search trigger bar (Center - Visible on large screens) */}
+        <div className="flex-1 max-w-md mx-6 hidden lg:block">
           <button
             onClick={() => setSearchOpen(true)}
-            className="w-full flex items-center justify-between px-3 h-8.5 rounded-lg bg-[#F0F1EA] border border-[#E2E4DC] hover:border-[#CDCFCE] hover:bg-white text-xs text-[#5E656D] hover:text-[#111417] transition-all cursor-pointer group shadow-2xs"
+            className="w-full flex items-center justify-between px-3.5 h-8.5 rounded-lg bg-[#F0F1EA] border border-[#E2E4DC] hover:border-[#CDCFCE] hover:bg-white text-xs text-[#5E656D] hover:text-[#111417] transition-all cursor-pointer group shadow-2xs"
           >
-            <div className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-[#8A939E] group-hover:text-[#1E4BD8] transition-colors" />
-              <span className="text-xs">Search playbooks, activity ledger, entities...</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Search className="w-3.5 h-3.5 text-[#8A939E] group-hover:text-[#1E4BD8] transition-colors shrink-0" />
+              <span className="text-xs truncate">Search playbooks, activity ledger, entities...</span>
             </div>
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white text-[#5E656D] rounded border border-[#E2E4DC] shadow-2xs">
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white text-[#5E656D] rounded border border-[#E2E4DC] shadow-2xs shrink-0 ml-2">
               ⌘K
             </kbd>
           </button>
         </div>
 
         {/* Right Tools */}
-        <div className="flex items-center gap-2">
-          {/* Quick Copilot Side Drawer Trigger */}
-          {location.pathname !== '/copilot' && (
-            <button
-              onClick={() => setSideDrawerOpen(true)}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#111417] hover:bg-[#1E4BD8] text-white border-2 border-[#2A3138] hover:border-[#4D76F8] transition-all cursor-pointer shadow-xs"
-              title="Open Copilot Assistant"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#A7C1FF]" />
-              <span className="hidden sm:inline">Copilot</span>
-            </button>
-          )}
-
-          {/* Status Indicator */}
-          <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-[#1E824C] bg-[#EDF7F1] border border-[#C6E8D5]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1E824C]" />
-            <span>Operational</span>
-          </div>
-
-          {/* Quick Search mobile icon */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Search icon (Visible on tablet & mobile) */}
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search records"
-            className="md:hidden p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA]"
+            className="lg:hidden p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA] transition-colors cursor-pointer"
           >
             <Search className="w-4 h-4" />
           </button>

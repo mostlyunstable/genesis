@@ -49,7 +49,8 @@ from backend.app.services.chat_tools import (
     AnalyzeWebAttackDatasetInput,
     AnalyzeDnsExfiltrationInput,
     AnalyzeKerberosTicketsInput,
-    CorrelateKillChainInput
+    CorrelateKillChainInput,
+    AnalyzeSocBruteforceLabInput
 )
 
 
@@ -285,10 +286,21 @@ class ChatCopilotService:
             ("how was genesis built" in p) or
             (p.strip() in ["repo", "the repo", "github", "git repo", "repository"])
         )
+        is_zacariah_lab = (
+            ("zacariah" in p) or
+            ("log-analysis-brute-force-detection" in p) or
+            ("zacariahcybersec" in p) or
+            ("log_detector" in p) or
+            ("soc brute force lab" in p) or
+            ("brute-force detection lab" in p) or
+            ("brute force detection lab" in p) or
+            ("python brute force lab" in p) or
+            ("tinashe" in p)
+        )
 
         # Explicit File / Log Analysis Intent: only true if user specifically asks for file/log analysis
         is_explicit_file_query = (
-            not is_kaggle_data and not is_github_repo and not is_question and (
+            not is_kaggle_data and not is_github_repo and not is_zacariah_lab and not is_question and (
                 (("file" in p or "upload" in p or "attachment" in p or ".log" in p or ".csv" in p or ".txt" in p or ".json" in p) and
                  ("analyze" in p or "inspect" in p or "parse" in p or "summarize" in p or "what does" in p or "check" in p or "review" in p or "findings" in p))
                 or (p.strip() in ["analyze", "analyze file", "analyze log", "inspect file", "inspect log", "parse file", "parse log", "summarize file", "summarize log"])
@@ -378,7 +390,7 @@ class ChatCopilotService:
             is_lanl_dataset or is_system_log_dataset or is_dataset_overview or is_insufficient_evidence or
             is_jailbreak or is_sqli_concept or is_ssrf_concept or is_kerberoast_concept or is_asrep_concept or
             is_dns_tunnel_concept or is_c2_concept or is_zero_trust or is_web_attack_dataset or is_dns_dataset or
-            is_kerberos_dataset or is_killchain or is_question or is_kaggle_data or is_github_repo
+            is_kerberos_dataset or is_killchain or is_question or is_kaggle_data or is_github_repo or is_zacariah_lab
         )
 
         # Contextual resolution: only inherit previous context if query is not a greeting or generic knowledge question
@@ -542,6 +554,13 @@ class ChatCopilotService:
             tool_records.append({"tool": "correlate_kill_chain", "params": {}, "result": killchain_res})
             evidence_refs.extend(killchain_res.get("evidence", []))
 
+        # Tool 15: Zacariah SOC Brute Force Lab Analysis
+        zacariah_lab_res: Optional[Dict[str, Any]] = None
+        if is_zacariah_lab:
+            zacariah_lab_res = await self.tools.analyze_soc_bruteforce_lab(AnalyzeSocBruteforceLabInput(), db)
+            tool_records.append({"tool": "analyze_soc_bruteforce_lab", "params": {}, "result": zacariah_lab_res})
+            evidence_refs.extend(zacariah_lab_res.get("evidence", []))
+
         # 4. Stage 3: Correlation & Pattern Recognition
         yield f"event: step\ndata: {json.dumps({'step': 'correlating', 'label': 'Correlating authentication telemetry, failure patterns & breach signals...'})}\n\n"
         await asyncio.sleep(0.06)
@@ -666,6 +685,64 @@ class ChatCopilotService:
                 "  - **Backend**: Python 3.12, FastAPI, SQLAlchemy, SQLite/PostgreSQL, Redis pub/sub, Uvicorn.\n"
                 "  - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide icons, bespoke architectural theme.\n\n"
                 "You can inspect code, run simulations, or trigger automated playbooks directly from the interface."
+            )
+
+        # SCENARIO 0A-ZACARIAH: Zacariah SOC Brute-Force Log Analysis Lab
+        elif is_zacariah_lab:
+            response_sections.append(
+                "### SOC Lab Analysis: OpenSSH Brute-Force & Password Spraying Detection\n\n"
+                "**Lab Reference**: [`https://github.com/ZacariahCyberSec/log-analysis-brute-force-detection`](https://github.com/ZacariahCyberSec/log-analysis-brute-force-detection)\n"
+                "**Author**: Tinashe Zacariah Nyandoro (Aspiring SOC Analyst | Cybersecurity Enthusiast)\n"
+                "**Platform**: Kali Linux, OpenSSH Daemon (`auth.log`), Python 3 Automation\n\n"
+                "#### 1. Forensic Log Telemetry Breakdown (`auth.log`)\n"
+                "The lab records simulated SSH authentication traffic generated during a credential access exercise on Kali Linux:\n\n"
+                "```log\n"
+                "Mar 19 10:01:23 kali sshd[1234]: Failed password for invalid user admin from 192.168.1.10 port 22\n"
+                "Mar 19 10:01:25 kali sshd[1235]: Failed password for root from 192.168.1.10 port 22\n"
+                "Mar 19 10:01:27 kali sshd[1236]: Failed password for admin from 192.168.1.10 port 22\n"
+                "Mar 19 10:01:29 kali sshd[1237]: Failed password for test from 192.168.1.10 port 22\n"
+                "Mar 19 10:01:31 kali sshd[1238]: Failed password for user from 192.168.1.10 port 22\n"
+                "Mar 19 10:02:10 kali sshd[1240]: Accepted password for zacariah from 192.168.1.5 port 22\n"
+                "```\n\n"
+                "#### 2. Key Forensic Findings\n"
+                "- **Adversary Source IP**: `192.168.1.10`\n"
+                "- **Velocity**: 5 failed login attempts within 8 seconds (`10:01:23` - `10:01:31`)\n"
+                "- **Targeted Accounts**: `admin` (invalid user flag triggered), `root`, `test`, `user`\n"
+                "- **Attack Nuance (Spraying vs Brute Force)**: While labeled as 'brute force' in beginner labs, targeting *multiple distinct usernames from a single source host* is technically **Multi-Account Password Spraying / Dictionary Guessing**, designed to identify valid accounts before conducting targeted brute-force cracking.\n"
+                "- **Authorized Session**: At `10:02:10`, user `zacariah` successfully authenticated with password from host `192.168.1.5` on port 22.\n\n"
+                "#### 3. Python Detection Script Evaluation (`log_detector.py`)\n"
+                "The project utilizes a straightforward Python parsing script:\n"
+                "```python\n"
+                "from collections import defaultdict\n\n"
+                "log_file = \"auth.log\"\n"
+                "failed_attempts = defaultdict(int)\n\n"
+                "with open(log_file, \"r\") as file:\n"
+                "    for line in file:\n"
+                "        if \"Failed password\" in line:\n"
+                "            parts = line.split()\n"
+                "            ip = parts[-3]\n"
+                "            failed_attempts[ip] += 1\n\n"
+                "for ip, count in failed_attempts.items():\n"
+                "    if count >= 3:\n"
+                "        print(f\"[ALERT] Possible brute force from {ip} - {count} failed attempts\")\n"
+                "```\n\n"
+                "**Engineering Review & Enhancements**:\n"
+                "- **Token Position Fragility**: Indexing `parts[-3]` assumes a static whitespace split. When OpenSSH encounters an unregistered username, it injects `'invalid user'`, which shifts token positions. In production, use compiled regular expressions:\n"
+                "  ```python\n"
+                "  pattern = re.compile(r\"Failed password for (?:invalid user )?(\\S+) from (\\S+) port (\\d+)\")\n"
+                "  ```\n"
+                "- **Temporal Dimension**: The basic script sums total failures across all time. Production SOC engines (like GENESIS AI) implement a **sliding time-window** (e.g., $\\ge 5$ failures within 60s) to distinguish human typos from automated botnet attacks.\n\n"
+                "#### 4. MITRE ATT&CK Framework Mappings\n"
+                "- **T1110.001**: Brute Force — Password Guessing\n"
+                "- **T1110.003**: Brute Force — Password Spraying\n"
+                "- **T1021.004**: Remote Services — SSH\n"
+                "- **T1078**: Valid Accounts\n\n"
+                "#### 5. Automated SOAR Containment Playbook\n"
+                "GENESIS AI automatically triggers **Playbook PB-SSH-BRUTE-01**:\n"
+                "- **Containment Action**: `firewall_drop_ip`\n"
+                "- **Command**: `iptables -A INPUT -s 192.168.1.10 -j DROP` (or `nft add rule ip filter input ip saddr 192.168.1.10 drop`)\n"
+                "- **Daemon Hardening**: Set `PermitRootLogin no` and `PasswordAuthentication no` (ED25519 public key only) in `/etc/ssh/sshd_config`.\n"
+                "- **Fail2ban Integration**: Configure `/etc/fail2ban/jail.local` with `bantime = 86400` and `maxretry = 3`."
             )
 
         # SCENARIO 0B: Assistant Capabilities

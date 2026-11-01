@@ -3,6 +3,7 @@ import csv
 import asyncio
 import re
 import time
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel, Field
@@ -214,6 +215,11 @@ class AnalyzeKerberosTicketsInput(BaseModel):
 class CorrelateKillChainInput(BaseModel):
     incident_id: Optional[str] = None
     target_host: Optional[str] = None
+
+
+class AnalyzeSocBruteforceLabInput(BaseModel):
+    file_path: Optional[str] = "data/soc_labs/zacariah_bruteforce/auth.log"
+    threshold: int = 3
 
 
 # -----------------------------------------------------------------------------
@@ -1276,11 +1282,21 @@ class CybersecurityToolRegistry:
                 "attackClasses": ["Kerberoasting (TGS RC4 Downgrade)", "AS-REP Roasting (No Pre-Auth)", "Golden/Silver Ticket Abuse"],
                 "primaryApplication": "Active Directory credential theft detection, offline hash cracking prevention, and domain hardening."
             }
+        elif "zacariah" in d or "soc_lab" in d or "log_detector" in d or "auth.log" in d:
+            return {
+                "status": "SUCCESS",
+                "datasetName": "SOC Log Analysis & Brute Force Detection Lab (ZacariahCyberSec)",
+                "source": "ZacariahCyberSec (GitHub: ZacariahCyberSec/log-analysis-brute-force-detection)",
+                "scale": "Simulated SSH authentication trace on Kali Linux (auth.log)",
+                "primaryFeatures": ["timestamp", "hostname", "daemon (sshd)", "event_type (Failed/Accepted password)", "target_user", "source_ip", "source_port"],
+                "attackClasses": ["SSH Brute Force", "Multi-Account Password Spraying (admin, root, test, user)", "Legitimate Session Authentication"],
+                "primaryApplication": "SOC analyst training, Python log analysis automation, threshold alert scripting, and fail2ban/iptables SOAR defense."
+            }
         else:
             return {
                 "status": "SUCCESS",
                 "datasetName": params.dataset_name,
-                "availableDatasets": ["cic-ids2017", "phishing", "lanl-cyber1", "hdfs-v1", "loghub", "web-attacks", "dns", "kerberos"],
+                "availableDatasets": ["cic-ids2017", "phishing", "lanl-cyber1", "hdfs-v1", "loghub", "web-attacks", "dns", "kerberos", "soc-lab-bruteforce"],
                 "message": "Specify one of the supported datasets to receive full schema breakdown."
             }
 
@@ -1579,6 +1595,81 @@ class CybersecurityToolRegistry:
                     "snippet": s["description"]
                 }
                 for s in stages
+            ]
+        }
+
+    @staticmethod
+    async def analyze_soc_bruteforce_lab(params: AnalyzeSocBruteforceLabInput, db: AsyncSession) -> Dict[str, Any]:
+        """
+        Parses and evaluates the ZacariahCyberSec SOC brute-force lab log (auth.log).
+        Detects failed password velocity, targeted accounts, legitimate logins,
+        and generates mitigation playbooks.
+        """
+        target_path = params.file_path or "data/soc_labs/zacariah_bruteforce/auth.log"
+        if not os.path.exists(target_path):
+            return {"status": "ERROR", "message": f"SOC lab auth.log not found at: {target_path}"}
+
+        failed_by_ip = defaultdict(int)
+        failed_targets_by_ip = defaultdict(list)
+        accepted_logins = []
+        total_lines = 0
+
+        pattern_failed = re.compile(r"Failed password for (?:invalid user )?(\S+) from (\S+) port (\d+)")
+        pattern_accepted = re.compile(r"Accepted password for (\S+) from (\S+) port (\d+)")
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            for line in f:
+                total_lines += 1
+                m_fail = pattern_failed.search(line)
+                if m_fail:
+                    user, ip, port = m_fail.groups()
+                    failed_by_ip[ip] += 1
+                    failed_targets_by_ip[ip].append(user)
+                    continue
+                m_acc = pattern_accepted.search(line)
+                if m_acc:
+                    user, ip, port = m_acc.groups()
+                    accepted_logins.append({"user": user, "ip": ip, "port": port, "line": line.strip()})
+
+        alerts = []
+        for ip, count in failed_by_ip.items():
+            if count >= params.threshold:
+                targets = list(set(failed_targets_by_ip[ip]))
+                is_spray = len(targets) > 1
+                alerts.append({
+                    "ip": ip,
+                    "failed_count": count,
+                    "targeted_accounts": targets,
+                    "attack_type": "Password Spraying (Multi-Account)" if is_spray else "Targeted Brute-Force",
+                    "severity": "HIGH",
+                    "recommended_action": f"Execute playbook PB-SSH-BRUTE-01 to drop traffic from {ip}"
+                })
+
+        return {
+            "status": "SUCCESS",
+            "repo_reference": "https://github.com/ZacariahCyberSec/log-analysis-brute-force-detection",
+            "author": "Tinashe Zacariah Nyandoro",
+            "total_lines_analyzed": total_lines,
+            "failed_attempts": dict(failed_by_ip),
+            "alerts": alerts,
+            "accepted_logins": accepted_logins,
+            "mitre_mappings": [
+                {"techniqueId": "T1110.001", "name": "Brute Force: Password Guessing"},
+                {"techniqueId": "T1110.003", "name": "Brute Force: Password Spraying"},
+                {"techniqueId": "T1078", "name": "Valid Accounts"},
+                {"techniqueId": "T1021.004", "name": "Remote Services: SSH"}
+            ],
+            "containment_playbook": "PB-SSH-BRUTE-01",
+            "evidence": [
+                {
+                    "type": "detection",
+                    "id": f"ZACARIAH-ALERT-{ip}",
+                    "title": f"SSH Attack from {ip} ({count} failed attempts)",
+                    "severity": "HIGH",
+                    "snippet": f"Targeted accounts: {', '.join(set(failed_targets_by_ip[ip]))}"
+                }
+                for ip, count in failed_by_ip.items()
+                if count >= params.threshold
             ]
         }
 

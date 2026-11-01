@@ -1,6 +1,6 @@
 # GENESIS AI — Autonomous Cybersecurity Intelligence Platform & SOC Copilot
 
-[![Tests Passing](https://img.shields.io/badge/Backend%20Tests-159%2F159%20Passing-success?style=flat-square&logo=pytest)](file:///Users/mayankkumar/genysis/backend/tests)
+[![Tests Passing](https://img.shields.io/badge/Backend%20Tests-164%2F164%20Passing-success?style=flat-square&logo=pytest)](file:///Users/mayankkumar/genysis/backend/tests)
 [![Python Version](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square&logo=python)](file:///Users/mayankkumar/genysis/backend)
 [![FastAPI](https://img.shields.io/badge/Framework-FastAPI%20%7C%20SSE%20Streaming-009688?style=flat-square&logo=fastapi)](file:///Users/mayankkumar/genysis/backend/app)
 [![React Version](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite%206%20%7C%20TS-61DAFB?style=flat-square&logo=react)](file:///Users/mayankkumar/genysis/src)
@@ -208,6 +208,7 @@ GENESIS AI integrates 8 real-world forensic benchmark datasets and dedicated ana
 | **DNS Exfiltration** | DNS Query Logs (Port 53) | High Shannon entropy ($H \ge 3.8$), base64 TXT exfiltration to attacker nameservers | `analyze_dns_exfiltration` |
 | **AD Kerberos Telemetry** | Windows Security Events | Event 4769 TGS ticket requests with legacy RC4 (`0x17`) downgrade, Event 4768 pre-auth disabled | `analyze_ad_kerberos_telemetry` |
 | **End-to-End Kill Chain** | Multi-Source Telemetry | Full 6-stage fusion: Phishing $\to$ Execution $\to$ Kerberoasting $\to$ Lateral Movement $\to$ C2 $\to$ Exfiltration | `correlate_kill_chain` |
+| **Zacariah SOC Lab** | Linux `auth.log` / Python | 5 SSH credential access attempts from `192.168.1.10` against `admin`/`root`/`test`/`user`, valid login from `192.168.1.5` | `analyze_soc_bruteforce_lab` |
 
 ---
 

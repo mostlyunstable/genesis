@@ -29,7 +29,7 @@ export const AppLayout: React.FC = () => {
               <Outlet />
             </div>
           ) : (
-            <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
               <Outlet />
             </main>
           )}
@@ -39,11 +39,11 @@ export const AppLayout: React.FC = () => {
       {/* Global Copilot Side Drawer (Accessible from Landing Page & across Platform) */}
       <CopilotSideDrawer />
 
-      {/* Floating Side Chatbot Pill Trigger (visible when not on full /copilot route) */}
+      {/* Floating Side Chatbot Pill Trigger (visible on sm+ viewports when not on full /copilot route) */}
       {!isCopilot && !isSideDrawerOpen && (
         <button
           onClick={() => setSideDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#111417] hover:bg-[#1E4BD8] text-white text-xs font-bold shadow-xl hover:shadow-2xl transition-all active:scale-95 cursor-pointer group border-2 border-[#2A3138] hover:border-[#4D76F8]"
+          className="fixed bottom-6 right-6 z-40 hidden sm:flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#111417] hover:bg-[#1E4BD8] text-white text-xs font-bold shadow-xl hover:shadow-2xl transition-all active:scale-95 cursor-pointer group border-2 border-[#2A3138] hover:border-[#4D76F8]"
           title="Open Genesis Copilot (Side Panel)"
           aria-label="Open Genesis Copilot"
         >

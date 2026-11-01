@@ -278,6 +278,34 @@ KNOWLEDGE_CATALOG: List[CyberKnowledgeItem] = [
         mitre_ids=["T1110.001", "T1110.003"]
     ),
     CyberKnowledgeItem(
+        key="soc_bruteforce_log_analysis",
+        title="Linux Authentication Log Analysis & Automated Brute-Force Detection Lab",
+        domain="Security Operations (SecOps), SOC Labs & Threat Hunting",
+        keywords=[
+            "zacariah", "zacariahcybersec", "log-analysis-brute-force-detection",
+            "brute force detection script", "python log analysis", "auth.log analysis",
+            "detect brute force in python", "ssh log detector", "failed password python"
+        ],
+        summary="A practical SOC analyst workflow and automation lab demonstrating how to detect, analyze, and mitigate SSH brute-force and password spraying attacks using Python scripts on Linux authentication logs.",
+        mechanics=(
+            "- **Linux Authentication Telemetry (`/var/log/auth.log` or `/var/log/secure`)**: OpenSSH daemons record every authentication attempt with timestamps, PID, outcome, username, source IP, and port.\n"
+            "- **Attack Signatures**: Rapid succession of `Failed password for invalid user <user> from <ip>` or `Failed password for root from <ip>` indicating automated credential guessing.\n"
+            "- **Python Log Parsing Strategies**:\n"
+            "  - *Basic Token Splitting*: Parsing tokens via `line.split()[-3]` works for simple standard formats, but is vulnerable to line variations (e.g. `invalid user` adds extra tokens).\n"
+            "  - *Production Regex Parsing*: Using compiled regular expressions like `r'Failed password for (?:invalid user )?(\\S+) from (\\S+) port (\\d+)'` guarantees accurate extraction of username, IP, and port regardless of user validity flags.\n"
+            "- **Threshold vs Sliding Window Detection**: Simple counters track total failures per IP; enterprise SIEM/SOC platforms employ sliding time-windows (e.g. $\\ge 5$ failures within 60 seconds) to filter out human typos."
+        ),
+        examples="Zacariah SOC Lab: Simulating a 5-attempt SSH brute-force on Kali Linux from IP `192.168.1.10` targeting `admin`, `root`, `test`, `user` in 8 seconds, followed by authorized login from `192.168.1.5` for user `zacariah`.",
+        detection="Scan `auth.log` for repeated `Failed password` lines; aggregate failure counts and distinct targeted usernames by source IP over time. Alert when threshold is breached.",
+        mitigation=(
+            "1. **Host-Level Firewall**: Deploy `iptables -A INPUT -s <attacker_ip> -j DROP` or `nftables`.\n"
+            "2. **Intrusion Prevention**: Configure Fail2ban (`/etc/fail2ban/jail.local`) with `maxretry = 3` and `bantime = 1d`.\n"
+            "3. **OpenSSH Hardening**: Set `PermitRootLogin no`, `PasswordAuthentication no` (require ED25519 public keys), and configure MFA with PAM Duo / Google Authenticator.\n"
+            "4. **SOAR Automation**: Trigger GENESIS AI playbook `PB-SSH-BRUTE-01` for instantaneous stateful packet filtering."
+        ),
+        mitre_ids=["T1110.001", "T1110.003", "T1021.004", "T1078"]
+    ),
+    CyberKnowledgeItem(
         key="kerberoasting",
         title="Kerberoasting Active Directory Attack & Mitigation",
         domain="Active Directory Post-Exploitation",
