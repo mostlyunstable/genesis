@@ -5,7 +5,8 @@ import {
   ChatMessage, 
   EvidenceReference, 
   SuggestedAction, 
-  StreamInvestigationStep 
+  StreamInvestigationStep,
+  UploadedFileSummary
 } from '@/types';
 import { sentinelApi } from '@/services/api';
 
@@ -14,6 +15,10 @@ interface ChatState {
   activeConversationId: string | null;
   activeConversation: ConversationDetail | null;
   messages: ChatMessage[];
+  uploadedFiles: UploadedFileSummary[];
+  activeFileId: string | null;
+  isUploading: boolean;
+  uploadError: string | null;
   isLoading: boolean;
   isStreaming: boolean;
   streamingContent: string;
@@ -32,7 +37,10 @@ interface ChatState {
   createNewConversation: (title?: string) => Promise<string>;
   updateConversation: (id: string, updates: { title?: string; isPinned?: boolean }) => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
-  sendMessage: (text: string, contextIncidentId?: string) => Promise<void>;
+  uploadFile: (file: File) => Promise<UploadedFileSummary | null>;
+  loadFiles: (convId?: string) => Promise<void>;
+  setActiveFileId: (fileId: string | null) => void;
+  sendMessage: (text: string, contextIncidentId?: string, contextFileId?: string) => Promise<void>;
   retryLastMessage: () => Promise<void>;
   stopStreaming: () => void;
   confirmAction: (action: SuggestedAction, confirmed: boolean) => Promise<void>;
@@ -47,6 +55,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeConversationId: null,
   activeConversation: null,
   messages: [],
+  uploadedFiles: [],
+  activeFileId: null,
+  isUploading: false,
+  uploadError: null,
   isLoading: false,
   isStreaming: false,
   streamingContent: '',
@@ -84,10 +96,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const lastAsst = [...detail.messages].reverse().find(m => m.role === 'assistant');
       const latestEvidence = lastAsst?.evidenceReferences || [];
       const latestActions = lastAsst?.suggestedActions || [];
+      const fileList = detail.uploadedFiles || [];
 
       set({ 
         activeConversation: detail, 
         messages: detail.messages || [],
+        uploadedFiles: fileList,
+        activeFileId: fileList.length > 0 ? fileList[0].id : null,
+        uploadError: null,
         evidenceReferences: latestEvidence,
         suggestedActions: latestActions,
         isLoading: false,
@@ -118,6 +134,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
           messages: []
         },
         messages: [],
+        uploadedFiles: [],
+        activeFileId: null,
+        uploadError: null,
         evidenceReferences: [],
         suggestedActions: [],
         selectedEvidence: null,
@@ -152,7 +171,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: remaining,
         activeConversationId: remaining.length > 0 ? remaining[0].id : null,
         activeConversation: null,
-        messages: []
+        messages: [],
+        uploadedFiles: [],
+        activeFileId: null
       });
       if (remaining.length > 0) {
         await get().selectConversation(remaining[0].id);
@@ -162,7 +183,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  sendMessage: async (text: string, contextIncidentId?: string) => {
+  uploadFile: async (file: File) => {
+    try {
+      set({ isUploading: true, uploadError: null });
+      let convId = get().activeConversationId;
+      if (!convId) {
+        convId = await get().createNewConversation();
+      }
+      const record = await sentinelApi.chat.uploadFile(convId, file);
+      set(state => ({
+        uploadedFiles: [record, ...state.uploadedFiles.filter(f => f.id !== record.id)],
+        activeFileId: record.id,
+        isUploading: false,
+        uploadError: null
+      }));
+      // Reload conversation messages and details immediately
+      await get().selectConversation(convId);
+      return record;
+    } catch (err: any) {
+      set({ isUploading: false, uploadError: err.message || 'File upload failed' });
+      return null;
+    }
+  },
+
+  loadFiles: async (convId?: string) => {
+    const targetId = convId || get().activeConversationId;
+    if (!targetId) return;
+    try {
+      const files = await sentinelApi.chat.listFiles(targetId);
+      set({ uploadedFiles: files });
+    } catch (err: any) {
+      console.warn('Failed to load files for conversation:', err);
+    }
+  },
+
+  setActiveFileId: (fileId: string | null) => {
+    set({ activeFileId: fileId });
+  },
+
+  sendMessage: async (text: string, contextIncidentId?: string, contextFileId?: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -170,6 +229,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!convId) {
       convId = await get().createNewConversation();
     }
+
+    const targetFileId = contextFileId || get().activeFileId || undefined;
 
     const controller = new AbortController();
     const tempUserMsg: ChatMessage = {
@@ -239,8 +300,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
               abortController: null
             }));
 
-            // Refresh conversation list to update titles/snippet
+            // Refresh conversation list to update titles/snippet and reload files
             get().loadConversations();
+            get().loadFiles(convId!);
           },
           onError: (err) => {
             set({
@@ -253,7 +315,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
         contextIncidentId,
         undefined,
-        controller.signal
+        controller.signal,
+        targetFileId
       );
     } catch (err: any) {
       if (err.name === 'AbortError') {

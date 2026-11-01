@@ -17,6 +17,13 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ) -> User:
     if not credentials:
+        if settings.DEMO_MODE:
+            # Fall back to default seeded SecOps lead analyst for seamless local analyst workflow
+            result = await db.execute(select(User).where(User.username == "secops_analyst@sentinel.ai"))
+            analyst = result.scalar_one_or_none()
+            if analyst and analyst.is_active:
+                return analyst
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "UNAUTHENTICATED", "message": "Missing Bearer authorization header"}

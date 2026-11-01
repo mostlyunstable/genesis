@@ -53,6 +53,28 @@ class ConversationSummarySchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UploadedFileSummarySchema(BaseModel):
+    id: str
+    conversationId: str
+    filename: str
+    fileHash: str
+    fileSize: int
+    formatDetected: str
+    logSource: str
+    recordCount: int
+    parsedCount: int
+    failedCount: int
+    skippedCount: int
+    detectionCount: int
+    incidentCount: int
+    status: str
+    analysisSummary: Dict[str, Any] = {}
+    createdAt: str
+    userId: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ConversationDetailSchema(BaseModel):
     id: str
     title: str
@@ -62,6 +84,7 @@ class ConversationDetailSchema(BaseModel):
     isPinned: bool = False
     contextMetadata: Dict[str, Any] = {}
     messages: List[ChatMessageSchema] = []
+    uploadedFiles: List[UploadedFileSummarySchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -80,6 +103,7 @@ class SendMessageRequest(BaseModel):
     message: str = Field(..., min_length=1)
     contextIncidentId: Optional[str] = None
     contextAssetId: Optional[str] = None
+    contextFileId: Optional[str] = None
 
 
 class ConfirmActionRequest(BaseModel):

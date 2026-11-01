@@ -15,7 +15,8 @@ import {
   ChatMessage,
   EvidenceReference,
   SuggestedAction,
-  StreamInvestigationStep
+  StreamInvestigationStep,
+  UploadedFileSummary
 } from '@/types';
 
 export interface SentinelApiClient {
@@ -25,7 +26,10 @@ export interface SentinelApiClient {
     createConversation: (title?: string, contextMetadata?: Record<string, any>) => Promise<ConversationSummary>;
     updateConversation: (id: string, updates: { title?: string; isPinned?: boolean }) => Promise<ConversationSummary>;
     deleteConversation: (id: string) => Promise<{ status: string; conversationId: string }>;
-    sendMessageSync: (id: string, message: string, contextIncidentId?: string, contextAssetId?: string) => Promise<ChatMessage>;
+    uploadFile: (conversationId: string, file: File) => Promise<UploadedFileSummary>;
+    listFiles: (conversationId: string) => Promise<UploadedFileSummary[]>;
+    getFile: (fileId: string) => Promise<UploadedFileSummary>;
+    sendMessageSync: (id: string, message: string, contextIncidentId?: string, contextAssetId?: string, contextFileId?: string) => Promise<ChatMessage>;
     streamMessage: (
       id: string,
       message: string,
@@ -39,7 +43,8 @@ export interface SentinelApiClient {
       },
       contextIncidentId?: string,
       contextAssetId?: string,
-      abortSignal?: AbortSignal
+      abortSignal?: AbortSignal,
+      contextFileId?: string
     ) => Promise<void>;
     confirmAction: (payload: {
       actionProposalId: string;
@@ -166,10 +171,41 @@ export const sentinelApi: SentinelApiClient = {
       });
     },
 
-    sendMessageSync: async (id: string, message: string, contextIncidentId?: string, contextAssetId?: string) => {
+    uploadFile: async (conversationId: string, file: File) => {
+      const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(conversationId)}/upload`;
+      const token = getAuthToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ detail: res.statusText }));
+        const msg = errorData.detail?.message || errorData.detail || `Upload failed with status ${res.status}`;
+        throw new Error(msg);
+      }
+      return await res.json() as UploadedFileSummary;
+    },
+
+    listFiles: async (conversationId: string) => {
+      return await fetchFromBackend<UploadedFileSummary[]>(`/chat/conversations/${encodeURIComponent(conversationId)}/files`);
+    },
+
+    getFile: async (fileId: string) => {
+      return await fetchFromBackend<UploadedFileSummary>(`/chat/files/${encodeURIComponent(fileId)}`);
+    },
+
+    sendMessageSync: async (id: string, message: string, contextIncidentId?: string, contextAssetId?: string, contextFileId?: string) => {
       return await fetchFromBackend<ChatMessage>(`/chat/conversations/${encodeURIComponent(id)}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ message, contextIncidentId, contextAssetId })
+        body: JSON.stringify({ message, contextIncidentId, contextAssetId, contextFileId })
       });
     },
 
@@ -186,7 +222,8 @@ export const sentinelApi: SentinelApiClient = {
       },
       contextIncidentId?: string,
       contextAssetId?: string,
-      abortSignal?: AbortSignal
+      abortSignal?: AbortSignal,
+      contextFileId?: string
     ) => {
       const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(id)}/stream`;
       const token = getAuthToken();
@@ -203,7 +240,8 @@ export const sentinelApi: SentinelApiClient = {
         body: JSON.stringify({
           message,
           contextIncidentId,
-          contextAssetId
+          contextAssetId,
+          contextFileId
         }),
         signal: abortSignal
       });
@@ -254,7 +292,7 @@ export const sentinelApi: SentinelApiClient = {
               } else if (eventType === 'actions' && callbacks.onActions) {
                 callbacks.onActions(data.actions || []);
               } else if (eventType === 'token' && callbacks.onToken) {
-                callbacks.onToken(data.token || '');
+                callbacks.onToken(data.delta || data.token || '');
               } else if (eventType === 'done' && callbacks.onDone) {
                 callbacks.onDone(data);
               } else if (eventType === 'error' && callbacks.onError) {

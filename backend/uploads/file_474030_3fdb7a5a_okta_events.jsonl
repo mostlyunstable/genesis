@@ -1,0 +1,2 @@
+{"eventType": "user.authentication.verify", "actor": {"alternateId": "alice@corp.com"}, "client": {"ipAddress": "203.0.113.55", "device": "macOS"}, "outcome": {"result": "FAILURE", "reason": "INVALID_CREDENTIALS"}}
+{"eventType": "user.authentication.verify", "actor": {"alternateId": "bob@corp.com"}, "client": {"ipAddress": "203.0.113.55", "device": "macOS"}, "outcome": {"result": "FAILURE", "reason": "INVALID_CREDENTIALS"}}

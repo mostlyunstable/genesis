@@ -8,7 +8,7 @@ from backend.app.models.source import LogSourceModel
 from backend.app.models.threat_intel import ThreatIntelModel
 from backend.app.models.audit import AuditRecordModel
 from backend.app.models.settings import SettingsModel
-from backend.app.models.chat import ConversationModel, ChatMessageModel
+from backend.app.models.chat import ConversationModel, ChatMessageModel, UploadedFileModel
 
 __all__ = [
     "Base",
@@ -24,4 +24,5 @@ __all__ = [
     "SettingsModel",
     "ConversationModel",
     "ChatMessageModel",
+    "UploadedFileModel",
 ]

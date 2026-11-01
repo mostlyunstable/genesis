@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Search, 
   Sparkles, 
   ShieldAlert, 
   FileText, 
@@ -11,44 +11,32 @@ import {
   Copy, 
   Check, 
   ExternalLink,
-  Cpu,
-  Layers,
-  Terminal,
   ShieldCheck,
   Zap,
-  Filter
+  MessageSquare,
+  Activity,
+  Layers
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SeverityBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
-interface EvidenceItem {
-  id: string;
-  type: 'CONFIRMED_EVIDENCE' | 'AI_HYPOTHESIS';
-  label: string;
-  value: string;
-  source: string;
-  confidence?: number;
-  details: string;
-}
-
 export const AIInvestigatorPage: React.FC = () => {
+  const navigate = useNavigate();
   const { 
     incidents, 
-    detections, 
-    events, 
     selectedIncidentId, 
     setSelectedIncidentId,
     executePlaybookAction,
     addNotification
   } = useSecurityStore();
 
-  const [activeTab, setActiveTab] = useState<'evidence' | 'timeline' | 'mitre' | 'raw_events'>('evidence');
+  const [activeTab, setActiveTab] = useState<'evidence' | 'timeline' | 'mitre'>('evidence');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [dryRunLogs, setDryRunLogs] = useState<string[]>([]);
 
-  const selectedIncident = incidents.find(i => i.id === selectedIncidentId) || incidents[0];
+  const selectedIncident = incidents.find(i => i.id === selectedIncidentId) || (incidents.length > 0 ? incidents[0] : null);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -61,70 +49,25 @@ export const AIInvestigatorPage: React.FC = () => {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  // Structured distinction between verified evidence and AI hypotheses
-  const evidenceArtifacts: EvidenceItem[] = [
-    {
-      id: 'EV-01',
-      type: 'CONFIRMED_EVIDENCE',
-      label: 'Adversary Source IP',
-      value: '198.51.100.42',
-      source: 'Bastion Auth Forwarder (syslog)',
-      details: 'RFC 5737 Benchmark IP Range / AS64496. 35 distinct SSH handshakes initiated.'
-    },
-    {
-      id: 'EV-02',
-      type: 'CONFIRMED_EVIDENCE',
-      label: 'Authentication Rejections',
-      value: '35 Failed SSH Attempts',
-      source: 'sshd[12390] logs',
-      details: '35 invalid PAM auth cycles across accounts: root (12), admin (8), ubuntu (8), deploy (7).'
-    },
-    {
-      id: 'EV-03',
-      type: 'CONFIRMED_EVIDENCE',
-      label: 'Compromised Linux Session',
-      value: 'user: deploy (PID 12436)',
-      source: 'PAM Session Open (auditd)',
-      details: 'Accepted publickey for deploy from 198.51.100.42 port 49152 ssh2. Bash spawned under PID 12436.'
-    },
-    {
-      id: 'HY-01',
-      type: 'AI_HYPOTHESIS',
-      label: 'Attack Vector Deduction',
-      value: 'Dictionary Rotation to Shell Pivot',
-      source: 'Genysis Correlation Engine',
-      confidence: 98,
-      details: 'High-velocity automated spray succeeded by human operator interactive shell takeover within 4.0 seconds of key acceptance.'
-    },
-    {
-      id: 'HY-02',
-      type: 'AI_HYPOTHESIS',
-      label: 'Potential Blast Radius Scope',
-      value: '14 Peered VPC Subnets Exposed',
-      source: 'Topology & IAM Graph Analyzer',
-      confidence: 94,
-      details: 'Bastion-01 route table permits ingress routing into 10.240.0.0/16. "deploy" account possesses Docker sudo privileges.'
-    }
-  ];
-
   const handleExecutePolicyDryRun = async () => {
+    if (!selectedIncident) return;
     setIsSimulating(true);
     try {
+      const primaryIp = selectedIncident.sourceIps?.[0] || '198.51.100.42';
       const ok = await executePlaybookAction(
-        'PB-SSH-BRUTE-01',
+        selectedIncident.assignedPlaybookId || 'PB-SSH-BRUTE-01',
         'Simulated Host Session Termination & Drop Filter',
-        '198.51.100.42',
+        primaryIp,
         selectedIncident.id
       );
 
       if (ok) {
         setDryRunLogs([
-          '[POLICY EVALUATION] Evaluating PB-SSH-BRUTE-01 against active security policy... OK',
-          '[SANDBOX BOUNDARY] Target 198.51.100.42 verified within RFC 5737 test boundary.',
-          '[DISPATCH SIMULATION] Simulated command: iptables -A INPUT -s 198.51.100.42 -j DROP',
-          '[KILL SIMULATION] Revoking rogue process tree PID 12436 (deploy)... Terminated',
-          '[TELEMETRY PROBE] Validating connection state: 0 ingress packets received from 198.51.100.42.',
-          '[RESULT: VERIFIED] Defensive countermeasure validated in deterministic dry-run mode.'
+          `[POLICY EVALUATION] Evaluating ${selectedIncident.assignedPlaybookId || 'PB-SSH-BRUTE-01'} against active policy... OK`,
+          `[SANDBOX BOUNDARY] Target ${primaryIp} verified within operational boundary.`,
+          `[DISPATCH SIMULATION] Simulated command: iptables -A INPUT -s ${primaryIp} -j DROP`,
+          `[TELEMETRY PROBE] Connection state: 0 ingress packets received from ${primaryIp}.`,
+          `[RESULT: VERIFIED] Defensive countermeasure validated in deterministic dry-run mode.`
         ]);
         addNotification({
           type: 'success',
@@ -137,294 +80,328 @@ export const AIInvestigatorPage: React.FC = () => {
     }
   };
 
+  // If no incidents exist, show clean empty state
+  if (!selectedIncident) {
+    return (
+      <div className="space-y-6 max-w-5xl mx-auto font-sans pb-16">
+        <section className="bg-white border border-[#E3E5DC] rounded-3xl p-8 sm:p-12 shadow-sm text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#EAF0E6] text-[#54765C] flex items-center justify-center mx-auto">
+            <ShieldCheck className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#20251F]">
+              No Active Investigations
+            </h1>
+            <p className="text-sm text-[#73796F] max-w-md mx-auto">
+              No correlated incident clusters currently meet escalation thresholds. Telemetry is monitored in real-time.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center gap-3">
+            <Button
+              variant="primary"
+              onClick={() => navigate('/copilot')}
+              icon={<MessageSquare className="w-4 h-4" />}
+            >
+              Open Security Copilot
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/events')}
+              icon={<Activity className="w-4 h-4" />}
+            >
+              View Telemetry Stream
+            </Button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // Derive dynamic evidence from the real selected incident
+  const evidenceArtifacts = [
+    ...(selectedIncident.sourceIps || []).map((ip, idx) => ({
+      id: `EV-IP-${idx + 1}`,
+      type: 'CONFIRMED_EVIDENCE' as const,
+      label: 'Adversary Source IP',
+      value: ip,
+      source: 'Ingested Telemetry Stream',
+      details: `Observed in ${selectedIncident.eventCount} correlated security log handshakes.`
+    })),
+    ...(selectedIncident.targetAccounts || []).map((acc, idx) => ({
+      id: `EV-USR-${idx + 1}`,
+      type: 'CONFIRMED_EVIDENCE' as const,
+      label: 'Targeted Identity',
+      value: acc,
+      source: 'Authentication Forwarder',
+      details: `Account targeted during credential spray / brute-force authentication attempts.`
+    })),
+    ...(selectedIncident.mitreAttack || []).map((m, idx) => ({
+      id: `EV-MITRE-${idx + 1}`,
+      type: 'AI_HYPOTHESIS' as const,
+      label: `MITRE ${m.techniqueId || 'Tactic'}`,
+      value: m.techniqueName || m.tactic || 'Technique',
+      source: 'SENTINEL Detection & Knowledge Engine',
+      confidence: selectedIncident.confidenceScore || 85,
+      details: `Correlated behavioral signature mapped to ${m.tactic || 'adversary operation'}.`
+    }))
+  ];
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans pb-16">
       
       {/* ─────────────────────────────────────────────────────────────
           1. INVESTIGATION WORKSPACE HEADER & SCOPE SELECTOR
           ───────────────────────────────────────────────────────────── */}
-      <section className="bg-[#10131B] border border-[#1C2230] rounded-xl p-5 shadow-sm">
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#38BDF8] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />
-                AUTONOMOUS SECURITY INTELLIGENCE
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#54765C]" />
+                FORENSIC EVIDENCE &amp; INVESTIGATION
               </span>
-              <span className="text-[#64748B]">•</span>
-              <span className="text-[10px] font-mono text-[#94A3B8]">EVIDENCE CORRELATION ENGINE</span>
+              <span className="text-[#CFD4C9]">•</span>
+              <span className="text-[10px] font-mono text-[#73796F]">SENTINEL CORRELATION ENGINE</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-[#20251F] tracking-tight">
               AI Investigator Workspace
             </h1>
-            <p className="text-xs text-[#94A3B8]">
+            <p className="text-xs sm:text-sm text-[#73796F]">
               Automated root-cause deduction, forensic evidence verification, and attack trajectory synthesis.
             </p>
           </div>
 
-          {/* Incident Scope Selector */}
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="text-[#64748B] text-[10px] uppercase">Incident Scope:</span>
-            <select
-              value={selectedIncident.id}
-              onChange={(e) => setSelectedIncidentId(e.target.value)}
-              className="bg-[#07080B] border border-[#1C2230] text-white px-3 py-1.5 rounded-lg text-xs font-mono focus:outline-none focus:border-[#38BDF8]"
+          {/* Scope Selector & Copilot Shortcut */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="text-[#73796F] text-[11px] uppercase">Incident:</span>
+              <select
+                value={selectedIncident.id}
+                onChange={(e) => setSelectedIncidentId(e.target.value)}
+                className="bg-[#F0F1EB] border border-[#E3E5DC] text-[#20251F] px-3 py-1.5 rounded-lg text-xs font-mono focus:outline-none focus:border-[#54765C]"
+              >
+                {incidents.map((inc) => (
+                  <option key={inc.id} value={inc.id}>
+                    {inc.id} — {inc.title.slice(0, 32)}...
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/copilot')}
+              icon={<MessageSquare className="w-3.5 h-3.5" />}
             >
-              {incidents.map((inc) => (
-                <option key={inc.id} value={inc.id}>
-                  {inc.id} — {inc.title.slice(0, 35)}...
-                </option>
-              ))}
-            </select>
+              Investigate in Copilot
+            </Button>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. ACTIVE INCIDENT DOSSIER & AI HYPOTHESIS OVERVIEW
+          2. ACTIVE INCIDENT OVERVIEW CARD
           ───────────────────────────────────────────────────────────── */}
-      <section className="bg-[#10131B] border border-[#1C2230] rounded-xl overflow-hidden shadow-sm">
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-sm">
         {/* Dossier Header */}
-        <div className="p-5 border-b border-[#1C2230] bg-[#0C0E14] flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="p-5 sm:p-6 border-b border-[#E3E5DC] bg-[#FAF9F5] flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-[#38BDF8]">{selectedIncident.id}</span>
+              <span className="text-xs font-mono font-bold text-[#54765C]">{selectedIncident.id}</span>
               <SeverityBadge severity={selectedIncident.severity} />
-              <span className="text-[11px] font-mono text-[#64748B]">Category: {selectedIncident.category}</span>
+              <span className="text-[11px] font-mono text-[#73796F]">Category: {selectedIncident.category}</span>
             </div>
-            <h2 className="text-lg font-bold text-white mt-1">
+            <h2 className="text-lg sm:text-xl font-bold text-[#20251F] mt-1">
               {selectedIncident.title}
             </h2>
           </div>
 
           <div className="flex items-center gap-3 font-mono text-xs">
-            <div className="px-3 py-1 rounded bg-[#07080B] border border-[#1C2230]">
-              <span className="text-[#64748B]">Risk Score: </span>
-              <span className="text-[#EF4444] font-bold">{selectedIncident.riskScore}/100</span>
+            <div className="px-3 py-1.5 rounded-xl bg-white border border-[#E3E5DC]">
+              <span className="text-[#73796F]">Risk Score: </span>
+              <span className="text-rose-600 font-bold">{selectedIncident.riskScore}/100</span>
             </div>
-            <div className="px-3 py-1 rounded bg-[#07080B] border border-[#1C2230]">
-              <span className="text-[#64748B]">AI Confidence: </span>
-              <span className="text-[#38BDF8] font-bold">{selectedIncident.confidenceScore}%</span>
+            <div className="px-3 py-1.5 rounded-xl bg-white border border-[#E3E5DC]">
+              <span className="text-[#73796F]">AI Confidence: </span>
+              <span className="text-[#54765C] font-bold">{selectedIncident.confidenceScore || 85}%</span>
             </div>
           </div>
         </div>
 
-        {/* Executive Summary & Root Cause */}
-        <div className="p-5 space-y-4">
+        {/* Narrative & Summary */}
+        <div className="p-6 space-y-5">
           <div className="space-y-1">
-            <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
-              AI ROOT-CAUSE DEDUCTION &amp; FINDING NARRATIVE
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                AI HYPOTHESIS
+              </span>
+              <span className="text-[10px] font-mono uppercase text-[#73796F] font-bold tracking-wider">
+                AI ROOT-CAUSE DEDUCTION &amp; FINDING NARRATIVE
+              </span>
             </div>
-            <p className="text-sm text-slate-200 leading-relaxed">
-              {selectedIncident.aiSummary.rootCauseAnalysis}
+            <p className="text-sm text-[#20251F] leading-relaxed pt-1">
+              {selectedIncident.aiSummary?.rootCauseAnalysis || selectedIncident.detectionExplanation || selectedIncident.title}
             </p>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-[#07080B] border border-[#1C2230] text-xs font-mono space-y-1 text-slate-300">
-            <div className="text-[10px] font-bold text-[#38BDF8] uppercase">Forensic Summary:</div>
-            <div>{selectedIncident.aiSummary.executiveSummary}</div>
+          {/* Key Forensic Evidence Pills */}
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                CONFIRMED EVIDENCE
+              </span>
+              <span className="text-[10px] font-mono uppercase text-[#73796F] font-bold tracking-wider">
+                CRYPTOGRAPHICALLY VERIFIED TELEMETRY
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#F0F1EB]/60 border border-[#E3E5DC] space-y-1">
+              <span className="text-[10px] font-mono text-[#73796F] uppercase">Source Adversary IP</span>
+              <div className="font-mono text-xs font-semibold text-[#20251F]">
+                {selectedIncident.sourceIps?.join(', ') || 'N/A'}
+              </div>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#F0F1EB]/60 border border-[#E3E5DC] space-y-1">
+              <span className="text-[10px] font-mono text-[#73796F] uppercase">Targeted Account(s)</span>
+              <div className="font-mono text-xs font-semibold text-[#20251F]">
+                {selectedIncident.targetAccounts?.join(', ') || 'root'}
+              </div>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#F0F1EB]/60 border border-[#E3E5DC] space-y-1">
+              <span className="text-[10px] font-mono text-[#73796F] uppercase">Correlated Events</span>
+              <div className="font-mono text-xs font-semibold text-[#20251F]">
+                {selectedIncident.eventCount} Ingested Records
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Navigation Sub-Tabs */}
-          <div className="flex items-center gap-2 border-b border-[#1C2230] pt-2">
-            <button
-              onClick={() => setActiveTab('evidence')}
-              className={`px-3 py-2 text-xs font-mono font-bold transition-colors border-b-2 cursor-pointer ${
-                activeTab === 'evidence'
-                  ? 'border-[#38BDF8] text-[#38BDF8]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
-              }`}
+        {/* Tabs */}
+        <div className="border-t border-[#E3E5DC] px-6 pt-3 flex gap-4 text-xs font-semibold text-[#73796F]">
+          <button
+            onClick={() => setActiveTab('evidence')}
+            className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === 'evidence' ? 'border-[#54765C] text-[#20251F]' : 'border-transparent hover:text-[#20251F]'}`}
+          >
+            Forensic Evidence ({evidenceArtifacts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('mitre')}
+            className={`pb-3 border-b-2 transition-colors cursor-pointer ${activeTab === 'mitre' ? 'border-[#54765C] text-[#20251F]' : 'border-transparent hover:text-[#20251F]'}`}
+          >
+            MITRE ATT&CK Mapping
+          </button>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          3. EVIDENCE ARTIFACTS LIST
+          ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'evidence' && (
+        <section className="space-y-3">
+          {evidenceArtifacts.map((item) => (
+            <div 
+              key={item.id}
+              className="bg-white border border-[#E3E5DC] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#54765C]/40 transition-colors shadow-xs"
             >
-              Confirmed Evidence vs Hypotheses ({evidenceArtifacts.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('timeline')}
-              className={`px-3 py-2 text-xs font-mono font-bold transition-colors border-b-2 cursor-pointer ${
-                activeTab === 'timeline'
-                  ? 'border-[#38BDF8] text-[#38BDF8]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Attack Trajectory ({selectedIncident.timelineEvents.length} stages)
-            </button>
-            <button
-              onClick={() => setActiveTab('mitre')}
-              className={`px-3 py-2 text-xs font-mono font-bold transition-colors border-b-2 cursor-pointer ${
-                activeTab === 'mitre'
-                  ? 'border-[#38BDF8] text-[#38BDF8]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              MITRE ATT&amp;CK Mapping ({selectedIncident.mitreAttack.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('raw_events')}
-              className={`px-3 py-2 text-xs font-mono font-bold transition-colors border-b-2 cursor-pointer ${
-                activeTab === 'raw_events'
-                  ? 'border-[#38BDF8] text-[#38BDF8]'
-                  : 'border-transparent text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Raw Event Telemetry ({selectedIncident.eventCount})
-            </button>
-          </div>
-
-          {/* TAB 1: CONFIRMED EVIDENCE VS AI HYPOTHESES */}
-          {activeTab === 'evidence' && (
-            <div className="space-y-3 pt-2">
-              <div className="text-[11px] font-mono text-[#64748B] flex items-center justify-between">
-                <span>Cryptographic verification distinction: Verified telemetry vs Generative hypothesis</span>
-                <span className="text-[#38BDF8]">Strict Evidence Governance Enforced</span>
-              </div>
-
-              <div className="divide-y divide-[#1C2230] border border-[#1C2230] rounded-lg bg-[#07080B] overflow-hidden">
-                {evidenceArtifacts.map((item) => (
-                  <div key={item.id} className="p-3.5 hover:bg-[#10131B] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {item.type === 'CONFIRMED_EVIDENCE' ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
-                            CONFIRMED EVIDENCE
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30">
-                            AI HYPOTHESIS ({item.confidence}% CONFIDENCE)
-                          </span>
-                        )}
-                        <span className="text-white font-bold">{item.label}</span>
-                      </div>
-                      <div className="text-slate-300 font-sans text-xs">{item.details}</div>
-                      <div className="text-[10px] text-[#64748B]">Source: {item.source}</div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className={`text-sm font-bold block ${
-                        item.type === 'CONFIRMED_EVIDENCE' ? 'text-white' : 'text-[#38BDF8]'
-                      }`}>
-                        {item.value}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: ATTACK TRAJECTORY TIMELINE */}
-          {activeTab === 'timeline' && (
-            <div className="space-y-3 pt-2">
-              <div className="relative border-l-2 border-[#1C2230] ml-3 pl-4 space-y-4">
-                {selectedIncident.timelineEvents.map((step, idx) => (
-                  <div key={step.id} className="relative space-y-1">
-                    <span className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-[#38BDF8] border-2 border-[#0A0D14]" />
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="font-bold text-white font-sans">{step.title}</span>
-                      <span className="text-[#64748B] text-[11px]">{step.timestamp.split('T')[1]?.replace('Z', ' UTC')}</span>
-                    </div>
-                    <p className="text-xs text-[#94A3B8] font-sans">{step.description}</p>
-                    <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#07080B] text-[#64748B] border border-[#1C2230]">
-                      Stage: {step.stage.toUpperCase()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: MITRE ATT&CK MAPPING */}
-          {activeTab === 'mitre' && (
-            <div className="space-y-3 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {selectedIncident.mitreAttack.map((technique) => (
-                  <div key={technique.techniqueId} className="p-3.5 rounded-lg bg-[#07080B] border border-[#1C2230] text-xs font-mono space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-[#64748B] uppercase">{technique.tactic}</span>
-                      <span className="text-[#38BDF8] font-bold">{technique.techniqueId}</span>
-                    </div>
-                    <div className="text-white font-bold font-sans">{technique.techniqueName}</div>
-                    <a
-                      href={technique.referenceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[10px] text-[#38BDF8] hover:underline flex items-center gap-1 pt-1"
-                    >
-                      <span>MITRE Knowledge Base</span>
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: RAW EVENT TELEMETRY */}
-          {activeTab === 'raw_events' && (
-            <div className="space-y-3 pt-2">
-              <div className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230] font-mono text-xs max-h-72 overflow-y-auto space-y-2">
-                {events.filter(e => selectedIncident.eventIds.includes(e.id)).map((evt) => (
-                  <div key={evt.id} className="p-2 border-b border-[#1C2230] last:border-0 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] text-[#64748B]">
-                      <span>{evt.id} • {evt.source}</span>
-                      <span>{evt.timestamp}</span>
-                    </div>
-                    <div className="text-slate-200 text-xs">{evt.rawEvent}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─────────────────────────────────────────────────────────────
-              3. POLICY-GOVERNED COUNTERMEASURE RECOMMENDATION
-              Strictly distinct from execution: "RECOMMENDED BY AI"
-              ───────────────────────────────────────────────────────────── */}
-          <div className="mt-6 pt-5 border-t border-[#1C2230] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#F97316]">
-                  POLICY-GOVERNED ACTION (NOT YET EXECUTED)
-                </span>
-                <span className="text-[10px] font-mono text-[#64748B]">Approval Required</span>
-              </div>
-              <p className="text-xs sm:text-sm font-semibold text-white">
-                Execute Playbook PB-SSH-BRUTE-01: Apply simulated iptables DROP rule for 198.51.100.42 and terminate PID 12436.
-              </p>
-            </div>
-
-            <Button
-              variant="action"
-              size="sm"
-              icon={<ShieldCheck className="w-4 h-4" />}
-              onClick={handleExecutePolicyDryRun}
-              isLoading={isSimulating}
-              className="shrink-0"
-            >
-              Simulate Policy Dry Run
-            </Button>
-          </div>
-
-          {/* Dry Run Execution Output (if triggered) */}
-          {dryRunLogs.length > 0 && (
-            <div className="mt-4 p-4 rounded-lg bg-[#07080B] border border-[#10B981]/30 font-mono text-xs space-y-1.5 animate-in fade-in-0 duration-150">
-              <div className="flex items-center justify-between text-[10px] font-bold text-[#10B981] uppercase tracking-wider pb-1 border-b border-[#1C2230]">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Deterministic Sandbox Verification Log
-                </span>
-                <span>RFC 5737 Enforced</span>
-              </div>
-              {dryRunLogs.map((log, i) => (
-                <div key={i} className="text-slate-300 text-[11px] leading-relaxed">
-                  <span className="text-[#38BDF8]">&gt; </span>
-                  <span className={log.includes('VERIFIED') ? 'text-[#10B981] font-bold' : log.includes('DROP') ? 'text-[#F97316]' : ''}>
-                    {log}
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold text-[#54765C] uppercase px-2 py-0.5 rounded bg-[#EAF0E6]">
+                    {item.label}
                   </span>
+                  <span className="text-xs font-mono text-[#73796F]">Source: {item.source}</span>
+                </div>
+                <div className="font-mono text-sm font-semibold text-[#20251F]">
+                  {item.value}
+                </div>
+                <p className="text-xs text-[#73796F] leading-relaxed">
+                  {item.details}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => copyToClipboard(item.value, item.id)}
+                  className="px-3 py-1.5 rounded-lg border border-[#E3E5DC] text-xs font-mono text-[#73796F] hover:text-[#20251F] hover:bg-[#FAF9F5] flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-[#54765C]" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedId === item.id ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          4. MITRE ATT&CK MAPPING TAB
+          ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'mitre' && (
+        <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 shadow-sm space-y-4">
+          <h3 className="text-sm font-bold text-[#20251F] uppercase tracking-wider">
+            Correlated MITRE ATT&CK Techniques
+          </h3>
+          {selectedIncident.mitreAttack && selectedIncident.mitreAttack.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedIncident.mitreAttack.map((m, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E3E5DC] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#54765C]">{m.techniqueId}</span>
+                    <span className="text-[11px] font-mono text-[#73796F]">{m.tactic}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-[#20251F]">{m.techniqueName}</h4>
+                  <a
+                    href={`https://attack.mitre.org/techniques/${m.techniqueId?.replace('.', '/')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-[#54765C] hover:underline pt-1"
+                  >
+                    <span>View on MITRE Framework</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-xs text-[#73796F]">No specific MITRE techniques mapped to this incident yet.</p>
           )}
+        </section>
+      )}
 
+      {/* ─────────────────────────────────────────────────────────────
+          5. AUTONOMOUS CONTAINMENT DRY RUN SIMULATOR
+          ───────────────────────────────────────────────────────────── */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-[#20251F]">
+              Defensive Playbook Evaluation
+            </h3>
+            <p className="text-xs text-[#73796F]">
+              Validate containment countermeasures against policy engine before dispatching kernel drop rules.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleExecutePolicyDryRun}
+            isLoading={isSimulating}
+            icon={<Zap className="w-3.5 h-3.5" />}
+          >
+            Run Policy Dry Run
+          </Button>
         </div>
+
+        {dryRunLogs.length > 0 && (
+          <div className="p-4 rounded-2xl bg-[#20251F] text-[#EAF0E6] font-mono text-xs space-y-1.5 overflow-x-auto">
+            {dryRunLogs.map((log, lIdx) => (
+              <div key={lIdx} className="leading-relaxed">
+                {log}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
     </div>

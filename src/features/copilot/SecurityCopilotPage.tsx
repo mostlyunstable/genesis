@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Sparkles, 
   Send, 
@@ -25,7 +26,13 @@ import {
   Sliders,
   PanelRightClose,
   PanelRightOpen,
-  MessageSquare
+  MessageSquare,
+  Paperclip,
+  UploadCloud,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  FileUp
 } from 'lucide-react';
 import { useChatStore } from '@/stores/useChatStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -46,6 +53,10 @@ export const SecurityCopilotPage: React.FC = () => {
     currentStep,
     evidenceReferences,
     suggestedActions,
+    uploadedFiles,
+    activeFileId,
+    isUploading,
+    uploadError,
     isEvidencePanelOpen,
     searchQuery,
     error,
@@ -54,6 +65,8 @@ export const SecurityCopilotPage: React.FC = () => {
     createNewConversation,
     updateConversation,
     deleteConversation,
+    uploadFile,
+    setActiveFileId,
     sendMessage,
     retryLastMessage,
     stopStreaming,
@@ -68,9 +81,53 @@ export const SecurityCopilotPage: React.FC = () => {
   const [editedTitle, setEditedTitle] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && q.trim()) {
+      handleSubmit(q.trim());
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const record = await uploadFile(file);
+      if (record && !inputMessage.trim()) {
+        setInputMessage(`Analyze uploaded log file ${record.filename} and perform full autonomous forensic investigation.`);
+      }
+      e.target.value = '';
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      const record = await uploadFile(file);
+      if (record && !inputMessage.trim()) {
+        setInputMessage(`Analyze uploaded log file ${record.filename} and perform full autonomous forensic investigation.`);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
 
   useEffect(() => {
     loadConversations();
@@ -220,7 +277,21 @@ export const SecurityCopilotPage: React.FC = () => {
       {/* ---------------------------------------------------- */}
       {/* COLUMN 2: CENTER CHAT & INVESTIGATION WORKSPACE      */}
       {/* ---------------------------------------------------- */}
-      <main className="flex-1 flex flex-col h-full bg-[#FFFEFA] overflow-hidden">
+      <main 
+        className="flex-1 flex flex-col h-full bg-[#FFFEFA] overflow-hidden relative"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Drag-and-drop file overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 bg-[#26796C]/15 border-2 border-dashed border-[#26796C] z-30 rounded-2xl flex flex-col items-center justify-center p-6 backdrop-blur-xs pointer-events-none">
+            <UploadCloud className="w-12 h-12 text-[#26796C] mb-2 animate-bounce" />
+            <p className="text-base font-bold text-[#142C29]">Drop security log file here to analyze</p>
+            <p className="text-xs text-[#5A6B66]">Supports OpenSSH, RFC 5424 Syslog, Windows Security, PAM, JSON, CSV</p>
+          </div>
+        )}
+
         {/* Workspace Top Header */}
         <header className="px-5 py-3 border-b border-[#DFE5E2] bg-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -287,6 +358,24 @@ export const SecurityCopilotPage: React.FC = () => {
                 <h3 className="text-xl font-bold text-[#142C29]">SENTINEL AI Security Copilot</h3>
                 <p className="text-xs sm:text-sm text-[#5A6B66] max-w-lg mx-auto leading-relaxed">
                   Your autonomous cybersecurity pair-analyst. Query telemetry, investigate active incidents, correlate multi-source attacks, cross-reference MITRE techniques, and evaluate safe response actions.
+                </p>
+              </div>
+
+              {/* Upload Log Hero Card */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="p-4 rounded-xl border-2 border-dashed border-[#26796C]/30 bg-[#26796C]/5 hover:bg-[#26796C]/10 hover:border-[#26796C] transition-all text-center cursor-pointer group"
+              >
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[#142C29] group-hover:text-[#26796C]">
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 text-[#26796C] animate-spin" />
+                  ) : (
+                    <UploadCloud className="w-5 h-5 text-[#26796C]" />
+                  )}
+                  <span>{isUploading ? 'Ingesting and parsing log file...' : 'Ingest Security Log File for Autonomous Analysis'}</span>
+                </div>
+                <p className="text-[11px] text-[#5A6B66] mt-1">
+                  Drag & drop or click to ingest OpenSSH, RFC 5424 Syslog, Windows 4625/4624, PAM, JSON, or CSV
                 </p>
               </div>
 
@@ -486,7 +575,83 @@ export const SecurityCopilotPage: React.FC = () => {
         {/* Input Composer Area */}
         <div className="p-4 border-t border-[#DFE5E2] bg-white">
           <div className="max-w-4xl mx-auto space-y-2.5">
+            {/* Upload Error Alert */}
+            {uploadError && (
+              <div className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
+                <span>Upload error: {uploadError}</span>
+              </div>
+            )}
+
+            {/* Attached Log Files Tray */}
+            {uploadedFiles.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <span className="text-[11px] font-semibold text-[#6B7D78] uppercase tracking-wider shrink-0 flex items-center gap-1">
+                  <FileText className="w-3.5 h-3.5 text-[#26796C]" />
+                  <span>Attached Logs ({uploadedFiles.length}):</span>
+                </span>
+                {uploadedFiles.map((file) => {
+                  const isActive = activeFileId === file.id;
+                  return (
+                    <div
+                      key={file.id}
+                      className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs transition-all shrink-0 ${
+                        isActive
+                          ? 'bg-[#26796C]/10 border-[#26796C] text-[#142C29]'
+                          : 'bg-[#FAF9F5] border-[#DFE5E2] text-[#5A6B66] hover:bg-white'
+                      }`}
+                    >
+                      <button
+                        onClick={() => setActiveFileId(isActive ? null : file.id)}
+                        className="flex items-center gap-1.5 font-medium cursor-pointer"
+                        title={isActive ? 'Active context file (click to deselect)' : 'Click to select as active context file'}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#26796C]' : 'bg-[#8C9E98]'}`} />
+                        <span className="font-mono text-xs truncate max-w-[130px]">{file.filename}</span>
+                      </button>
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white border border-[#DFE5E2] text-[#26796C] uppercase font-semibold">
+                        {file.formatDetected}
+                      </span>
+                      <span className="text-[10px] text-[#8C9E98]">
+                        {file.parsedCount} evts
+                      </span>
+                      <button
+                        onClick={() => handleSubmit(`Analyze uploaded log file ${file.filename} and perform full autonomous forensic investigation.`)}
+                        disabled={isStreaming}
+                        className="ml-1 px-2 py-0.5 rounded bg-[#26796C] hover:bg-[#1E6157] text-white text-[10px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Analyze with Copilot"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Analyze</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <div className="relative flex items-end rounded-xl border border-[#DFE5E2] bg-[#FAF9F5] focus-within:border-[#26796C] focus-within:bg-white transition-all shadow-xs">
+              {/* Paperclip attachment button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isStreaming || isUploading}
+                className="p-3 text-[#6B7D78] hover:text-[#26796C] transition-colors cursor-pointer disabled:opacity-40 shrink-0"
+                title="Attach log file (.log, .txt, .csv, .json, .jsonl)"
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-[#26796C]" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+                accept=".log,.txt,.csv,.json,.jsonl"
+                className="hidden"
+              />
+
               <textarea
                 ref={textareaRef}
                 value={inputMessage}
@@ -495,7 +660,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 placeholder="Ask Security Copilot... (e.g. 'Investigate incident INC-001' or 'Analyze brute force attempts from 198.51.100.42')"
                 rows={1}
                 disabled={isStreaming}
-                className="w-full resize-none py-3 pl-4 pr-14 bg-transparent text-xs sm:text-sm text-[#192622] placeholder-[#8C9E98] focus:outline-none max-h-36 overflow-y-auto"
+                className="w-full resize-none py-3 pl-1 pr-14 bg-transparent text-xs sm:text-sm text-[#192622] placeholder-[#8C9E98] focus:outline-none max-h-36 overflow-y-auto"
                 style={{ minHeight: '44px' }}
               />
 
@@ -525,6 +690,15 @@ export const SecurityCopilotPage: React.FC = () => {
             {/* Quick Prompts Pills */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-[11px] text-[#6B7D78]">
               <span className="shrink-0 font-medium text-[#142C29]">Quick queries:</span>
+              {uploadedFiles.length > 0 && (
+                <button
+                  onClick={() => handleSubmit(`Analyze uploaded log file ${uploadedFiles[0].filename} and investigate suspicious activities`)}
+                  className="px-2.5 py-1 rounded-full bg-[#26796C]/10 text-[#26796C] border border-[#26796C]/30 hover:bg-[#26796C]/20 font-medium whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Analyze {uploadedFiles[0].filename}</span>
+                </button>
+              )}
               <button
                 onClick={() => handleSubmit("Summarize active incidents")}
                 className="px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#E5EBE8] hover:border-[#26796C] hover:text-[#26796C] whitespace-nowrap transition-colors cursor-pointer"

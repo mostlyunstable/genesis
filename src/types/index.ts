@@ -301,6 +301,25 @@ export interface ConversationSummary {
   contextMetadata: Record<string, any>;
 }
 
+export interface UploadedFileSummary {
+  id: string;
+  conversationId: string;
+  filename: string;
+  fileSizeBytes: number;
+  formatDetected: string;
+  logSource?: string;
+  recordsCount: number;
+  parsedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  detectionCount: number;
+  incidentCount: number;
+  status: 'PENDING' | 'PARSING' | 'COMPLETED' | 'FAILED';
+  analysisSummary?: Record<string, any>;
+  errorMessage?: string;
+  createdAt: string;
+}
+
 export interface ConversationDetail {
   id: string;
   title: string;
@@ -310,6 +329,7 @@ export interface ConversationDetail {
   isPinned: boolean;
   contextMetadata: Record<string, any>;
   messages: ChatMessage[];
+  uploadedFiles?: UploadedFileSummary[];
 }
 
 export interface StreamInvestigationStep {

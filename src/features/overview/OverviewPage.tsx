@@ -97,8 +97,8 @@ export const OverviewPage: React.FC = () => {
     setIsSynthesizing(true);
     setTimeout(() => {
       setIsSynthesizing(false);
-      navigate('/investigator');
-    }, 350);
+      navigate(`/copilot?q=${encodeURIComponent(promptInput.trim())}`);
+    }, 250);
   };
 
   // Find real critical incident needing operator attention, if any exists in DB
