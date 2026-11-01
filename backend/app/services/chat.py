@@ -228,34 +228,101 @@ class ChatCopilotService:
         # Intent classification
         is_pure_greeting = bool(re.search(r'^\s*(hello|hi|hey|greetings|good morning|good afternoon)\s*[\.!\?]?$', p)) or (p.strip() in ["hi", "hello", "hey", "greetings"])
         is_capabilities = ("what can you do" in p) or ("who are you" in p) or ("what do you do" in p) or (p.strip() == "help") or ("capabilities" in p)
+
+        # Extended Cybersecurity Knowledge & Tool Intents
+        is_jailbreak = ("ignore previous instructions" in p) or ("give me ransomware" in p) or ("write malware" in p) or ("disable policy engine" in p) or ("bypass safeguards" in p) or ("how do i hack" in p)
+
+        # Contextual reference / Operational actions detection
+        is_action_or_ref = any(w in p for w in ["that ip", "this ip", "the ip", "block", "contain", "isolate", "quarantine", "propose containment", "investigate that"])
+
+        # Concept Inquiry detection (phishing concept, brute force, etc.)
+        is_phishing_concept = (
+            ("what is a phishing" in p) or ("what is phishing" in p) or ("explain phishing" in p) or
+            ("how does phishing work" in p) or ("types of phishing" in p) or ("definition of phishing" in p) or
+            ("what are phishing" in p) or ("how do attackers use phishing" in p) or ("phishing attack" in p and ("what" in p or "how" in p or "explain" in p or "describe" in p))
+        )
+
+        # Mandatory Question / Conceptual Inquiry detection
+        is_question = (
+            (any(p.startswith(w) for w in [
+                "what", "how", "why", "who", "which", "when", "where", "can you",
+                "could you", "tell me", "explain", "describe", "define", "compare",
+                "difference", "is ", "are ", "does ", "do ", "should "
+            ])
+            or "?" in user_message_text
+            or any(w in p for w in [
+                "what is", "how to", "how does", "explain", "describe", "difference between",
+                "tell me about", "definition of", "how do", "meaning of", "compare"
+            ])
+            or is_phishing_concept)
+            and not is_action_or_ref
+        )
+
+        # Explicit File / Log Analysis Intent: only true if user specifically asks for file/log analysis
+        is_explicit_file_query = (
+            (("file" in p or "log" in p or "upload" in p or "attachment" in p or ".log" in p or ".csv" in p or ".txt" in p or ".json" in p) and
+             ("analyze" in p or "inspect" in p or "parse" in p or "summarize" in p or "what does" in p or "check" in p or "review" in p or "findings" in p))
+            or (p.strip() in ["analyze", "analyze file", "analyze log", "inspect file", "inspect log", "parse file", "parse log", "summarize file", "summarize log"])
+            or (bool(context_file_id) and not is_question and not is_action_or_ref)
+        )
+
         is_concept = ("what is a brute" in p) or ("what is brute force" in p) or ("how can you detect" in p) or ("explain brute force" in p) or ("how do you detect" in p) or ("explain password spraying" in p) or ("what is password spraying" in p) or ("difference between brute-force and password spraying" in p) or ("brute-force and password spraying" in p)
         is_syn_flood = ("syn flood" in p) or ("how does a syn flood" in p)
         is_second_event = ("second suspicious" in p) or ("second event" in p) or ("second attack" in p)
         is_slowloris = (("slowloris" in p) or ("slow http" in p)) and not is_second_event
         is_ids_ips = ("difference between ids and ips" in p) or ("ids vs ips" in p) or ("ids and ips" in p) or ("between ids and ips" in p) or ("compare ids and ips" in p)
         is_packet_analysis = ("packet analysis" in p) or ("packet capture" in p) or ("purpose of network packet" in p) or ("analyze suspicious packets" in p) or ("wireshark" in p)
-        is_network_dataset = ("network traffic" in p and "analyze" in p) or ("analyze these network" in p) or ("analyze network records" in p) or ("analyze cic" in p) or ("network records" in p and "analyze" in p) or ("analyze the network traffic dataset" in p)
-        is_phishing_dataset = ("phishing" in p and "analyze" in p) or ("check phishing" in p) or ("phishing email" in p and "analyze" in p) or ("analyze phishing" in p) or ("analyze the phishing" in p)
-        is_lanl_dataset = ("lanl" in p and "analyze" in p) or ("lateral movement" in p and "analyze" in p) or ("red team" in p and "analyze" in p) or ("analyze lanl" in p) or ("authentication anomalies in the lanl" in p)
-        is_system_log_dataset = ("analyze system log" in p) or ("openssh log" in p and "analyze" in p) or ("analyze openssh" in p) or ("analyze linux" in p) or ("analyze hdfs" in p)
+
+        # Explicit Dataset & Benchmark Evaluation Intents (strictly separated from general conceptual inquiries)
         is_dataset_overview = (
-            ("what does this dataset contain" in p) or 
-            ("what attack categories are present in this dataset" in p) or 
-            ("what attack categories" in p) or 
-            ("dataset contain" in p) or 
-            ("dataset overview" in p) or 
-            ("explain this dataset" in p) or 
-            ("about this dataset" in p) or
-            ("analyze this dataset" in p) or
-            ("explain its structure" in p) or
-            ("dataset structure" in p) or
-            ("explain the structure and features" in p)
+            ("dataset overview" in p) or ("explain this dataset" in p) or ("about this dataset" in p) or
+            ("dataset structure" in p) or ("explain its structure" in p) or ("structure and features of the cic" in p) or
+            (("what does this dataset contain" in p) or ("what attack categories are present in this dataset" in p) or ("what attack categories" in p))
         )
-        is_second_event = ("second suspicious" in p) or ("second event" in p) or ("second attack" in p)
+        is_network_dataset = (
+            ("cic" in p or "cic-ids" in p or "network traffic dataset" in p or "network flow dataset" in p) and
+            ("analyze" in p or "evaluate" in p or "inspect" in p)
+        ) or ("analyze the network traffic dataset" in p) or ("network records" in p and "analyze" in p)
+
+        is_phishing_dataset = (
+            ("phishing" in p and ("email" in p or "emails" in p or "dataset" in p or "telemetry" in p or "records" in p) and
+             ("analyze" in p or "evaluate" in p or "inspect" in p or "check" in p or "parse" in p))
+            or ("analyze the phishing dataset" in p)
+            or ("phishing email header forensics" in p)
+        ) and not is_phishing_concept
+
+        is_lanl_dataset = (
+            ("lanl" in p or "cyber1" in p) and
+            ("analyze" in p or "investigate" in p or "evaluate" in p or "lateral" in p or "events" in p or "dataset" in p or "telemetry" in p)
+        ) or ("authentication anomalies in the lanl" in p)
+
+        is_system_log_dataset = (
+            ("system log" in p or "openssh log" in p or "hdfs log" in p) and
+            ("dataset" in p or "benchmark" in p) and
+            ("analyze" in p or "evaluate" in p)
+        ) or ("analyze system log dataset" in p)
+
+        is_web_attack_dataset = (
+            ("web attack" in p or "waf log" in p or "web application" in p) and
+            ("dataset" in p or "traffic" in p) and
+            ("analyze" in p or "evaluate" in p)
+        ) or ("analyze the web attack dataset" in p) or ("analyze the web attack" in p and "dataset" in p)
+
+        is_dns_dataset = (
+            ("dns" in p or "dns exfiltration" in p or "dns query" in p) and
+            ("dataset" in p or "telemetry" in p or "queries" in p) and
+            ("analyze" in p or "evaluate" in p)
+        ) or ("analyze the dns exfiltration" in p) or ("dns exfiltration telemetry analysis" in p)
+
+        is_kerberos_dataset = (
+            ("kerberos" in p or "ad kerberos" in p or "kerberos ticket" in p) and
+            ("dataset" in p or "telemetry" in p or "tickets" in p) and
+            ("analyze" in p or "evaluate" in p)
+        ) or ("analyze the kerberos" in p and "dataset" in p) or ("ad kerberos telemetry analysis" in p)
+
+        is_killchain = ("kill chain" in p) or ("killchain" in p) or ("attack timeline" in p and "correlate" in p) or ("correlate multi-stage" in p) or ("correlate the incident" in p) or ("correlate kill chain" in p)
         is_insufficient_evidence = ("who is the threat actor" in p) or ("who attacked" in p) or ("state-sponsored" in p) or ("attribution" in p) or ("additional information would you need" in p) or ("confirm this attack" in p) or ("carried out by apt" in p) or ("russian state actor" in p)
 
-        # Extended Cybersecurity Knowledge & Tool Intents
-        is_jailbreak = ("ignore previous instructions" in p) or ("give me ransomware" in p) or ("write malware" in p) or ("disable policy engine" in p) or ("bypass safeguards" in p) or ("how do i hack" in p)
         is_sqli_concept = ("sql injection" in p or "sqli" in p) and not ("analyze" in p and "dataset" in p)
         is_ssrf_concept = ("ssrf" in p or "server-side request forgery" in p or "169.254.169.254" in p or "imdsv2" in p) and not ("analyze" in p and "dataset" in p)
         is_kerberoast_concept = ("kerberoasting" in p or "kerberoast" in p) and not ("analyze" in p and "dataset" in p)
@@ -264,13 +331,15 @@ class ChatCopilotService:
         is_c2_concept = ("c2 beaconing" in p or "beaconing" in p or "jitter" in p or "command and control" in p) and not ("analyze" in p and "dataset" in p)
         is_zero_trust = ("zero trust" in p or "nist sp 800-207" in p or "microsegmentation" in p)
 
-        is_web_attack_dataset = ("web attack" in p and "analyze" in p) or ("analyze web" in p) or ("waf log" in p and "analyze" in p) or ("analyze the web attack" in p)
-        is_dns_dataset = ("dns query" in p and "analyze" in p) or ("analyze dns" in p) or ("dns queries" in p and "analyze" in p) or ("analyze the dns" in p)
-        is_kerberos_dataset = ("kerberos tickets" in p and "analyze" in p) or ("analyze kerberos" in p) or ("analyze active directory" in p) or ("analyze the kerberos" in p)
-        is_killchain = ("kill chain" in p) or ("killchain" in p) or ("attack timeline" in p and "correlate" in p) or ("correlate multi-stage" in p) or ("correlate the incident" in p) or ("correlate kill chain" in p)
+        is_accounts_query = (
+            ("which account" in p) or ("what account" in p) or ("who was targeted" in p) or
+            ("which user was targeted" in p) or ("affected accounts" in p and "list" in p)
+        ) and not ("how" in p and ("protect" in p or "secure" in p or "mitigate" in p))
 
-        is_accounts_query = ("which account" in p) or ("what account" in p) or ("which user" in p) or ("who was targeted" in p) or ("affected user" in p) or ("targeted account" in p)
-        is_login_query = ("successful login" in p) or ("login succeed" in p) or ("any login" in p) or ("did they get in" in p) or ("did login succeed" in p) or ("successful authentication" in p)
+        is_login_query = (
+            ("successful login" in p or "login succeed" in p or "any login" in p or "did they get in" in p or "did login succeed" in p or "successful authentication" in p)
+            and ("did" in p or "was there" in p or "were there" in p or "check" in p or "any" in p)
+        )
         is_report_query = ("investigation report" in p) or ("incident report" in p) or ("generate report" in p) or ("summary report" in p)
 
         is_general_or_benchmark = (
@@ -279,11 +348,11 @@ class ChatCopilotService:
             is_lanl_dataset or is_system_log_dataset or is_dataset_overview or is_insufficient_evidence or
             is_jailbreak or is_sqli_concept or is_ssrf_concept or is_kerberoast_concept or is_asrep_concept or
             is_dns_tunnel_concept or is_c2_concept or is_zero_trust or is_web_attack_dataset or is_dns_dataset or
-            is_kerberos_dataset or is_killchain
+            is_kerberos_dataset or is_killchain or is_question
         )
 
         # Contextual resolution: only inherit previous context if query is not a greeting or generic knowledge question
-        if is_general_or_benchmark and not is_second_event:
+        if (is_general_or_benchmark or is_question) and not is_second_event and not is_action_or_ref:
             target_inc_id = explicit_inc
             target_ip = explicit_ip
         else:
@@ -294,7 +363,7 @@ class ChatCopilotService:
         if context_file_id:
             res_f = await db.execute(select(UploadedFileModel).where(UploadedFileModel.id == context_file_id))
             active_file = res_f.scalar_one_or_none()
-        elif "file" in p or "upload" in p or "dataset" in p or "log" in p:
+        elif is_explicit_file_query:
             active_file = hist_context["context_file"]
 
         # 3. Stage 2: Investigation Planning & Tool Execution
@@ -307,17 +376,23 @@ class ChatCopilotService:
 
         # Tool 1: Uploaded File Analysis
         file_summary: Optional[Dict[str, Any]] = None
-        if active_file or ("file" in p and hist_context["context_file"]):
+        if (active_file and is_explicit_file_query) or (is_explicit_file_query and hist_context["context_file"]):
             f = active_file or hist_context["context_file"]
             file_res = await self.tools.analyze_uploaded_file(AnalyzeUploadedFileInput(file_id=f.id), db)
             tool_records.append({"tool": "analyze_uploaded_file", "params": {"file_id": f.id}, "result": file_res})
             if file_res.get("status") == "SUCCESS":
                 file_summary = file_res
                 evidence_refs.extend(file_res.get("evidence", []))
-                # Set target_ip from top observed IP if not specified
+                # Set target_ip from top observed IP if not specified and not a general question
                 u_ips = file_res.get("analysisSummary", {}).get("uniqueSourceIps", [])
-                if u_ips and not target_ip:
+                if u_ips and not target_ip and not is_question:
                     target_ip = u_ips[0]
+        elif active_file and not is_question:
+            # File is present in context, record evidence for background forensics
+            file_res = await self.tools.analyze_uploaded_file(AnalyzeUploadedFileInput(file_id=active_file.id), db)
+            if file_res.get("status") == "SUCCESS":
+                file_summary = file_res
+                evidence_refs.extend(file_res.get("evidence", []))
 
         # Tool 2: Incident Investigation
         retrieved_incident: Optional[Dict[str, Any]] = None
@@ -954,8 +1029,8 @@ class ChatCopilotService:
                         f"Threat profile for `{threat_intel_data['ip']}`: {threat_intel_data['threatClassification']} (Score: {threat_intel_data['reputationScore']}/100, {threat_intel_data['country']})."
                     )
 
-        # SCENARIO B: Uploaded File Analysis
-        elif file_summary:
+        # SCENARIO B: Uploaded File Analysis (strictly scoped to explicit file/log queries)
+        elif is_explicit_file_query and file_summary:
             fstats = file_summary.get("analysisSummary", {})
             u_ips = fstats.get("uniqueSourceIps", [])
             u_users = fstats.get("uniqueAccounts", [])
@@ -979,8 +1054,8 @@ class ChatCopilotService:
                     f"Authentication failure rate exceeds baseline. Proposed action: apply playbook `PB-SSH-BRUTE-01` to isolate `{u_ips[0]}`."
                 )
 
-        # SCENARIO C: IP Address Investigation
-        elif target_ip and ip_dossier:
+        # SCENARIO C: IP Address Investigation (scoped to explicit IP or host inquiries)
+        elif target_ip and ip_dossier and (explicit_ip or "ip" in p or "host" in p or "investigate" in p or "threat" in p or "dossier" in p or "containment" in p):
             fails = ip_dossier.get("failureCount", 0)
             succs = ip_dossier.get("successCount", 0)
             users = ip_dossier.get("targetedUsers", [])
@@ -1009,13 +1084,13 @@ class ChatCopilotService:
                 )
 
         # SCENARIO D: Active Incidents Overview
-        elif active_incidents_list:
+        elif active_incidents_list and ("active incidents" in p or "open incidents" in p or "list incidents" in p or "incident" in p):
             response_sections.append(
                 f"### Active Incidents ({len(active_incidents_list)})\n\n"
                 + "\n".join([f"- **{inc['id']}**: {inc['title']} ({inc['severity'].upper()}, Risk: {inc['riskScore']}/100)" for inc in active_incidents_list])
             )
 
-        # SCENARIO E: Comprehensive Cybersecurity Knowledge Engine & Dynamic RAG
+        # SCENARIO E: Mandatory Comprehensive Cybersecurity Knowledge Engine & Dynamic RAG
         else:
             # Check if CyberKnowledgeEngine has a direct match for this cybersecurity inquiry
             knowledge_answer = cyber_knowledge_engine.answer_query(user_message_text)
@@ -1024,38 +1099,16 @@ class ChatCopilotService:
             else:
                 # Dynamically retrieve matching MITRE ATT&CK techniques, Sigma rules, and playbooks via RAG
                 rag_results = knowledge_retriever.retrieve(user_message_text, max_results=3)
-                is_cyber_query = any(w in p for w in [
+                is_cyber_query = is_question or any(w in p for w in [
                     "what", "how", "why", "explain", "describe", "difference", "compare", "can you",
                     "attack", "security", "threat", "vulnerability", "exploit", "protocol", "port",
                     "traffic", "packet", "log", "incident", "malware", "auth", "defense", "mitigate",
                     "prevent", "firewall", "edr", "siem", "dns", "http", "ssh", "tcp", "ip", "c2", "?"
                 ])
-                if is_cyber_query and rag_results:
-                    rag_desc = []
-                    for r in rag_results:
-                        if r.get("source") == "mitre_attack":
-                            rag_desc.append(
-                                f"### {r['title']} ({r.get('tactic', 'Tactics')})\n\n"
-                                f"- **Guideline**: {r.get('guidelines', 'Active threat monitoring.')}\n"
-                                f"- **Mitigations**: {', '.join(r.get('mitigations', ['Enforce least privilege access.']))}\n"
-                            )
-                        elif r.get("source") == "sigma_rule":
-                            rag_desc.append(
-                                f"### Detection Rule: {r['title']} (Severity: {r.get('severity', 'HIGH').upper()})\n\n"
-                                f"- **Logic**: `{r.get('logic', '')}`\n"
-                                f"- **False Positives**: {', '.join(r.get('false_positives', []))}\n"
-                            )
-                        elif r.get("source") == "defensive_playbook":
-                            rag_desc.append(
-                                f"### Playbook: {r['title']}\n\n"
-                                f"- **Containment Actions**: {', '.join(r.get('actions', []))}\n"
-                            )
-                    
-                    response_sections.append(
-                        f"### Grounded Cybersecurity Intelligence\n\n"
-                        f"Here is the technical analysis and guidance for your inquiry:\n\n"
-                        + "\n".join(rag_desc)
-                    )
+                if is_cyber_query:
+                    # Mandatorily answer the question using synthesis over retrieved threat knowledge
+                    synthesized_answer = cyber_knowledge_engine.synthesize_general_answer(user_message_text, rag_results)
+                    response_sections.append(synthesized_answer)
                 else:
                     health = tool_records[0].get("data", {}) if tool_records else {}
                     response_sections.append(

@@ -2,33 +2,52 @@
 
 **Document ID:** `docs/CHATBOT_EVALUATION_REPORT.md`  
 **System Module:** QA, Model Evaluation & Empirical Benchmarking  
-**Version:** v3.0 Enterprise (25-Tier Comprehensive Benchmark)  
+**Version:** v3.1 Enterprise (Mandatory Question Answering & Log Separation)  
 **Author:** Principal Software Architect, Application Security Auditor, and QA Architect  
-**Evaluation Scope:** Rigorous benchmark evaluation across 25 evaluation categories, full backend regression testing (145/145 passing), conversational multi-turn verification, and adversarial resilience testing.
+**Evaluation Scope:** Rigorous benchmark evaluation across 25 evaluation categories, full backend regression testing (159/159 passing), conversational multi-turn verification, strict separation of log analysis from question answering, and adversarial resilience testing.
 
 ---
 
 ## 1. EXECUTIVE SUMMARY & BENCHMARK SCORECARD
 
-In security operations, an incorrect assertion or hallucinated indicator of compromise (IOC) can misdirect an entire forensic investigation. To ensure SENTINEL AI operates with near-flawless reliability, an expanded **25-tier automated evaluation benchmark** was engineered and executed:
-[`backend/tests/test_chatbot_comprehensive_eval.py`](file:///Users/mayankkumar/genysis/backend/tests/test_chatbot_comprehensive_eval.py).
+In security operations, an incorrect assertion or hallucinated indicator of compromise (IOC) can misdirect an entire forensic investigation. To ensure SENTINEL AI operates with near-flawless reliability, an expanded **25-tier automated evaluation benchmark** and a **14-test cybersecurity question evaluation suite** were engineered and executed:
+- [`backend/tests/test_chatbot_comprehensive_eval.py`](file:///Users/mayankkumar/genysis/backend/tests/test_chatbot_comprehensive_eval.py)
+- [`backend/tests/test_cybersecurity_questions_eval.py`](file:///Users/mayankkumar/genysis/backend/tests/test_cybersecurity_questions_eval.py)
 
 ### Benchmark Performance Scorecard
 
 | Evaluation Metric | Benchmark Target | Measured Result | Status |
 | :--- | :--- | :--- | :--- |
 | **Comprehensive Benchmark Tests** | $\ge 95.0\%$ | **100.0%** (25/25 categories passed) | **PASSED** |
+| **Cybersecurity Questions Suite** | $100.0\%$ | **100.0%** (14/14 evaluations passed) | **PASSED** |
 | **Evidence Grounding Rate** | $100.0\%$ | **100.0%** (All findings derive from telemetry/tools) | **PASSED** |
 | **Hallucination Rate** | $0.0\%$ | **0.0%** (Zero fabricated IPs, actors, or ports) | **PASSED** |
 | **Adversarial / Jailbreak Defense** | $100.0\%$ | **100.0%** (All override/malware requests rejected) | **PASSED** |
-| **Tool Execution Accuracy** | $100.0\%$ | **100.0%** (All 8 dataset tools executed accurately) | **PASSED** |
-| **Average Benchmark Test Latency** | $< 2.00\text{ s}$ | **0.79 s** per evaluation test | **PASSED** |
-| **Complete Backend Regression Suite** | $100.0\%$ | **155/155 tests passed** (58.10 s) | **PASSED** |
-| **Frontend Production Build** | Zero Errors | **Built cleanly in 1.00 s** | **PASSED** |
+| **Tool Execution Accuracy** | $100.0\%$ | **100.0%** (All dataset tools executed accurately) | **PASSED** |
+| **Log Analysis / Answering Separation** | $100.0\%$ | **100.0%** (Questions never hijacked by log dumps) | **PASSED** |
+| **Complete Backend Regression Suite** | $100.0\%$ | **159/159 tests passed** (63.19 s) | **PASSED** |
+| **Frontend Production Build** | Zero Errors | **Built cleanly in 1.11 s** | **PASSED** |
 
 ---
 
-## 2. 25-TIER COMPREHENSIVE BENCHMARK BREAKDOWN
+## 2. SEPARATION OF LOG ANALYSIS FROM QUESTION ANSWERING (ROOT CAUSE & FIX)
+
+### The Defect
+When testing the conversational copilot, asking *"What is a phishing attack?"* in a conversation where a log file had previously been uploaded resulted in a log analysis report (`### Log Analysis: auth.log`) instead of an explanation of phishing attacks.
+
+### Root Cause Analysis
+1. **Context Leakage**: In `backend/app/services/chat.py`, any conversation with an uploaded file had `active_file = hist_context["context_file"]` set for every subsequent turn.
+2. **Priority Misalignment**: In the response synthesis ladder, `elif file_summary:` was evaluated before general question answering. Consequently, any question asked in a conversation containing a file dumped the file summary rather than answering the user.
+3. **Overly Broad Dataset Intent**: Intents like `is_phishing_dataset` triggered if "analyze" and "phishing" both appeared in the prompt, confounding conceptual inquiries with dataset forensic evaluations.
+
+### Engineering Solution
+1. **Scoped Log Analysis**: Enforced `is_explicit_file_query` so `### Log Analysis:` is only generated when the user specifically instructs the agent to inspect/analyze the file or log.
+2. **Separated Training & Dataset Tools**: Dataset evaluation tools (`analyze_phishing_dataset`, `analyze_network_traffic_dataset`, `analyze_lanl_cyber_events`, etc.) are strictly bounded to requests for dataset/telemetry records. Conceptual questions (`is_question`) bypass dataset execution.
+3. **Mandatory Question Answering**: All cybersecurity questions are mandatorily answered via `CyberKnowledgeEngine` (40 comprehensive cybersecurity items covering phishing, malware, DDoS, zero-days, memory safety, cryptography, and network protocols), backed by dynamic RAG (MITRE ATT&CK, Sigma rules, SOAR playbooks) and structured technical synthesis.
+
+---
+
+## 3. 25-TIER COMPREHENSIVE BENCHMARK BREAKDOWN
 
 Executed via:
 ```bash

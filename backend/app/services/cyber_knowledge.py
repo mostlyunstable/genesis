@@ -526,6 +526,239 @@ KNOWLEDGE_CATALOG: List[CyberKnowledgeItem] = [
         detection="Monitor CloudTrail for anomalous IAM privilege escalation (`iam:CreatePolicyVersion`, `sts:AssumeRole`) and audit container manifests with Falco for container breakouts.",
         mitigation="Enforce Kubernetes Pod Security Standards (PSS Restricted), never mount `/var/run/docker.sock` in workloads, run containers as non-root users (`USER 1000`), and enforce immutable read-only root filesystems.",
         mitre_ids=["T1611", "T1613"]
+    ),
+
+    # -------------------------------------------------------------------------
+    # 8. SOCIAL ENGINEERING, PHISHING & THREAT TAXONOMY
+    # -------------------------------------------------------------------------
+    CyberKnowledgeItem(
+        key="phishing_attacks",
+        title="Phishing Attacks & Social Engineering Vectors",
+        domain="Social Engineering & Email Security",
+        keywords=[
+            "phishing", "phishing attack", "spear phishing", "whaling", "vishing", 
+            "smishing", "credential harvesting", "email spoofing", "what is a phishing attack", 
+            "what is phishing", "phishing email", "bec", "business email compromise"
+        ],
+        summary="A deceptive social engineering attack where adversaries impersonate trusted organizations or individuals (banks, corporate IT, executives) via email, SMS, or voice to deceive victims into revealing credentials, transferring money, or downloading malware.",
+        mechanics=(
+            "1. **Email Spoofing & Lookalike Domains**: Attackers register typosquatted domains (e.g. `chase-security.com`) or forge display names and sender headers when email authentication is misconfigured.\n"
+            "2. **Psychological Triggers**: Exploit urgency, fear, authority, or curiosity (e.g., 'Account Suspended: Immediate Action Required', 'Unpaid Invoice Notice').\n"
+            "3. **Primary Phishing Variants**:\n"
+            "   - **Bulk Phishing**: Untargeted mass emails harvesting login credentials or spreading generic malware.\n"
+            "   - **Spear Phishing**: Customized, highly targeted attacks directed at specific individuals using reconnaissance from social media or corporate directories.\n"
+            "   - **Whaling**: Spear phishing targeting high-profile C-level executives or finance directors (Business Email Compromise - BEC) to authorize high-value wire transfers.\n"
+            "   - **Smishing (SMS) & Vishing (Voice)**: Fraudulent text messages or automated phone calls impersonating fraud departments.\n"
+            "   - **Reverse-Proxy Phishing (Evilginx)**: In-line man-in-the-middle proxies serving real login portals to steal session cookies and bypass standard 2FA."
+        ),
+        examples="An employee receives an urgent email appearing to come from Microsoft 365 Support with a link to `login.microsoftonline.com.secure-auth.net` requesting credential verification, resulting in account takeover.",
+        detection="Verify SPF, DKIM, and DMARC alignment (`p=reject`), monitor email gateway logs for newly registered domains (NRDs) and IP-in-URL hyperlinks, and inspect email body text for urgency language.",
+        mitigation="Enforce strict **DMARC policies (`p=reject`)**, deploy phishing-resistant **FIDO2 / WebAuthn hardware security keys** (which bind authentication to the true domain origin, neutralizing proxy phishing), implement automated email sandboxing, and conduct regular employee phishing simulations.",
+        mitre_ids=["T1566.001", "T1566.002", "T1566.003"]
+    ),
+    CyberKnowledgeItem(
+        key="malware_types",
+        title="Malware Classifications & Infection Vectors",
+        domain="Endpoint Security & Malware Analysis",
+        keywords=["malware", "virus", "worm", "trojan", "spyware", "keylogger", "types of malware", "what is malware"],
+        summary="Malicious software specifically engineered to compromise system integrity, steal confidential data, disrupt operational continuity, or grant unauthorized remote access.",
+        mechanics=(
+            "- **Viruses**: Malicious code that attaches to legitimate executable files and replicates when the host program is executed.\n"
+            "- **Worms**: Standalone malware that self-replicates across networks by exploiting unpatched protocol vulnerabilities (e.g., WannaCry via SMBv1 EternalBlue) without user interaction.\n"
+            "- **Trojans**: Programs masquerading as benign utilities (e.g. cracked installers, invoice PDFs) that silently deploy backdoors or infostealers.\n"
+            "- **Ransomware**: Encrypts victim storage using asymmetric/symmetric hybrid encryption and demands payment for private decryption keys.\n"
+            "- **Spyware & Keyloggers**: Secretly monitors user keystrokes, webcam feeds, and clipboard data, exfiltrating credentials to C2 infrastructure.\n"
+            "- **Rootkits**: Kernel-level or firmware-level software designed to conceal processes, sockets, and files from operating system APIs and EDR agents."
+        ),
+        examples="A user downloads an infected PDF disguised as a vendor invoice, executing an embedded macro that downloads and runs an infostealer Trojan.",
+        detection="Monitor behavioral EDR telemetry (unusual parent-child process relationships, unauthorized scheduled tasks, LSASS memory dumping) and cross-reference file hashes against threat intelligence.",
+        mitigation="Deploy EDR with active behavioral protection, restrict local administrator privileges, maintain aggressive patch management schedules, and block macro execution in files from the internet.",
+        mitre_ids=["T1204", "T1059"]
+    ),
+    CyberKnowledgeItem(
+        key="social_engineering",
+        title="Social Engineering Tactics & Human Risk",
+        domain="Human Risk & Behavioral Security",
+        keywords=["social engineering", "pretexting", "baiting", "quid pro quo", "tailgating", "what is social engineering"],
+        summary="The psychological manipulation of individuals into divulging confidential information, granting physical access, or performing security-compromising actions.",
+        mechanics=(
+            "- **Pretexting**: Establishing a believable invented persona (e.g. IT support technician, company auditor) to deceive employees into surrendering credentials or access.\n"
+            "- **Baiting**: Leaving infected USB flash drives in company lobbies or parking lots labeled 'Confidential Executive Salaries' to entice victims into plugging them in.\n"
+            "- **Tailgating / Piggybacking**: Following authorized personnel through badge-controlled access doors without scanning credentials.\n"
+            "- **Quid Pro Quo**: Offering an ostensible benefit or service (e.g. 'free security software cleanup') in exchange for login credentials."
+        ),
+        examples="An attacker calls an employee pretending to be from the IT helpdesk, requesting their one-time passcode to 'fix an email sync error'.",
+        detection="Monitor employee reports of suspicious phone calls, correlate failed authentication spikes following executive social media announcements.",
+        mitigation="Implement multi-party verification protocols for sensitive requests (financial transfers, password resets), conduct interactive employee awareness training, and enforce physical security barriers (turnstiles).",
+        mitre_ids=["T1566", "T1598"]
+    ),
+    CyberKnowledgeItem(
+        key="ddos_attacks",
+        title="Distributed Denial of Service (DDoS) Attacks & Defenses",
+        domain="Network Availability & Perimeter Defense",
+        keywords=["ddos", "distributed denial of service", "ddos attack", "volumetric attack", "amplification attack", "what is ddos"],
+        summary="A coordinated attempt to exhaust server, network, or application availability by overwhelming targets with massive floods of malicious internet traffic originating from distributed botnets.",
+        mechanics=(
+            "- **Volumetric Floods**: Satiate raw physical bandwidth (UDP Floods, ICMP Echo Floods, DNS/NTP Reflection Amplification where small spoofed queries elicit 50x larger responses).\n"
+            "- **Protocol Layer Attacks**: Exhaust connection state tables on perimeter firewalls, load balancers, and web servers (SYN Floods, Ping of Death).\n"
+            "- **Application Layer Floods (Layer 7)**: Overwhelm server compute/database threads with complex HTTP GET/POST requests that appear legitimate but consume maximum server CPU."
+        ),
+        examples="Adversaries directing a Mirai botnet of 100,000 infected IoT cameras to flood an enterprise DNS provider with 1.2 Tbps of UDP traffic.",
+        detection="Real-time NetFlow/IPFIX anomaly monitoring identifying sudden spikes in bits-per-second (BPS) or packets-per-second (PPS) and asymmetric inbound-to-outbound traffic ratios.",
+        mitigation="Deploy cloud DDoS mitigation scrubbers (Cloudflare, AWS Shield, Akamai), utilize BGP Anycast routing to disperse traffic across global PoPs, and implement BCP 38 ingress filtering.",
+        mitre_ids=["T1498", "T1499"]
+    ),
+    CyberKnowledgeItem(
+        key="zero_day",
+        title="Zero-Day Vulnerabilities & Exploit Lifecycle",
+        domain="Vulnerability Management & Exploitation",
+        keywords=["zero day", "zero-day", "0-day", "cve", "cvss", "vulnerability lifecycle"],
+        summary="A software flaw unknown to the vendor or developers, leaving systems vulnerable to exploitation with zero days of defensive patch availability.",
+        mechanics=(
+            "1. **Discovery**: Vulnerability discovered by researchers, nation-state intelligence agencies, or cybercriminal exploit brokers.\n"
+            "2. **Weaponization**: Functional exploit code authored to achieve remote code execution, privilege escalation, or authentication bypass.\n"
+            "3. **In-the-Wild Exploitation**: Attacks executed against high-value targets while signature-based antiviruses have zero signatures.\n"
+            "4. **Disclosure & Patching**: Vendor is notified, assigns a CVE, issues an emergency patch, and publishes mitigation advisories."
+        ),
+        examples="The Log4Shell (CVE-2021-44228) vulnerability in Apache Log4j allowing unauthenticated remote code execution via a simple JNDI lookup string.",
+        detection="Heuristic and behavioral anomaly detection in EDR/SIEM, monitoring memory corruption exceptions, and detecting unauthorized child processes spawned by server daemons.",
+        mitigation="Adopt Zero Trust architecture, minimize attack surface, enforce least privilege, deploy virtual patching via WAF/IPS rule sets, and apply defense-in-depth controls.",
+        mitre_ids=["T1190", "T1068"]
+    ),
+    CyberKnowledgeItem(
+        key="mitre_attack_framework",
+        title="MITRE ATT&CK Framework Architecture & Matrix",
+        domain="Cyber Threat Intelligence & TTPs",
+        keywords=["mitre attack", "mitre att&ck", "tactics", "techniques", "ttps", "what is mitre"],
+        summary="The globally standard knowledge base of adversary Tactics, Techniques, and Procedures (TTPs) based on real-world threat observations, used to evaluate and improve enterprise security posture.",
+        mechanics=(
+            "- **Tactics (The 'Why')**: The high-level objective of an adversary at each step (e.g. Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Lateral Movement, Collection, Exfiltration, Impact).\n"
+            "- **Techniques (The 'How')**: The specific technical method used to accomplish the tactic (e.g. T1110 Brute Force, T1059 Command and Scripting Interpreter).\n"
+            "- **Sub-Techniques**: Granular variations (e.g. T1110.001 Password Guessing, T1110.003 Password Spraying).\n"
+            "- **Procedures**: The documented implementations used by specific threat actors."
+        ),
+        examples="Mapping an incident timeline: Initial Access via T1566 (Phishing) -> Execution via T1059.001 (PowerShell) -> Lateral Movement via T1021.002 (SMB Shares).",
+        detection="Align SIEM correlation alerts and Sigma rules directly with ATT&CK technique IDs to measure enterprise detection coverage.",
+        mitigation="Cross-reference with MITRE D3FEND defensive countermeasures to address identified detection and mitigation blind spots.",
+        mitre_ids=["TA0001", "TA0002", "TA0008"]
+    ),
+    CyberKnowledgeItem(
+        key="buffer_overflow",
+        title="Buffer Overflow Vulnerabilities & Memory Protection",
+        domain="Software Security & Exploit Mitigation",
+        keywords=["buffer overflow", "stack overflow", "heap overflow", "aslr", "dep", "stack canary", "shellcode"],
+        summary="A memory corruption anomaly where a program writes more data to a memory buffer than its boundary allows, overwriting adjacent memory and hijacking execution flow.",
+        mechanics=(
+            "- In vulnerable C/C++ applications, functions like `strcpy()`, `gets()`, or `sprintf()` do not check input boundaries.\n"
+            "- An attacker supplies input exceeding buffer size, overwriting the **Saved Frame Pointer** and the **Saved Return Address (EIP/RIP)** on the stack.\n"
+            "- When the function returns, control flow redirects to attacker-controlled memory (shellcode) or Return-Oriented Programming (ROP) gadgets."
+        ),
+        examples="Classic Morris Worm exploiting `gets()` in Unix `fingerd`, or remote code execution in network routers via unbuffered packet headers.",
+        detection="Monitor crash dumps for `SIGSEGV` segmentation faults and inspect EDR logs for anomalous execution from stack or heap memory regions.",
+        mitigation="Compile with compiler mitigations: **Stack Canaries** (`-fstack-protector-all`), **Data Execution Prevention (DEP / NX bit)**, and **Address Space Layout Randomization (ASLR)**; migrate critical components to memory-safe languages (Rust, Go).",
+        mitre_ids=["T1203", "T1059"]
+    ),
+    CyberKnowledgeItem(
+        key="credential_stuffing",
+        title="Credential Stuffing Attacks & Automated Account Takeover",
+        domain="Identity & Web Application Security",
+        keywords=["credential stuffing", "account takeover", "ato", "breached credentials", "what is credential stuffing"],
+        summary="Automated injection of stolen username/password combinations harvested from past data breaches against secondary websites to achieve account takeover.",
+        mechanics=(
+            "1. Threat actors obtain massive credential dumps (e.g. from breach compilation databases).\n"
+            "2. Automated bot programs (e.g. OpenBullet, Sentry MBA) cycle through millions of credentials across banking, retail, and corporate portals.\n"
+            "3. Because 60%+ of users reuse passwords across personal and professional accounts, bots achieve a 1-3% success rate, compromising legitimate accounts without attacking enterprise infrastructure."
+        ),
+        examples="Bots submitting 500,000 username/password pairs per hour against an airline loyalty portal, successfully taking over 5,000 accounts.",
+        detection="Monitor web application login endpoints for abnormal spikes in authentication attempts, high ratios of failed-to-successful logins, and traffic originating from known residential proxy networks.",
+        mitigation="Mandate Multi-Factor Authentication (MFA), deploy bot protection solutions with CAPTCHA step-ups, check passwords against breached credential APIs (HaveIBeenPwned), and enforce device fingerprinting.",
+        mitre_ids=["T1110.004"]
+    ),
+    CyberKnowledgeItem(
+        key="man_in_the_middle",
+        title="Man-in-the-Middle (MitM) Attacks & Network Interception",
+        domain="Network Transport Security",
+        keywords=["mitm", "man in the middle", "man-in-the-middle", "ssl stripping", "session hijacking", "traffic interception"],
+        summary="An attack where the adversary secretly relays and potentially alters communication between two parties who believe they are directly communicating with each other.",
+        mechanics=(
+            "1. Adversary positions themselves between client and server via ARP spoofing, rogue DHCP, DNS spoofing, or rogue Wi-Fi access points.\n"
+            "2. In HTTPS connections, attackers execute SSL Stripping (converting HTTPS to unencrypted HTTP) or present spoofed certificates if clients ignore TLS validation warnings.\n"
+            "3. Stolen session tokens, cleartext credentials, or sensitive transaction parameters are extracted or modified in transit."
+        ),
+        examples="Attacker deploying a Wi-Fi Pineapple in an airport or coffee shop to intercept unencrypted employee HTTP requests.",
+        detection="Monitor for duplicate ARP mappings on LAN switches, inspect network flows for anomalous TLS certificate authorities, and deploy Dynamic ARP Inspection (DAI).",
+        mitigation="Enforce HTTP Strict Transport Security (HSTS with preloading), mandate TLS 1.3 with Certificate Pinning, disable insecure cipher suites, and use end-to-end encrypted VPN tunnels.",
+        mitre_ids=["T1557", "T1557.001", "T1557.002"]
+    ),
+    CyberKnowledgeItem(
+        key="vpn_and_ipsec",
+        title="Virtual Private Networks (VPN), IPsec & Secure Tunneling",
+        domain="Enterprise Network & Perimeter Defense",
+        keywords=["vpn", "ipsec", "wireguard", "openvpn", "secure tunnel", "ikev2", "esp"],
+        summary="Cryptographic network tunneling mechanisms that establish encrypted virtual communication channels across untrusted public networks.",
+        mechanics=(
+            "- **IPsec Architecture**: Operates at Layer 3 using Authentication Header (AH) for integrity and Encapsulating Security Payload (ESP) for encryption and integrity.\n"
+            "- **Key Exchange (IKEv2)**: Authenticates endpoints and negotiates symmetric encryption keys via Diffie-Hellman ephemeral exchange.\n"
+            "- **Modern Protocols**: WireGuard (lean, modern crypto primitives like ChaCha20-Poly1305 and Curve25519) and OpenVPN (TLS-based Layer 2/3 tunneling)."
+        ),
+        examples="Remote employees securely accessing corporate cloud VPC subnets over public hotel Wi-Fi without exposing internal database ports.",
+        detection="Audit VPN gateway connection logs for concurrent sessions from disparate geo-locations, anomalous off-hours logon bursts, and protocol downgrade attempts.",
+        mitigation="Enforce MFA on all VPN ingress gateways, mandate post-quantum or AES-256-GCM ciphers, and implement Zero Trust Network Access (ZTNA) to replace flat network VPN access.",
+        mitre_ids=["T1133"]
+    ),
+    CyberKnowledgeItem(
+        key="honeypots",
+        title="Deception Technology, Honeypots & Canary Tokens",
+        domain="Threat Deception & Early Warning Sensors",
+        keywords=["honeypot", "honeynet", "canary token", "deception technology", "honeytoken", "cowrie"],
+        summary="Deliberately decoy assets, credentials, or systems deployed within an enterprise network to detect, deflect, and study adversary intrusion activity with near-zero false positive rates.",
+        mechanics=(
+            "- **Low-Interaction Honeypots**: Simulate specific services (e.g., Cowrie simulating SSH/Telnet) to capture brute-force credentials and initial exploit payloads without running real OS services.\n"
+            "- **High-Interaction Honeypots**: Run real operating systems in isolated sandbox VLANs to capture full multi-stage adversary post-exploitation tradecraft.\n"
+            "- **Canary Tokens**: Unique fake API keys, AWS credentials, or macro-enabled documents planted in corporate repositories; any access immediately triggers high-priority SOC alerts."
+        ),
+        examples="Placing a fake AWS root access key `AKIA...` in a git repository that triggers an alert the moment an attacker attempts to call `aws sts get-caller-identity`.",
+        detection="Any traffic or authentication attempt to a honeypot or canary token represents verified unauthorized activity (zero false positives).",
+        mitigation="Use honeypot threat telemetry to instantly feed perimeter firewall blocklists and trigger automated host containment for compromised internal endpoints.",
+        mitre_ids=["T1562.001"]
+    ),
+    CyberKnowledgeItem(
+        key="least_privilege",
+        title="Principle of Least Privilege (PoLP) & Access Control",
+        domain="Identity Governance & Enterprise Access Control",
+        keywords=["least privilege", "polp", "rbac", "abac", "privileged access management", "pam", "jit"],
+        summary="A foundational cybersecurity architectural concept mandating that every user, service, and process be granted only the minimum access rights necessary to perform authorized duties.",
+        mechanics=(
+            "- **Role-Based Access Control (RBAC)**: Assigns permissions to organizational roles rather than individual user accounts.\n"
+            "- **Attribute-Based Access Control (ABAC)**: Evaluates dynamic context (device posture, IP location, time of day, risk score) before authorizing sensitive actions.\n"
+            "- **Just-In-Time (JIT) Privileged Access**: Replaces permanent standing administrative privileges with temporary, audited, time-bound privilege escalation."
+        ),
+        examples="Restricting standard developer accounts from accessing production customer databases, requiring an approved ticket to unlock temporary 2-hour read-only access.",
+        detection="Audit Active Directory and IAM permission grants for over-privileged service accounts, privilege creep across employee role changes, and excessive sudo permissions.",
+        mitigation="Implement Privileged Access Management (PAM) vaults (CyberArk, HashiCorp Vault), eliminate domain admin standing rights, and perform quarterly user access reviews.",
+        mitre_ids=["T1078", "T1069"]
+    ),
+    CyberKnowledgeItem(
+        key="cve_cvss",
+        title="Vulnerability Scoring (CVE & CVSS v3.1 Metrics)",
+        domain="Vulnerability Management & Risk Assessment",
+        keywords=["cve", "cvss", "common vulnerabilities and exposures", "vulnerability scoring", "cvss score", "base score"],
+        summary="Standardized frameworks for cataloging security vulnerabilities (CVE) and quantifying their technical severity and exploitability (CVSS v3.1).",
+        mechanics=(
+            "- **Common Vulnerabilities and Exposures (CVE)**: Unique identifiers (e.g. `CVE-2021-44228` Log4Shell) assigned by CVE Numbering Authorities (CNAs).\n"
+            "- **CVSS v3.1 Base Metrics** (0.0 to 10.0 scale):\n"
+            "  1. **Attack Vector (AV)**: Network (N), Adjacent (A), Local (L), Physical (P)\n"
+            "  2. **Attack Complexity (AC)**: Low (L) vs High (H)\n"
+            "  3. **Privileges Required (PR)**: None (N), Low (L), High (H)\n"
+            "  4. **User Interaction (UI)**: None (N) vs Required (R)\n"
+            "  5. **Scope (S)**: Unchanged (U) vs Changed (C)\n"
+            "  6. **Impact Metrics (CIA)**: Confidentiality, Integrity, Availability (None, Low, High)\n"
+            "- **Severity Ratings**: Low (0.1–3.9), Medium (4.0–6.9), High (7.0–8.9), Critical (9.0–10.0)."
+        ),
+        examples="Log4Shell (`CVE-2021-44228`) scored CVSS 10.0 (Critical): Network vector, Low complexity, No privileges required, No user interaction, Scope Changed, High impact across CIA.",
+        detection="Scan assets with authenticated vulnerability scanners (Nessus, Qualys, OpenVAS) and cross-reference software BOMs with CISA Known Exploited Vulnerabilities (KEV) catalog.",
+        mitigation="Prioritize patching based on EPSS (Exploit Prediction Scoring System) and CISA KEV presence rather than raw CVSS alone, applying virtual patches via WAFs during zero-day disclosure windows.",
+        mitre_ids=["T1190"]
     )
 ]
 
@@ -585,5 +818,63 @@ class CyberKnowledgeEngine:
             return match.format_markdown()
         return None
 
+    def synthesize_general_answer(self, query: str, rag_results: Optional[List[Dict[str, Any]]] = None) -> str:
+        """
+        Synthesizes a structured, expert cybersecurity response for technical inquiries
+        that did not match a pre-indexed catalog entry. Uses retrieved RAG techniques or
+        deep domain knowledge synthesis.
+        """
+        clean_q = query.strip()
+        sections = [
+            f"### Cybersecurity Analysis & Guidance\n\n**Query**: *{clean_q}*"
+        ]
+
+        if rag_results:
+            rag_blocks = []
+            for r in rag_results:
+                if r.get("source") == "mitre_attack":
+                    rag_blocks.append(
+                        f"#### {r['title']} ({r.get('tactic', 'Tactics')})\n\n"
+                        f"- **Guideline**: {r.get('guidelines', 'Active threat monitoring.')}\n"
+                        f"- **Mitigations**: {', '.join(r.get('mitigations', ['Enforce least privilege access.']))}\n"
+                    )
+                elif r.get("source") == "sigma_rule":
+                    rag_blocks.append(
+                        f"#### Detection Rule: {r['title']} (Severity: {r.get('severity', 'HIGH').upper()})\n\n"
+                        f"- **Logic**: `{r.get('logic', '')}`\n"
+                        f"- **False Positives**: {', '.join(r.get('false_positives', []))}\n"
+                    )
+                elif r.get("source") == "defensive_playbook":
+                    rag_blocks.append(
+                        f"#### Playbook: {r['title']}\n\n"
+                        f"- **Containment Actions**: {', '.join(r.get('actions', []))}\n"
+                    )
+            if rag_blocks:
+                sections.append("**Correlated Threat Frameworks & Mitigations**:\n\n" + "\n\n".join(rag_blocks))
+
+        sections.append(
+            "**Technical Overview & Threat Context**:\n"
+            f"In enterprise cybersecurity operations, addressing inquiries regarding *{clean_q}* requires "
+            "evaluating the complete threat lifecycle—from initial reconnaissance and delivery to lateral movement and impact. "
+            "Modern threat actors continuously refine automated tooling to evade static detection filters and exploit misconfigurations across network, identity, and application boundaries."
+        )
+
+        sections.append(
+            "**Core Detection & Observability Strategy**:\n"
+            "- **Telemetry Ingestion**: Correlate endpoint EDR process events, perimeter firewall flows, DNS query entropy, and identity provider (IdP) authentication audits in real time.\n"
+            "- **Behavioral Anomaly Detection**: Monitor for deviations from baseline behavioral velocity, abnormal credential access sequences, and high-frequency failure patterns.\n"
+            "- **MITRE ATT&CK Mapping**: Cross-reference observed telemetry with known adversary tactics, techniques, and procedures (TTPs) to track campaign progression."
+        )
+
+        sections.append(
+            "**Defensive Remediation & Operational Hardening**:\n"
+            "1. **Enforce Zero Trust Principles**: Eliminate implicit trust based on network topology; require continuous identity verification with phishing-resistant FIDO2 MFA.\n"
+            "2. **Least Privilege & Microsegmentation**: Restrict lateral movement vectors across internal subnets through fine-grained ingress/egress firewall policies and JIT access control.\n"
+            "3. **Automated Incident Response**: Deploy automated containment playbooks (e.g., automated perimeter IP isolation, session revocation, compromised asset quarantine) to shrink adversary dwell time."
+        )
+
+        return "\n\n".join(sections)
+
 
 cyber_knowledge_engine = CyberKnowledgeEngine()
+

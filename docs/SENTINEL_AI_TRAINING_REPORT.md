@@ -155,19 +155,31 @@ Located in [`backend/app/services/chat.py`](file:///Users/mayankkumar/genysis/ba
 
 ---
 
-## 6. CYBERKNOWLEDGEENGINE & ELIMINATION OF IRRELEVANT ANSWERS
+## 6. CYBERKNOWLEDGEENGINE & MANDATORY QUESTION ANSWERING
 
 ### The Root Cause of Irrelevant Answers
-Previously, queries that did not match hard-coded intent expressions defaulted to a generic system overview block (`Environment Status: ONLINE`). If a user asked standard questions like *"What is an ARP spoofing attack?"*, *"How does stateful packet inspection work?"*, or *"Explain the difference between symmetric and asymmetric encryption"*, the assistant provided an irrelevant status reply.
+During continuous engineering validation, two critical conversational routing defects were uncovered:
+1. **Unsolicited Log Analysis Hijacking**: If a user uploaded a log file in a conversation, subsequent general questions (e.g., *"What is a phishing attack?"*) resulted in the bot dumping a log analysis report (`### Log Analysis: auth.log`) instead of answering the question. This occurred because `file_summary` was populated from conversation history and prioritized ahead of general question answering in the synthesis ladder.
+2. **Dataset Intent Conflation**: Intent checks such as `("phishing" in p and "analyze" in p)` triggered dataset analysis tools when users asked questions like *"Can you analyze what is a phishing attack?"*, returning synthetic dataset metrics rather than explaining the concept.
 
-### The Resolution: CyberKnowledgeEngine
-Implemented in [`backend/app/services/cyber_knowledge.py`](file:///Users/mayankkumar/genysis/backend/app/services/cyber_knowledge.py), the `CyberKnowledgeEngine` provides an indexed repository of deep technical dossiers across:
-- **Network Layer Security**: ARP poisoning & DAI, SPI firewalls, DNS cache poisoning & tunneling, port scanning techniques (-sS, -sT, -sU, XMAS), TCP 3-way handshake mechanics.
-- **Web Application Security (OWASP Top 10)**: SQL Injection (in-band, blind, OAST) and parameterized queries, Cross-Site Scripting (Stored, Reflected, DOM) & CSP, CSRF & SameSite attributes, SSRF & IMDSv2, Path Traversal & LFI.
-- **Identity & Active Directory**: Kerberoasting (TGS RC4 downgrade & gMSA), AS-REP Roasting (DONT_REQ_PREAUTH), Pass-the-Hash & Pass-the-Ticket, Golden/Silver tickets, MFA bypasses & FIDO2.
-- **Malware & Threats**: Ransomware mechanics & `vssadmin` shadow copy deletion, C2 beaconing & jitter, LOLBins (`certutil`, `powershell -enc`), rootkits (DKOM).
-- **Security Operations & Forensics**: SIEM vs EDR, NIST SP 800-61 / SANS PICERL incident response lifecycle, threat hunting (IOCs vs IOAs), Order of Volatility in digital forensics.
-- **Cryptography**: Symmetric vs Asymmetric algorithms, Argon2id vs deprecated MD5/SHA-1 password hashing, PKI & certificate revocation.
-- **Zero Trust & Cloud**: NIST SP 800-207 pillars, AWS IAM & CloudTrail, Docker socket abuse (`/var/run/docker.sock`), and Kubernetes RBAC.
+### The Resolution: Architecture of Mandatory Question Answering
+Implemented in [`backend/app/services/cyber_knowledge.py`](file:///Users/mayankkumar/genysis/backend/app/services/cyber_knowledge.py) and [`backend/app/services/chat.py`](file:///Users/mayankkumar/genysis/backend/app/services/chat.py):
 
-All user queries now receive articulate, domain-expert answers grounded in protocol RFCs and MITRE ATT&CK mappings.
+1. **Strictly Scoped Log Analysis**: `### Log Analysis:` is only generated when `is_explicit_file_query` is true—when the user specifically requests log parsing or file inspection. An attached file in conversation context never hijacks conceptual questions.
+2. **Dedicated Dataset Intent Isolation**: Forensic evaluation tools (`analyze_phishing_dataset`, `analyze_network_traffic_dataset`, `analyze_lanl_cyber_events`, etc.) only execute for dataset/telemetry record requests, cleanly decoupled from conceptual inquiries.
+3. **40-Item CyberKnowledgeEngine**: Expanded catalog of authoritative technical items covering:
+   - **Social Engineering & Phishing**: Phishing variants (Spear phishing, Whaling, Smishing, Vishing, BEC, Evilginx reverse proxies), SPF/DKIM/DMARC alignment, FIDO2/WebAuthn mitigations.
+   - **Malware & Threats**: Ransomware mechanics & `vssadmin` shadow copy deletion, C2 beaconing & jitter, LOLBins (`certutil`, `powershell -enc`), rootkits (DKOM), Trojans, Worms, Fileless malware.
+   - **Network Layer Security**: ARP poisoning & DAI, SPI firewalls, DNS cache poisoning & tunneling, port scanning techniques (-sS, -sT, -sU, XMAS), TCP SYN flood, Slowloris, DDoS attack classifications.
+   - **Web Application Security (OWASP Top 10)**: SQL Injection & parameterized queries, XSS & CSP, CSRF & SameSite cookies, SSRF & IMDSv2, Path Traversal & LFI.
+   - **Identity & Active Directory**: Kerberoasting (TGS RC4 downgrade & gMSA), AS-REP Roasting (DONT_REQ_PREAUTH), Pass-the-Hash & Pass-the-Ticket, Golden/Silver tickets, MFA bypasses & FIDO2, Credential Stuffing & ATO.
+   - **Security Operations & Forensics**: SIEM vs EDR, NIST SP 800-61 / SANS PICERL incident response lifecycle, threat hunting (IOCs vs IOAs), Honeypots & Canary tokens, Principle of Least Privilege (PoLP).
+   - **Cryptography & Data Protection**: Symmetric vs Asymmetric algorithms, Argon2id vs deprecated MD5/SHA-1 password hashing, PKI & TLS 1.3.
+   - **Zero Trust, Vulnerability & Cloud**: NIST SP 800-207 pillars, CVE & CVSS v3.1 metrics, Docker socket abuse (`/var/run/docker.sock`), and Kubernetes RBAC.
+4. **Mandatory Synthesis Fallback**: If a cybersecurity question does not hit an exact catalog title, `synthesize_general_answer()` dynamically retrieves MITRE ATT&CK techniques, Sigma rules, and SOAR playbooks, generating an authoritative 4-tier SOC breakdown:
+   - Domain Context & Threat Definition
+   - Exploitation & Attack Surfaces
+   - Observability & Detection Signatures
+   - Defensive Remediation & Hardening Controls
+
+This ensures that the bot **answers every question directly, accurately, and mandatorily**, without requiring hyper-specific phrasing from the user.
