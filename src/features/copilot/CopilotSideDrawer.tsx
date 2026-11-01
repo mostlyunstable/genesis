@@ -403,7 +403,7 @@ export const CopilotSideDrawer: React.FC = () => {
                 <button
                   onClick={() => handleSend()}
                   disabled={!inputMessage.trim()}
-                  className="p-1.5 rounded-lg bg-[#111417] hover:bg-[#1E4BD8] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-xs"
+                  className="p-2 rounded-lg bg-[#111417] hover:bg-[#1E4BD8] text-white border border-[#2A3138] hover:border-[#4D76F8] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
                   title="Send message"
                 >
                   <Send className="w-3.5 h-3.5" />

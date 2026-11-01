@@ -43,7 +43,7 @@ export const AppLayout: React.FC = () => {
       {!isCopilot && !isSideDrawerOpen && (
         <button
           onClick={() => setSideDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#111417] hover:bg-[#1E4BD8] text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 cursor-pointer group border border-white/10"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#111417] hover:bg-[#1E4BD8] text-white text-xs font-bold shadow-xl hover:shadow-2xl transition-all active:scale-95 cursor-pointer group border-2 border-[#2A3138] hover:border-[#4D76F8]"
           title="Open Genesis Copilot (Side Panel)"
           aria-label="Open Genesis Copilot"
         >

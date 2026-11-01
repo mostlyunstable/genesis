@@ -220,7 +220,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 createNewConversation();
                 if (window.innerWidth < 768) setIsHistoryOpen(false);
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#111417] hover:bg-[#20252A] text-white text-xs font-medium shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#111417] hover:bg-[#1E2328] text-white text-xs font-bold border-2 border-[#2A3138] hover:border-[#404A54] shadow-xs transition-all active:scale-[0.98] cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Investigation</span>

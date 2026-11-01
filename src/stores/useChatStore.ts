@@ -108,7 +108,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         activeConversation: detail, 
         messages: detail.messages || [],
         uploadedFiles: fileList,
-        activeFileId: fileList.length > 0 ? fileList[0].id : null,
+        activeFileId: null,
         uploadError: null,
         evidenceReferences: latestEvidence,
         suggestedActions: latestActions,

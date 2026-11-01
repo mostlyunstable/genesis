@@ -72,7 +72,7 @@ export const TopNav: React.FC = () => {
           {location.pathname !== '/copilot' && (
             <button
               onClick={() => setSideDrawerOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#111417] hover:bg-[#1E4BD8] text-white transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#111417] hover:bg-[#1E4BD8] text-white border-2 border-[#2A3138] hover:border-[#4D76F8] transition-all cursor-pointer shadow-xs"
               title="Open Copilot Assistant"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#A7C1FF]" />
