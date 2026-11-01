@@ -5,44 +5,44 @@
 @layer base {
   :root, .light {
     /* GENESIS AI Light-First Design System Foundation */
-    --color-bg: #F7F7F2;
+    --color-bg: #F8F8F5;
     --color-surface: #FFFFFF;
-    --color-surface-secondary: #F0F1EB;
-    --color-surface-elevated: #FAFAF7;
-    --color-surface-sunken: #F0F1EB;
+    --color-surface-secondary: #F0F1EA;
+    --color-surface-elevated: #FFFFFF;
+    --color-surface-sunken: #F0F1EA;
     
-    --color-text: #20251F;
-    --color-text-secondary: #73796F;
-    --color-text-muted: #969B91;
+    --color-text: #111417;
+    --color-text-secondary: #5E656D;
+    --color-text-muted: #8A939E;
     
-    --color-accent: #54765C;
-    --color-accent-hover: #436049;
-    --color-accent-secondary: #A1B69A;
-    --color-accent-subtle: #EAF0E6;
+    --color-accent: #1E4BD8;
+    --color-accent-hover: #163CAE;
+    --color-accent-secondary: #4D77FF;
+    --color-accent-subtle: #EFF4FF;
     
-    --color-border: #E3E5DC;
-    --color-border-strong: #CFD4C9;
-    --color-divider: #E3E5DC;
-    --color-focus: #91A78B;
+    --color-border: #E2E4DC;
+    --color-border-strong: #CDCFCE;
+    --color-divider: #E2E4DC;
+    --color-focus: #1E4BD8;
     
     /* Semantic Status Colors */
-    --color-status-critical: #B94C43;
-    --color-status-critical-bg: #F9ECEB;
-    --color-status-high: #C47A45;
-    --color-status-high-bg: #FAF2EC;
+    --color-status-critical: #D03B2E;
+    --color-status-critical-bg: #FDF2F1;
+    --color-status-high: #C27814;
+    --color-status-high-bg: #FDF7ED;
     --color-status-medium: #B28A42;
     --color-status-medium-bg: #FAF5EB;
-    --color-status-low: #547D70;
-    --color-status-low-bg: #EDF3F1;
-    --color-status-resolved: #64856C;
-    --color-status-resolved-bg: #EDF3EF;
+    --color-status-low: #486581;
+    --color-status-low-bg: #F0F4F8;
+    --color-status-resolved: #1E824C;
+    --color-status-resolved-bg: #EDF7F1;
     
-    --shadow-sm: 0 1px 3px rgba(32, 37, 31, 0.04), 0 1px 2px rgba(32, 37, 31, 0.02);
-    --shadow-md: 0 4px 14px rgba(32, 37, 31, 0.06);
-    --shadow-lg: 0 12px 32px rgba(32, 37, 31, 0.08);
+    --shadow-sm: 0 1px 3px rgba(17, 20, 23, 0.04), 0 1px 2px rgba(17, 20, 23, 0.02);
+    --shadow-md: 0 4px 12px rgba(17, 20, 23, 0.05);
+    --shadow-lg: 0 10px 24px rgba(17, 20, 23, 0.06);
     
-    --font-heading: 'Caprasimo', Georgia, serif;
-    --font-body: 'Figtree', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-body: 'Figtree', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   }
 
@@ -59,29 +59,29 @@
 
 /* Custom Clean Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
+  background: #D5D7CE;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: #A0A59A;
 }
 
 /* Typography Helpers */
 .font-display {
   font-family: var(--font-heading);
-  letter-spacing: -0.015em;
-  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-weight: 600;
 }
 
 /* Focus States */
 *:focus-visible {
   outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }

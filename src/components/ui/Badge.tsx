@@ -17,31 +17,31 @@ export const Badge: React.FC<BadgeProps> = ({
   dot = false
 }) => {
   const variantStyles: Record<string, string> = {
-    brand: 'bg-[#EAF0E6] text-[#54765C] border-[#CFDCC9]',
-    accent: 'bg-[#EAF0E6] text-[#54765C] border-[#CFDCC9]',
-    critical: 'bg-[#F9ECEB] text-[#B94C43] border-[#F2D5D3]',
-    high: 'bg-[#FAF2EC] text-[#C47A45] border-[#F4E2D5]',
+    brand: 'bg-[#EFF4FF] text-[#1E4BD8] border-[#D0DEFF]',
+    accent: 'bg-[#EFF4FF] text-[#1E4BD8] border-[#D0DEFF]',
+    critical: 'bg-[#FDF2F1] text-[#D03B2E] border-[#F8D3D0]',
+    high: 'bg-[#FDF7ED] text-[#C27814] border-[#F7E1C0]',
     warning: 'bg-[#FAF5EB] text-[#B28A42] border-[#F4ECD5]',
     medium: 'bg-[#FAF5EB] text-[#B28A42] border-[#F4ECD5]',
-    info: 'bg-[#EDF3F1] text-[#547D70] border-[#DCE8E5]',
-    low: 'bg-[#EDF3F1] text-[#547D70] border-[#DCE8E5]',
-    success: 'bg-[#EDF3EF] text-[#64856C] border-[#DBE7DF]',
-    resolved: 'bg-[#EDF3EF] text-[#64856C] border-[#DBE7DF]',
-    neutral: 'bg-[#F0F1EB] text-[#73796F] border-[#E3E5DC]'
+    info: 'bg-[#F0F4F8] text-[#486581] border-[#D9E2EC]',
+    low: 'bg-[#F0F4F8] text-[#486581] border-[#D9E2EC]',
+    success: 'bg-[#EDF7F1] text-[#1E824C] border-[#C6E8D5]',
+    resolved: 'bg-[#EDF7F1] text-[#1E824C] border-[#C6E8D5]',
+    neutral: 'bg-[#F0F1EA] text-[#5E656D] border-[#E2E4DC]'
   };
 
   const dotColors: Record<string, string> = {
-    brand: 'bg-[#54765C]',
-    accent: 'bg-[#54765C]',
-    critical: 'bg-[#B94C43]',
-    high: 'bg-[#C47A45]',
+    brand: 'bg-[#1E4BD8]',
+    accent: 'bg-[#1E4BD8]',
+    critical: 'bg-[#D03B2E]',
+    high: 'bg-[#C27814]',
     warning: 'bg-[#B28A42]',
     medium: 'bg-[#B28A42]',
-    info: 'bg-[#547D70]',
-    low: 'bg-[#547D70]',
-    success: 'bg-[#64856C]',
-    resolved: 'bg-[#64856C]',
-    neutral: 'bg-[#969B91]'
+    info: 'bg-[#486581]',
+    low: 'bg-[#486581]',
+    success: 'bg-[#1E824C]',
+    resolved: 'bg-[#1E824C]',
+    neutral: 'bg-[#8A939E]'
   };
 
   const resolvedStyle = variantStyles[variant] || variantStyles.neutral;

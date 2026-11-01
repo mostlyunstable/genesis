@@ -35,7 +35,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
       const raw = match[0];
       if (raw.startsWith('**') && raw.endsWith('**')) {
         parts.push(
-          <strong key={keyIdx++} className="font-semibold text-[#142C29]">
+          <strong key={keyIdx++} className="font-semibold text-[#111417]">
             {raw.slice(2, -2)}
           </strong>
         );
@@ -48,8 +48,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
             onClick={() => isChip && onChipClick && onChipClick(val)}
             className={`px-1.5 py-0.5 rounded text-xs font-mono font-medium transition-colors ${
               isChip 
-                ? 'bg-[#26796C]/10 text-[#26796C] border border-[#26796C]/20 hover:bg-[#26796C]/20 cursor-pointer' 
-                : 'bg-[#F2F5F3] text-[#192622] border border-[#E5EBE8]'
+                ? 'bg-[#1E4BD8]/10 text-[#1E4BD8] border border-[#1E4BD8]/20 hover:bg-[#1E4BD8]/20 cursor-pointer' 
+                : 'bg-[#F0F1EA] text-[#111417] border border-[#E2E4DC]'
             }`}
           >
             {val}
@@ -80,7 +80,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
           <button
             key={keyIdx++}
             onClick={() => onChipClick && onChipClick(raw, 'threat_intel')}
-            className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-mono font-semibold bg-teal-50 text-[#26796C] border border-[#26796C]/30 hover:bg-teal-100 transition-colors"
+            className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-mono font-semibold bg-blue-50 text-[#1E4BD8] border border-[#1E4BD8]/30 hover:bg-teal-100 transition-colors"
           >
             {raw}
           </button>
@@ -121,8 +121,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
       const blockId = codeBlockCounter++;
 
       renderedElements.push(
-        <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-[#DFE5E2] bg-[#142C29] text-white">
-          <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#0D1F1D] text-xs font-mono text-[#A3B8B2] border-b border-[#1E3B37]">
+        <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-[#E2E4DC] bg-[#111417] text-white">
+          <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#0A0D10] text-xs font-mono text-[#889085] border-b border-[#1E252B]">
             <span className="uppercase">{lang}</span>
             <button
               onClick={() => handleCopyCode(fullCode, blockId)}
@@ -142,7 +142,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
               )}
             </button>
           </div>
-          <pre className="p-3.5 text-xs font-mono overflow-x-auto leading-relaxed text-[#E1EAE7]">
+          <pre className="p-3.5 text-xs font-mono overflow-x-auto leading-relaxed text-[#E2E4DC]">
             <code>{fullCode}</code>
           </pre>
         </div>
@@ -172,14 +172,14 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
               ? 'bg-amber-50/70 border-amber-200 text-amber-900' 
               : isNote 
               ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-              : 'bg-[#F7FAF8] border-[#DFE5E2] text-[#192622]'
+              : 'bg-[#F8F8F5] border-[#E2E4DC] text-[#111417]'
           }`}
         >
           <div className="shrink-0 mt-0.5">
             {isWarning ? (
               <AlertTriangle className="w-4 h-4 text-amber-600" />
             ) : (
-              <Info className="w-4 h-4 text-[#26796C]" />
+              <Info className="w-4 h-4 text-[#1E4BD8]" />
             )}
           </div>
           <div className="flex-1 space-y-1">
@@ -195,7 +195,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
     // Headings
     if (line.startsWith('### ')) {
       renderedElements.push(
-        <h3 key={`h3-${i}`} className="text-base font-bold text-[#142C29] mt-4 mb-2 flex items-center gap-2">
+        <h3 key={`h3-${i}`} className="text-base font-bold text-[#111417] mt-4 mb-2 flex items-center gap-2">
           {formatInline(line.replace('### ', ''))}
         </h3>
       );
@@ -204,7 +204,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
     }
     if (line.startsWith('#### ')) {
       renderedElements.push(
-        <h4 key={`h4-${i}`} className="text-sm font-semibold text-[#26796C] uppercase tracking-wide mt-3 mb-1.5">
+        <h4 key={`h4-${i}`} className="text-sm font-semibold text-[#1E4BD8] uppercase tracking-wide mt-3 mb-1.5">
           {formatInline(line.replace('#### ', ''))}
         </h4>
       );
@@ -220,7 +220,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
         i++;
       }
       renderedElements.push(
-        <ul key={`ul-${i}`} className="my-2 space-y-1 text-sm text-[#192622] pl-4 list-disc marker:text-[#26796C]">
+        <ul key={`ul-${i}`} className="my-2 space-y-1 text-sm text-[#111417] pl-4 list-disc marker:text-[#1E4BD8]">
           {listItems.map((item, idx) => (
             <li key={idx} className="leading-relaxed">
               {formatInline(item)}
@@ -239,7 +239,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
         i++;
       }
       renderedElements.push(
-        <ol key={`ol-${i}`} className="my-2 space-y-1 text-sm text-[#192622] pl-5 list-decimal marker:font-semibold marker:text-[#26796C]">
+        <ol key={`ol-${i}`} className="my-2 space-y-1 text-sm text-[#111417] pl-5 list-decimal marker:font-semibold marker:text-[#1E4BD8]">
           {listItems.map((item, idx) => (
             <li key={idx} className="leading-relaxed">
               {formatInline(item)}
@@ -259,7 +259,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onC
 
     // Regular paragraph
     renderedElements.push(
-      <p key={`p-${i}`} className="text-sm text-[#192622] leading-relaxed my-1">
+      <p key={`p-${i}`} className="text-sm text-[#111417] leading-relaxed my-1">
         {formatInline(line)}
       </p>
     );

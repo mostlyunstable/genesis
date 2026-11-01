@@ -56,50 +56,50 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-24 px-4 animate-in fade-in-0 duration-150">
-      <div className="bg-white border border-[#E3E5DC] rounded-3xl shadow-origin-lg w-full max-w-2xl overflow-hidden">
+      <div className="bg-white border border-[#E2E4DC] rounded-xl shadow-origin-lg w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Search Input Bar */}
-        <div className="flex items-center px-6 py-4 border-b border-[#E3E5DC] gap-3">
-          <Search className="w-5 h-5 text-[#54765C]" />
+        <div className="flex items-center px-5 py-3.5 border-b border-[#E2E4DC] gap-3 bg-white">
+          <Search className="w-4.5 h-4.5 text-[#1E4BD8] shrink-0" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search threats, incidents, IPs, users, or playbooks..."
-            className="flex-1 bg-transparent border-none text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none font-sans"
+            placeholder="Search playbooks, activity ledger, IPs, users, entities..."
+            className="flex-1 bg-transparent border-none text-xs sm:text-sm text-[#111417] placeholder-[#8A939E] focus:outline-none font-sans"
           />
-          <kbd className="px-2 py-0.5 text-[10px] font-mono text-[#73796F] bg-[#F0F1EB] border border-[#E3E5DC] rounded-full">
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-[#5E656D] bg-[#F0F1EA] border border-[#E2E4DC] rounded">
             ESC
           </kbd>
-          <button onClick={onClose} className="text-[#969B91] hover:text-[#20251F] p-1 cursor-pointer">
+          <button onClick={onClose} className="text-[#8A939E] hover:text-[#111417] p-1 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-[60vh] overflow-y-auto p-4 space-y-4 text-xs font-sans">
+        <div className="max-h-[60vh] overflow-y-auto p-3 space-y-3 text-xs font-sans">
           {/* Incidents */}
           {matchedIncidents.length > 0 && (
             <div>
-              <div className="text-[10px] font-bold text-[#969B91] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <Flame className="w-3.5 h-3.5 text-[#C47A45]" />
-                Incidents
+              <div className="text-[10px] font-bold text-[#8A939E] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Flame className="w-3.5 h-3.5 text-[#C27814]" />
+                Correlated Incidents
               </div>
               <div className="space-y-1">
                 {matchedIncidents.map(inc => (
                   <button
                     key={inc.id}
                     onClick={() => handleSelectIncident(inc.id, inc.title)}
-                    className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0F1EA] flex items-center justify-between text-[#111417] transition-colors group cursor-pointer border border-transparent hover:border-[#E2E4DC]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#54765C] font-semibold font-mono">{inc.id}</span>
-                      <span className="truncate">{inc.title}</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF2EC] text-[#C47A45] font-mono border border-[#F4E2D5]">
+                      <span className="text-[#1E4BD8] font-semibold font-mono text-[11px]">{inc.id}</span>
+                      <span className="truncate text-xs">{inc.title}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded font-mono border bg-[#FDF7ED] text-[#C27814] border-[#F7E1C0]">
                         {inc.severity}
                       </span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#8A939E] group-hover:text-[#1E4BD8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -109,8 +109,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Threat Detections */}
           {matchedDetections.length > 0 && (
             <div>
-              <div className="text-[10px] font-bold text-[#969B91] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <ShieldAlert className="w-3.5 h-3.5 text-[#54765C]" />
+              <div className="text-[10px] font-bold text-[#8A939E] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#1E4BD8]" />
                 Threat Detections
               </div>
               <div className="space-y-1">
@@ -121,14 +121,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       navigate(`/copilot?q=${encodeURIComponent(`Analyze detection ${det.id}: ${det.name} from ${det.sourceIp}`)}`);
                       onClose();
                     }}
-                    className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0F1EA] flex items-center justify-between text-[#111417] transition-colors group cursor-pointer border border-transparent hover:border-[#E2E4DC]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-[#54765C] font-mono">{det.id}</span>
-                      <span className="truncate">{det.name}</span>
-                      <span className="text-[#73796F] font-mono text-[11px]">({det.sourceIp})</span>
+                      <span className="text-[#1E4BD8] font-mono text-[11px]">{det.id}</span>
+                      <span className="truncate text-xs">{det.name}</span>
+                      <span className="text-[#5E656D] font-mono text-[11px]">({det.sourceIp})</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#8A939E] group-hover:text-[#1E4BD8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -138,8 +138,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Activity Events */}
           {matchedEvents.length > 0 && (
             <div>
-              <div className="text-[10px] font-bold text-[#969B91] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
-                <Activity className="w-3.5 h-3.5 text-[#54765C]" />
+              <div className="text-[10px] font-bold text-[#8A939E] tracking-wider uppercase px-2 mb-1.5 flex items-center gap-1.5 font-mono">
+                <Activity className="w-3.5 h-3.5 text-[#1E4BD8]" />
                 Security Activity Events
               </div>
               <div className="space-y-1">
@@ -150,15 +150,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       navigate(`/copilot?q=${encodeURIComponent(`Inspect event ${evt.id}: ${evt.eventType} for user ${evt.username} from IP ${evt.sourceIp}`)}`);
                       onClose();
                     }}
-                    className="w-full text-left px-3.5 py-2.5 rounded-2xl hover:bg-[#F0F1EB] flex items-center justify-between text-[#20251F] transition-colors group cursor-pointer border border-transparent hover:border-[#E3E5DC]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0F1EA] flex items-center justify-between text-[#111417] transition-colors group cursor-pointer border border-transparent hover:border-[#E2E4DC]"
                   >
                     <div className="flex items-center gap-2 truncate font-mono text-[11px]">
-                      <span className="text-[#969B91]">{evt.id}</span>
-                      <span className="text-[#54765C] font-semibold">{evt.eventType}</span>
-                      <span className="text-[#73796F]">{evt.username}</span>
-                      <span className="text-[#20251F]">{evt.sourceIp}</span>
+                      <span className="text-[#8A939E]">{evt.id}</span>
+                      <span className="text-[#1E4BD8] font-semibold">{evt.eventType}</span>
+                      <span className="text-[#5E656D]">{evt.username}</span>
+                      <span className="text-[#111417]">{evt.sourceIp}</span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#8A939E] group-hover:text-[#1E4BD8] shrink-0" />
                   </button>
                 ))}
               </div>
@@ -166,15 +166,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           )}
 
           {q && matchedIncidents.length === 0 && matchedDetections.length === 0 && matchedEvents.length === 0 && (
-            <div className="py-8 text-center text-[#969B91]">
+            <div className="py-8 text-center text-[#8A939E]">
               No security entities matching &ldquo;{query}&rdquo; found.
             </div>
           )}
         </div>
 
-        <div className="px-6 py-3 bg-[#FAFAF7] border-t border-[#E3E5DC] flex items-center justify-between text-[11px] text-[#73796F] font-mono">
-          <span>Press <kbd className="text-[#20251F] font-semibold">↵ Enter</kbd> to inspect in Copilot</span>
-          <span>Security Intelligence</span>
+        <div className="px-5 py-2.5 bg-[#F8F8F5] border-t border-[#E2E4DC] flex items-center justify-between text-[11px] text-[#5E656D] font-mono">
+          <span>Press <kbd className="text-[#111417] font-semibold">↵ Enter</kbd> to inspect in Copilot</span>
+          <span>Genesis Intelligence</span>
         </div>
       </div>
     </div>

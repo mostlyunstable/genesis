@@ -17,22 +17,22 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91A78B] disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.98] cursor-pointer font-sans';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E4BD8]/40 focus-visible:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.98] cursor-pointer font-sans';
 
   const variants = {
-    primary: 'bg-[#54765C] hover:bg-[#436049] text-white border border-transparent shadow-sm font-semibold',
-    action: 'bg-[#54765C] hover:bg-[#436049] text-white border border-transparent shadow-sm font-semibold',
-    secondary: 'bg-white hover:bg-[#F0F1EB] text-[#20251F] border border-[#E3E5DC] shadow-sm font-medium',
-    danger: 'bg-[#F9ECEB] hover:bg-[#F2D5D3] text-[#B94C43] border border-[#F2D5D3] font-semibold',
-    outline: 'bg-transparent hover:bg-[#F0F1EB] text-[#20251F] border border-[#E3E5DC] font-medium',
-    ghost: 'bg-transparent hover:bg-[#F0F1EB] text-[#73796F] hover:text-[#20251F] border border-transparent'
+    primary: 'bg-[#111417] hover:bg-[#20252A] text-white border border-[#111417] shadow-xs font-medium',
+    action: 'bg-[#1E4BD8] hover:bg-[#163CAE] text-white border border-[#1E4BD8] shadow-xs font-medium',
+    secondary: 'bg-white hover:bg-[#F5F5F0] text-[#111417] border border-[#E2E4DC] hover:border-[#CDCFCE] shadow-xs font-medium',
+    danger: 'bg-[#FDF2F1] hover:bg-[#FCE8E6] text-[#D03B2E] border border-[#F8D3D0] font-medium',
+    outline: 'bg-transparent hover:bg-[#F0F1EA] text-[#111417] border border-[#E2E4DC] hover:border-[#CDCFCE] font-medium',
+    ghost: 'bg-transparent hover:bg-[#F0F1EA] text-[#5E656D] hover:text-[#111417] border border-transparent'
   };
 
   const sizes = {
-    xs: 'text-[11px] px-3 py-1 gap-1.5 font-mono',
-    sm: 'text-xs px-3.5 py-1.5 gap-2 font-medium',
-    md: 'text-sm px-4 py-2 gap-2 font-medium',
-    lg: 'text-sm px-5 py-2.5 gap-2.5 font-semibold'
+    xs: 'text-[11px] h-7 px-2.5 gap-1.5 font-mono rounded-md',
+    sm: 'text-xs h-8 px-3 gap-1.5 font-medium rounded-lg',
+    md: 'text-xs h-9 px-3.5 gap-2 font-medium rounded-lg',
+    lg: 'text-sm h-10 px-4.5 gap-2.5 font-semibold rounded-lg'
   };
 
   return (

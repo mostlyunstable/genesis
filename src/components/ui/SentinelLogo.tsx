@@ -30,9 +30,9 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
   };
 
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+    <div className={`inline-flex items-center gap-2 select-none ${className}`}>
       {/* Genesis Cosmic Orb Emblem */}
-      <div className={`${iconSizes[size]} shrink-0 rounded-xl overflow-hidden bg-black flex items-center justify-center p-0.5 shadow-xs border border-purple-950/40 ring-1 ring-purple-500/20`}>
+      <div className={`${iconSizes[size]} shrink-0 rounded-lg overflow-hidden bg-[#0A0D10] flex items-center justify-center p-0.5 shadow-2xs border border-[#1E232A]`}>
         <img
           src="/genesis-logo-mark.png"
           alt="Genesis"
@@ -43,10 +43,10 @@ export const SentinelLogo: React.FC<SentinelLogoProps> = ({
       {/* Genesis Wordmark */}
       {showWordmark && !imageOnly && (
         <div className="flex items-center gap-1.5 leading-none">
-          <span className={`font-black uppercase text-[#20251F] font-sans ${textSizes[size]}`}>
+          <span className={`font-display font-extrabold uppercase text-[#111417] tracking-[0.14em] ${textSizes[size]}`}>
             {brandName}
           </span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#F0F1EB] text-[#20251F] border border-[#E3E5DC] uppercase tracking-wider">
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-[#EFF4FF] text-[#1E4BD8] border border-[#D0DEFF] uppercase tracking-wider">
             AI
           </span>
         </div>

@@ -30,15 +30,15 @@ export const InvestigationStepsIndicator: React.FC<InvestigationStepsIndicatorPr
   const currentIdx = STAGES.findIndex(s => s.id === currentStep.step);
 
   return (
-    <div className="bg-[#FAFDFB] border border-[#26796C]/25 rounded-xl p-3.5 mb-4 shadow-xs">
+    <div className="bg-[#FAFBFD] border border-[#1E4BD8]/25 rounded-xl p-3.5 mb-4 shadow-xs">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Loader2 className="w-4 h-4 text-[#26796C] animate-spin" />
-          <span className="text-xs font-semibold text-[#142C29] tracking-wider uppercase">
-            Autonomous Investigation Pipeline
+          <Loader2 className="w-4 h-4 text-[#1E4BD8] animate-spin" />
+          <span className="text-xs font-semibold text-[#111417] tracking-wider uppercase font-mono">
+            Autonomous Pipeline Analysis
           </span>
         </div>
-        <span className="text-xs text-[#26796C] font-mono font-medium animate-pulse">
+        <span className="text-xs text-[#1E4BD8] font-mono font-medium animate-pulse">
           {currentStep.label}
         </span>
       </div>
@@ -55,16 +55,16 @@ export const InvestigationStepsIndicator: React.FC<InvestigationStepsIndicatorPr
               key={stage.id}
               className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
                 isCurrent
-                  ? 'bg-[#26796C]/10 border-[#26796C] text-[#142C29] font-medium shadow-xs'
+                  ? 'bg-[#1E4BD8]/10 border-[#1E4BD8] text-[#111417] font-medium shadow-xs'
                   : isPassed
-                  ? 'bg-[#F2F7F5] border-[#D1E0DB] text-[#26796C]'
-                  : 'bg-white/60 border-[#E8EDE9] text-[#8C9E98]'
+                  ? 'bg-[#F0F4FE] border-[#D0DEFF] text-[#1E4BD8]'
+                  : 'bg-white/80 border-[#E2E4DC] text-[#889085]'
               }`}
             >
               {isPassed ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#26796C] shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#1E4BD8] shrink-0" />
               ) : isCurrent ? (
-                <Loader2 className="w-3.5 h-3.5 text-[#26796C] animate-spin shrink-0" />
+                <Loader2 className="w-3.5 h-3.5 text-[#1E4BD8] animate-spin shrink-0" />
               ) : (
                 <Icon className="w-3.5 h-3.5 shrink-0 opacity-40" />
               )}

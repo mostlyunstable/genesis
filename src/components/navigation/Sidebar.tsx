@@ -47,16 +47,16 @@ export const Sidebar: React.FC = () => {
       )}
 
       <aside
-        className={`bg-white border-r border-[#E3E5DC] flex flex-col shrink-0 min-h-0 h-full transition-all duration-200 z-50 select-none ${
+        className={`bg-white border-r border-[#E2E4DC] flex flex-col shrink-0 min-h-0 h-full transition-all duration-200 z-50 select-none ${
           mobileSidebarOpen
-            ? 'fixed inset-y-0 left-0 w-[240px] shadow-xl flex md:relative md:shadow-none'
+            ? 'fixed inset-y-0 left-0 w-[240px] shadow-origin-lg flex md:relative md:shadow-none'
             : sidebarCollapsed
             ? 'hidden md:flex w-[72px]'
             : 'hidden md:flex w-[240px]'
         }`}
       >
         {/* Brand Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-[#E3E5DC] shrink-0">
+        <div className="h-14 px-4 flex items-center justify-between border-b border-[#E2E4DC] shrink-0">
           <NavLink 
             to="/copilot" 
             onClick={() => setMobileSidebarOpen(false)}
@@ -70,7 +70,7 @@ export const Sidebar: React.FC = () => {
             {/* Mobile close button */}
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="md:hidden p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
+              className="md:hidden p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA] transition-colors cursor-pointer"
               aria-label="Close sidebar"
             >
               <X className="w-4 h-4" />
@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={toggleSidebar}
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="hidden md:inline-flex p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
+              className="hidden md:inline-flex p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA] transition-colors cursor-pointer"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -89,7 +89,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.path === '/copilot'
@@ -102,13 +102,13 @@ export const Sidebar: React.FC = () => {
                 to={item.path}
                 onClick={() => setMobileSidebarOpen(false)}
                 title={sidebarCollapsed && !mobileSidebarOpen ? item.name : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all duration-150 ${
                   isActive
-                    ? 'bg-[#EAF0E6] text-[#54765C] font-semibold border border-[#CFDCC9]'
-                    : 'text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] border border-transparent'
+                    ? 'bg-[#111417] text-white font-medium shadow-xs'
+                    : 'text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA]'
                 } ${sidebarCollapsed && !mobileSidebarOpen ? 'justify-center px-0' : ''}`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#54765C]' : 'text-[#73796F]'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#5E656D]'}`} />
                 
                 {(!sidebarCollapsed || mobileSidebarOpen) && (
                   <span className="truncate flex-1 tracking-tight font-sans">{item.name}</span>
@@ -119,18 +119,18 @@ export const Sidebar: React.FC = () => {
         </nav>
 
         {/* Status Indicator */}
-        <div className="p-3 border-t border-[#E3E5DC] shrink-0">
+        <div className="p-3 border-t border-[#E2E4DC] shrink-0">
           {!sidebarCollapsed || mobileSidebarOpen ? (
-            <div className="px-3 py-2 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC] text-xs flex items-center justify-between">
-              <span className="flex items-center gap-2 text-[11px] font-medium text-[#20251F] font-sans">
-                <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-                Genesis Ready
+            <div className="px-3 py-2 rounded-lg bg-[#F0F1EA] border border-[#E2E4DC] text-xs flex items-center justify-between">
+              <span className="flex items-center gap-2 text-[11px] font-medium text-[#111417] font-sans">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1E824C] shadow-2xs" />
+                Genesis Online
               </span>
-              <span className="text-[10px] font-mono text-[#969B91]">v2.5</span>
+              <span className="text-[10px] font-mono text-[#8A939E]">v2.5</span>
             </div>
           ) : (
             <div className="flex justify-center p-1">
-              <span className="w-2 h-2 rounded-full bg-[#54765C]" title="Genesis Active" />
+              <span className="w-2 h-2 rounded-full bg-[#1E824C]" title="Genesis Online" />
             </div>
           )}
         </div>
