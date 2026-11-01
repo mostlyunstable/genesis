@@ -274,14 +274,16 @@ class ChatCopilotService:
         )
         is_github_repo = (
             ("github" in p) or
-            ("repo" in p) or
-            ("repository" in p) or
+            (" repository" in p) or
+            ("the repo" in p) or
+            ("git repo" in p) or
             ("source code" in p) or
             ("codebase" in p) or
             ("mostlyunstable" in p) or
             ("genesis architecture" in p) or
             ("how is genesis built" in p) or
-            ("how was genesis built" in p)
+            ("how was genesis built" in p) or
+            (p.strip() in ["repo", "the repo", "github", "git repo", "repository"])
         )
 
         # Explicit File / Log Analysis Intent: only true if user specifically asks for file/log analysis
