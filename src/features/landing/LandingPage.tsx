@@ -629,9 +629,9 @@ export const LandingPage: React.FC = () => {
 
             <Button
               variant="action"
-              size="sm"
+              size="md"
               onClick={() => handleLaunchCopilot()}
-              icon={<ArrowRight className="w-3.5 h-3.5" />}
+              icon={<ArrowRight className="w-4 h-4" />}
               className="w-full"
             >
               Open in Side Panel
@@ -653,10 +653,10 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <Button
-              variant="secondary"
-              size="sm"
+              variant="primary"
+              size="md"
               onClick={() => navigate('/response')}
-              icon={<ArrowRight className="w-3.5 h-3.5" />}
+              icon={<ArrowRight className="w-4 h-4" />}
               className="w-full"
             >
               Inspect Playbooks
@@ -679,9 +679,9 @@ export const LandingPage: React.FC = () => {
 
             <Button
               variant="secondary"
-              size="sm"
+              size="md"
               onClick={() => navigate('/audit')}
-              icon={<ArrowRight className="w-3.5 h-3.5" />}
+              icon={<ArrowRight className="w-4 h-4" />}
               className="w-full"
             >
               Verify Cryptographic Chain
@@ -709,20 +709,20 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           
           {/* Card 1 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">CIC-IDS2017</span>
                 <span className="text-[#889085]">2.83M Flows</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">Network Flow & DoS Slowloris</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">Network Flow & DoS Slowloris</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 79 bi-directional statistical features evaluating Slowloris, DDoS, PortScan, and SSH-Patator.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Analyze the CIC-IDS2017 network traffic dataset")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />
@@ -730,20 +730,20 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 2 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">Phishing Corpus</span>
                 <span className="text-[#889085]">82K Emails</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">SPF/DKIM Spoofing & Lures</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">SPF/DKIM Spoofing & Lures</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 Header forensics, lookalike domain detection, and synthetic urgency scoring across executive targets.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Analyze the phishing email dataset and SPF/DKIM telemetry")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />
@@ -751,20 +751,20 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 3 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">LANL Cyber1</span>
                 <span className="text-[#889085]">1.64B Events</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">Enterprise Lateral Movement</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">Enterprise Lateral Movement</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 749 verified ground-truth Red Team compromise events tracking Windows network hops.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Analyze LANL Cyber1 enterprise authentication dataset")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />
@@ -772,20 +772,20 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 4 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">AD Kerberos</span>
                 <span className="text-[#889085]">Event 4769</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">Kerberoasting RC4 Downgrades</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">Kerberoasting RC4 Downgrades</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 Ticket Encryption Type 0x17 tracking offline service ticket hash harvesting and AS-REP roasting.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Explain Kerberoasting detection and RC4 downgrade mechanics")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />
@@ -793,20 +793,20 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 5 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">DNS Exfiltration</span>
                 <span className="text-[#889085]">H ≥ 3.8 Entropy</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">Base64 Tunneling Detection</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">Base64 Tunneling Detection</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 Information-theoretic Shannon entropy measuring anomalous label length and randomized character density.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Analyze DNS Shannon entropy exfiltration telemetry")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />
@@ -814,20 +814,20 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 6 */}
-          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-3 shadow-2xs flex flex-col justify-between">
-            <div className="space-y-1.5">
+          <div className="p-5 rounded-xl border-2 border-[#E2E4DC] bg-white hover:border-[#1E4BD8] transition-all space-y-4 shadow-2xs flex flex-col justify-between group">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#1E4BD8]">OWASP Web</span>
                 <span className="text-[#889085]">WAF Logs</span>
               </div>
-              <div className="font-bold text-sm text-[#111417]">SQLi, XSS & IMDS SSRF</div>
+              <div className="font-bold text-sm text-[#111417] group-hover:text-[#1E4BD8] transition-colors">SQLi, XSS & IMDS SSRF</div>
               <p className="text-xs text-[#5C645B] leading-relaxed">
                 Captures evaluating injection vectors, directory traversals, and Cloud Metadata 169.254.169.254 exfiltration.
               </p>
             </div>
             <button
               onClick={() => handleLaunchCopilot("Analyze the OWASP web attacks dataset and Cloud IMDS SSRF")}
-              className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F0F1EA] text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#111417] hover:text-white text-[#111417] border-2 border-[#CFD4C9] hover:border-[#111417] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs transition-all duration-150 active:scale-[0.98]"
             >
               <span>Analyze in Copilot</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-[#1E4BD8]" />

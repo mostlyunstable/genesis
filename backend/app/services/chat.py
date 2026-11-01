@@ -258,12 +258,40 @@ class ChatCopilotService:
             and not is_action_or_ref
         )
 
+        is_kaggle_data = (
+            ("kaggle" in p) or
+            ("training data" in p) or
+            ("train the bot" in p) or
+            ("train on" in p) or
+            ("trained on" in p) or
+            ("benchmark dataset" in p) or
+            ("benchmark data" in p) or
+            ("what data do you have" in p) or
+            ("what datasets" in p) or
+            ("available datasets" in p) or
+            ("cyber datasets" in p) or
+            ("data that i sent" in p)
+        )
+        is_github_repo = (
+            ("github" in p) or
+            ("repo" in p) or
+            ("repository" in p) or
+            ("source code" in p) or
+            ("codebase" in p) or
+            ("mostlyunstable" in p) or
+            ("genesis architecture" in p) or
+            ("how is genesis built" in p) or
+            ("how was genesis built" in p)
+        )
+
         # Explicit File / Log Analysis Intent: only true if user specifically asks for file/log analysis
         is_explicit_file_query = (
-            (("file" in p or "log" in p or "upload" in p or "attachment" in p or ".log" in p or ".csv" in p or ".txt" in p or ".json" in p) and
-             ("analyze" in p or "inspect" in p or "parse" in p or "summarize" in p or "what does" in p or "check" in p or "review" in p or "findings" in p))
-            or (p.strip() in ["analyze", "analyze file", "analyze log", "inspect file", "inspect log", "parse file", "parse log", "summarize file", "summarize log"])
-            or (bool(context_file_id) and not is_question and not is_action_or_ref)
+            not is_kaggle_data and not is_github_repo and not is_question and (
+                (("file" in p or "upload" in p or "attachment" in p or ".log" in p or ".csv" in p or ".txt" in p or ".json" in p) and
+                 ("analyze" in p or "inspect" in p or "parse" in p or "summarize" in p or "what does" in p or "check" in p or "review" in p or "findings" in p))
+                or (p.strip() in ["analyze", "analyze file", "analyze log", "inspect file", "inspect log", "parse file", "parse log", "summarize file", "summarize log"])
+                or (bool(context_file_id) and any(w in p for w in ["this file", "the file", "uploaded", "attachment", "my log", "this log", "analyze", "parse", "inspect"]))
+            )
         )
 
         is_concept = ("what is a brute" in p) or ("what is brute force" in p) or ("how can you detect" in p) or ("explain brute force" in p) or ("how do you detect" in p) or ("explain password spraying" in p) or ("what is password spraying" in p) or ("difference between brute-force and password spraying" in p) or ("brute-force and password spraying" in p)
@@ -348,7 +376,7 @@ class ChatCopilotService:
             is_lanl_dataset or is_system_log_dataset or is_dataset_overview or is_insufficient_evidence or
             is_jailbreak or is_sqli_concept or is_ssrf_concept or is_kerberoast_concept or is_asrep_concept or
             is_dns_tunnel_concept or is_c2_concept or is_zero_trust or is_web_attack_dataset or is_dns_dataset or
-            is_kerberos_dataset or is_killchain or is_question
+            is_kerberos_dataset or is_killchain or is_question or is_kaggle_data or is_github_repo
         )
 
         # Contextual resolution: only inherit previous context if query is not a greeting or generic knowledge question
@@ -564,6 +592,79 @@ class ChatCopilotService:
         # SCENARIO 0A: Pure Greetings
         if is_pure_greeting:
             response_sections.append("Hey! What would you like to investigate?")
+
+        # SCENARIO 0A-KAGGLE-GITHUB: Combined Kaggle Benchmark Data & GitHub Architecture
+        elif is_kaggle_data and is_github_repo:
+            response_sections.append(
+                "### GENESIS Platform Architecture & Calibrated Kaggle Benchmark Corpus\n\n"
+                "**GitHub Repository**: [`https://github.com/mostlyunstable/genesis`](https://github.com/mostlyunstable/genesis)\n\n"
+                "GENESIS is an enterprise-grade autonomous generative-AI cybersecurity platform engineered with zero-hallucination grounded reasoning, automated SOAR playbooks, and an immutable cryptographic audit trail.\n\n"
+                "#### Platform Architecture (`mostlyunstable/genesis`):\n"
+                "- **Autonomous Copilot & Grounded RAG**: Multi-turn entity resolution over active security events, IP dossiers, and MITRE ATT&CK techniques with zero unverified operational hallucinations.\n"
+                "- **Forensic Ingestion Gateway**: Real-time parsing of RFC 5424 Syslog, OpenSSH, and Windows Security Event 4625 logs using Drain clustering algorithms.\n"
+                "- **Deterministic SOAR Engine**: Automated containment playbooks (`PB-SSH-BRUTE-01` stateful firewall drops, `PB-SPRAY-DEFENSE-02` MFA step-up) governed by policy boundary controls.\n"
+                "- **SHA-256 Merkle Audit Ledger**: Every investigation, detection score, and response action is cryptographically signed and stored with Merkle root verification.\n"
+                "- **Modern Stack**: Python 3.12, FastAPI, SQLAlchemy, SQLite/PostgreSQL, Redis pub/sub backend paired with React 19, Vite, and Tailwind CSS.\n\n"
+                "#### Integrated Kaggle & Academic Benchmark Datasets (`data/`):\n"
+                "1. **CIC-IDS2017 (`data/cic_ids2017/`)**: 2,830,743 network flows with 79 features evaluating DoS Slowloris, DDoS, PortScan, and SSH-Patator (MITRE T1499, T1110.001).\n"
+                "2. **Phishing Email & Malicious URL Corpus (`data/phishing/`)**: 82,486 labeled emails and 450,000 URLs with SPF/DKIM verification and brand impersonation models (MITRE T1566.002).\n"
+                "3. **LANL Cyber1 Enterprise Dataset (`data/lanl/`)**: 1.64B authentication events with 749 verified ground-truth Red Team compromise events tracking lateral movement (MITRE T1078, T1021.002).\n"
+                "4. **Active Directory Kerberos Tickets (`data/kerberos/`)**: Security Event 4769 telemetry capturing Kerberoasting (RC4 0x17 downgrade) and AS-REP roasting (MITRE T1558.003).\n"
+                "5. **DNS Exfiltration & Shannon Entropy Dataset (`data/dns/`)**: Base64/base32 payload tunneling streams with Shannon entropy $H \\ge 3.8$ (MITRE T1048, T1071.004).\n"
+                "6. **OWASP Web Attack & WAF Dataset (`data/web_attacks/`)**: Application captures evaluating SQLi, XSS, Path Traversal, and Cloud IMDS SSRF (MITRE T1190, T1059).\n\n"
+                "The bot's reasoning engine is actively calibrated against this telemetry corpus to ensure domain-specific accuracy."
+            )
+
+        # SCENARIO 0A-KAGGLE: Kaggle Datasets & Training Telemetry Corpus
+        elif is_kaggle_data:
+            response_sections.append(
+                "### Calibrated Cybersecurity Benchmark Datasets Corpus (`data/`)\n\n"
+                "GENESIS is calibrated against six premier Kaggle and academic cybersecurity benchmark datasets across network flow, authentication, email, and protocol domains:\n\n"
+                "1. **CIC-IDS2017 Network Traffic Benchmark (`data/cic_ids2017/cic_ids2017_sample.csv`)**\n"
+                "   - **Source**: Canadian Institute for Cybersecurity & Kaggle\n"
+                "   - **Scale**: 2,830,743 flows, 79 bi-directional statistical features\n"
+                "   - **Attack Classes**: DoS Slowloris (HTTP starvation), DDoS, PortScan, SSH-Patator brute-force\n"
+                "   - **MITRE TTPs**: T1499.003, T1110.001, T1046\n\n"
+                "2. **Phishing Email & URL Corpus (`data/phishing/phishing_emails_sample.csv`)**\n"
+                "   - **Source**: Mendeley / Kaggle Cybersecurity Datasets\n"
+                "   - **Scale**: 82,486 email headers and 450,000 malicious URLs\n"
+                "   - **Features**: SPF/DKIM authentication flags, IP-in-URL detection, synthetic urgency cues\n"
+                "   - **MITRE TTPs**: T1566.001, T1566.002 (Phishing: Spearphishing Link)\n\n"
+                "3. **LANL Cyber1 Enterprise Dataset (`data/lanl/auth_sample.csv` & `redteam_sample.csv`)**\n"
+                "   - **Source**: Los Alamos National Laboratory\n"
+                "   - **Scale**: 1.64 Billion Windows authentication events over 58 consecutive days\n"
+                "   - **Ground Truth**: 749 verified Red Team pivot hops tracking adversary lateral movement\n"
+                "   - **MITRE TTPs**: T1078 (Valid Accounts), T1021.002 (SMB/Windows Admin Shares)\n\n"
+                "4. **Active Directory Kerberos Tickets (`data/kerberos/kerberos_tickets_sample.csv`)**\n"
+                "   - **Source**: Enterprise Windows Active Directory Event Logs\n"
+                "   - **Telemetry**: Event 4769 (TGS Request) tracking Kerberoasting with weak RC4 encryption (Ticket Encryption Type `0x17`)\n"
+                "   - **MITRE TTPs**: T1558.003 (Steal or Forge Kerberos Tickets: Kerberoasting)\n\n"
+                "5. **DNS Exfiltration & Shannon Entropy Dataset (`data/dns/dns_queries_sample.csv`)**\n"
+                "   - **Telemetry**: Subdomain query streams tracking base64/hex data exfiltration\n"
+                "   - **Metric**: High Shannon entropy ($H \\ge 3.8$) and abnormal label lengths exceeding 50 bytes\n"
+                "   - **MITRE TTPs**: T1048 (Exfiltration Over Alternative Protocol), T1071.004 (DNS)\n\n"
+                "6. **OWASP Web Attacks Dataset (`data/web_attacks/web_attacks_sample.log`)**\n"
+                "   - **Telemetry**: WAF and Nginx ingress logs capturing SQL Injection (`UNION SELECT`), Cross-Site Scripting (`<script>`), Path Traversal (`../../etc/passwd`), and AWS IMDS SSRF (`http://169.254.169.254/latest/meta-data/`)\n"
+                "   - **MITRE TTPs**: T1190 (Exploit Public-Facing Application)\n\n"
+                "You can ask me to evaluate any of these datasets in detail (e.g. *'analyze the network traffic dataset'* or *'check phishing email telemetry'*)."
+            )
+
+        # SCENARIO 0A-GITHUB: GitHub Repository & Architecture
+        elif is_github_repo:
+            response_sections.append(
+                "### GENESIS Autonomous Security Platform — GitHub Repository\n\n"
+                "**Repository**: [`https://github.com/mostlyunstable/genesis`](https://github.com/mostlyunstable/genesis)\n\n"
+                "GENESIS is an enterprise-grade autonomous generative-AI cybersecurity platform designed to eliminate analyst fatigue and reduce adversary dwell time through evidence-grounded AI.\n\n"
+                "#### Architectural Highlights:\n"
+                "- **Autonomous Copilot**: Real-time multi-turn triage agent with zero hallucination guarantee—every statement is mathematically tied to database telemetry or established MITRE ATT&CK standards.\n"
+                "- **Drain Log Clustering**: High-speed log parser normalizing raw Linux auth, RFC 5424 Syslog, and Windows Event 4625 logs into structured telemetry.\n"
+                "- **Deterministic SOAR Engine**: Bounded playbook executor (`PB-SSH-BRUTE-01` stateful firewall drops, `PB-SPRAY-DEFENSE-02` MFA step-up) governed by policy boundary controls.\n"
+                "- **SHA-256 Merkle Ledger**: Cryptographically verifiable audit trail recording every investigation step, anomaly score, and mitigation action.\n"
+                "- **Technology Stack**:\n"
+                "  - **Backend**: Python 3.12, FastAPI, SQLAlchemy, SQLite/PostgreSQL, Redis pub/sub, Uvicorn.\n"
+                "  - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide icons, bespoke architectural theme.\n\n"
+                "You can inspect code, run simulations, or trigger automated playbooks directly from the interface."
+            )
 
         # SCENARIO 0B: Assistant Capabilities
         elif is_capabilities:

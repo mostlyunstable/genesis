@@ -340,18 +340,26 @@ export const CopilotSideDrawer: React.FC = () => {
 
         {/* Bottom Input Composer */}
         <div className="p-3.5 border-t border-[#E2E4DC] bg-white shrink-0 space-y-2">
-          {/* Attached Files Tray */}
-          {uploadedFiles.length > 0 && (
+          {/* Active Attached File Pill */}
+          {activeFileId && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              {uploadedFiles.map((f) => (
-                <div
-                  key={f.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EFF4FF] border border-[#D0DEFF] text-[#1E4BD8] text-[11px] font-mono shrink-0"
-                >
-                  <FileText className="w-3 h-3" />
-                  <span className="truncate max-w-[120px]">{f.filename}</span>
-                </div>
-              ))}
+              {(() => {
+                const f = uploadedFiles.find(file => file.id === activeFileId);
+                if (!f) return null;
+                return (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EFF4FF] border border-[#D0DEFF] text-[#1E4BD8] text-[11px] font-mono shrink-0 shadow-2xs">
+                    <FileText className="w-3 h-3" />
+                    <span className="truncate max-w-[140px] font-semibold">{f.filename}</span>
+                    <button
+                      onClick={() => useChatStore.setState({ activeFileId: null })}
+                      className="ml-1 p-0.5 hover:bg-[#D0DEFF] rounded-full text-[#1E4BD8] cursor-pointer"
+                      title="Detach file"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
