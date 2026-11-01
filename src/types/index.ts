@@ -213,3 +213,107 @@ export interface DetectionThresholdConfig {
   requireApprovalForCritical: boolean;
   temporaryIpBlockDurationMinutes: number;
 }
+
+export interface EventsTimelinePoint {
+  timestamp: string;
+  count: number;
+}
+
+export interface MitreTechniqueCount {
+  techniqueId: string;
+  name: string;
+  tactic: string;
+  count: number;
+}
+
+export interface SystemHealthSummary {
+  databaseConnected: boolean;
+  databaseLatencyMs: number;
+  activeForwarders: number;
+  defenseStatus: string;
+}
+
+export interface OverviewMetrics {
+  totalEvents: number;
+  eventsOverTime: EventsTimelinePoint[];
+  activeIncidents: number;
+  openInvestigations: number;
+  resolvedIncidents: number;
+  incidentSeverityDistribution: Record<string, number>;
+  totalDetections: number;
+  criticalDetections: number;
+  detectionsByCategory: Record<string, number>;
+  mitreTechniqueDistribution: MitreTechniqueCount[];
+  responseActionsSummary: Record<string, number>;
+  totalActionsTaken: number;
+  systemHealth: SystemHealthSummary;
+  lastUpdated: string;
+}
+
+// ----------------------------------------------------
+// Security Copilot & Conversational Analyst Types
+// ----------------------------------------------------
+
+export interface EvidenceReference {
+  type: 'incident' | 'event' | 'detection' | 'threat_intel' | 'mitre';
+  id: string;
+  title: string;
+  severity?: Severity;
+  timestamp?: string;
+  snippet?: string;
+  url?: string;
+}
+
+export interface SuggestedAction {
+  id: string;
+  actionName: string;
+  target: string;
+  playbookId: string;
+  description: string;
+  requiresConfirmation: boolean;
+  status: 'pending' | 'confirmed' | 'rejected' | 'executed' | 'blocked';
+  incidentId?: string;
+  executionResult?: any;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  thoughtProcess?: string;
+  toolCalls?: Array<{ tool: string; params: any; result?: any; count?: number; found?: boolean }>;
+  evidenceReferences?: EvidenceReference[];
+  suggestedActions?: SuggestedAction[];
+  createdAt: string;
+  tokenCount?: number;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  userId?: string;
+  createdAt: string;
+  updatedAt: string;
+  isPinned: boolean;
+  messageCount: number;
+  lastMessageSnippet?: string;
+  contextMetadata: Record<string, any>;
+}
+
+export interface ConversationDetail {
+  id: string;
+  title: string;
+  userId?: string;
+  createdAt: string;
+  updatedAt: string;
+  isPinned: boolean;
+  contextMetadata: Record<string, any>;
+  messages: ChatMessage[];
+}
+
+export interface StreamInvestigationStep {
+  step: 'understanding' | 'retrieving' | 'correlating' | 'mapping' | 'evaluating' | 'synthesizing';
+  label: string;
+}
+

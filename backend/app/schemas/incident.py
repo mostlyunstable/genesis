@@ -22,11 +22,11 @@ class TimelineEventSchema(BaseModel):
 
 
 class AISummarySchema(BaseModel):
-    executiveSummary: str
-    evidenceChain: List[str]
-    rootCauseAnalysis: str
-    recommendedActions: List[str]
-    confidenceExplanation: str
+    executiveSummary: str = ""
+    evidenceChain: List[str] = []
+    rootCauseAnalysis: str = ""
+    recommendedActions: List[str] = []
+    confidenceExplanation: str = ""
 
 
 class IncidentCommentSchema(BaseModel):

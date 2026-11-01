@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   RotateCcw, 
   CheckCircle2, 
@@ -8,38 +8,74 @@ import {
   Zap,
   Palette,
   ShieldAlert,
-  Sliders
+  Sliders,
+  RefreshCw
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { Button } from '@/components/ui/Button';
+import { sentinelApi } from '@/services/api';
 
 export const SettingsPage: React.FC = () => {
   const { 
     thresholds, 
     updateThresholds, 
+    fetchThresholds,
     autonomousResponseGlobalEnabled, 
     toggleAutonomousGlobal,
-    resetToMockDefaults,
     addNotification
   } = useSecurityStore();
 
   const [localThresholds, setLocalThresholds] = useState(thresholds);
-  const [fastApiEndpoint, setFastApiEndpoint] = useState('http://localhost:8000');
+  const [fastApiEndpoint, setFastApiEndpoint] = useState(sentinelApi.system.getBackendUrl());
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPinging, setIsPinging] = useState(false);
 
-  const handleSaveThresholds = () => {
-    updateThresholds(localThresholds);
-    addNotification({
-      type: 'success',
-      title: 'Policy Saved',
-      message: 'Heuristic velocity thresholds updated successfully.'
-    });
+  useEffect(() => {
+    fetchThresholds();
+  }, [fetchThresholds]);
+
+  useEffect(() => {
+    setLocalThresholds(thresholds);
+  }, [thresholds]);
+
+  const handleSaveThresholds = async () => {
+    setIsSaving(true);
+    try {
+      const ok = await updateThresholds(localThresholds);
+      if (ok) {
+        addNotification({
+          type: 'success',
+          title: 'Policy Saved',
+          message: 'Heuristic velocity thresholds updated in backend database.'
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handlePingBackend = () => {
+  const handlePingBackend = async () => {
+    setIsPinging(true);
+    try {
+      const res = await sentinelApi.system.pingHealth();
+      addNotification({
+        type: res.healthy ? 'success' : 'error',
+        title: res.healthy ? 'Backend Online' : 'Backend Unreachable',
+        message: res.healthy 
+          ? `Connected to ${fastApiEndpoint} successfully.`
+          : `Failed to connect to ${fastApiEndpoint}.`
+      });
+    } finally {
+      setIsPinging(false);
+    }
+  };
+
+  const handleSaveEndpoint = () => {
+    sentinelApi.system.setBackendUrl(fastApiEndpoint);
     addNotification({
       type: 'info',
-      title: 'Backend Verification',
-      message: `Configured FastAPI target: ${fastApiEndpoint}. Running in simulated sandbox mode.`
+      title: 'Target Updated',
+      message: `Active API target set to ${fastApiEndpoint}.`
     });
   };
 
@@ -61,180 +97,158 @@ export const SettingsPage: React.FC = () => {
               </span>
             </div>
             <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
-              System Configuration
+              Platform Configuration
             </h1>
             <p className="text-sm text-[#73796F] font-sans max-w-xl leading-relaxed">
-              Ingestion velocity thresholds, autonomous defense safeguards, botanical design tokens, and backend endpoints.
+              Detection heuristic baselines, SOAR safeguards, and backend telemetry connection.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 1. Global Kill-Switch Guard */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              autonomousResponseGlobalEnabled ? 'bg-[#EAF0E6] text-[#54765C]' : 'bg-[#F9ECEB] text-[#B94C43]'
+            }`}>
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg text-[#20251F]">
+                Autonomous Defensive Response Engine
+              </h3>
+              <p className="text-xs text-[#73796F]">
+                When disabled, all automated SOAR countermeasures, IP drops, and session terminations are halted.
+              </p>
+            </div>
           </div>
 
           <Button
-            variant="outline"
-            size="md"
-            icon={<RotateCcw className="w-3.5 h-3.5" />}
-            onClick={() => {
-              resetToMockDefaults();
-              setLocalThresholds(thresholds);
-              addNotification({
-                type: 'info',
-                title: 'Sandbox Reset',
-                message: 'Local mock state restored to default baseline.'
-              });
-            }}
+            variant={autonomousResponseGlobalEnabled ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={toggleAutonomousGlobal}
           >
-            Reset Sandbox Baseline
+            {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
           </Button>
         </div>
       </section>
 
-      {/* Visual Design Foundation Indicator */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E3E5DC] shadow-origin-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Palette className="w-4 h-4 text-[#54765C]" />
-              <h3 className="font-display text-xl text-[#20251F]">Sentinel Light-First Foundation</h3>
-            </div>
-            <p className="text-sm text-[#73796F] mt-1 font-sans">
-              Refined light visual identity with <strong>warm white canvas (#F7F7F2)</strong>, <strong>botanical green branding (#54765C)</strong>, and <strong>deep natural typography (#20251F)</strong>.
-            </p>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] font-mono text-xs font-bold shrink-0">
-            <span className="w-2 h-2 rounded-full bg-[#54765C] animate-pulse" />
-            <span>Botanical Light Active</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Emergency Autonomous Kill Switch */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E3E5DC] shadow-origin-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h3 className="font-display text-xl text-[#20251F]">Emergency Autonomous Guard</h3>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                autonomousResponseGlobalEnabled ? 'bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9]' :
-                'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]'
-              }`}>
-                {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
-              </span>
-            </div>
-            <p className="text-sm text-[#73796F] mt-1.5 leading-relaxed font-sans">
-              When disengaged, automated countermeasures and dry runs are paused across all forwarders.
-            </p>
-          </div>
-
-          <Button
-            variant={autonomousResponseGlobalEnabled ? 'danger' : 'primary'}
-            size="md"
-            icon={<Zap className="w-4 h-4" />}
-            onClick={toggleAutonomousGlobal}
-            className="shrink-0"
-          >
-            {autonomousResponseGlobalEnabled ? 'Engage Emergency Halt' : 'Resume Autonomous Engine'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Heuristic Detection Thresholds */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E3E5DC] shadow-origin-sm space-y-6">
+      {/* 2. Detection Velocity Thresholds */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm space-y-6">
         <div className="flex items-center justify-between border-b border-[#E3E5DC] pb-4">
-          <div>
-            <h3 className="font-display text-xl text-[#20251F]">Detection Thresholds &amp; Windows</h3>
-            <p className="text-sm text-[#73796F] mt-0.5 font-sans">Adjust velocity thresholds for brute force and spraying detectors.</p>
+          <div className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-[#54765C]" />
+            <h3 className="font-display text-lg text-[#20251F]">
+              Heuristic Correlation Thresholds
+            </h3>
           </div>
           <Button
             variant="primary"
             size="sm"
-            icon={<Save className="w-3.5 h-3.5" />}
             onClick={handleSaveThresholds}
+            isLoading={isSaving}
+            icon={<Save className="w-3.5 h-3.5" />}
           >
-            Save Policy
+            Save Policies
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-          <div className="space-y-1.5">
-            <label className="text-[#20251F] font-semibold block font-sans">
-              SSH Failed Login Velocity Limit:
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-mono">
+          <div className="space-y-2">
+            <label className="text-[#20251F] font-bold block">
+              SSH Brute Force Velocity Limit (attempts)
             </label>
             <input
               type="number"
               value={localThresholds.sshFailedAttemptThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshFailedAttemptThreshold: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 text-xs font-mono text-[#20251F] focus:outline-none focus:border-[#54765C]"
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-xl px-4 py-2.5 text-[#20251F] focus:outline-none focus:border-[#54765C]"
             />
-            <span className="text-[11px] text-[#969B91] font-mono block">Baseline: 10 attempts</span>
+            <span className="text-[10px] text-[#969B91]">Failures before adversary IP isolation trigger</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[#20251F] font-semibold block font-sans">
-              SSH Window Seconds:
+          <div className="space-y-2">
+            <label className="text-[#20251F] font-bold block">
+              SSH Velocity Window (seconds)
             </label>
             <input
               type="number"
               value={localThresholds.sshWindowSeconds}
               onChange={(e) => setLocalThresholds({ ...localThresholds, sshWindowSeconds: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 text-xs font-mono text-[#20251F] focus:outline-none focus:border-[#54765C]"
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-xl px-4 py-2.5 text-[#20251F] focus:outline-none focus:border-[#54765C]"
             />
-            <span className="text-[11px] text-[#969B91] font-mono block">Baseline: 120 seconds</span>
+            <span className="text-[10px] text-[#969B91]">Sliding window for brute-force rate calculations</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[#20251F] font-semibold block font-sans">
-              Password Spray Unique Users Limit:
+          <div className="space-y-2">
+            <label className="text-[#20251F] font-bold block">
+              Password Spray Unique Accounts Threshold
             </label>
             <input
               type="number"
               value={localThresholds.passwordSprayUniqueUsersThreshold}
               onChange={(e) => setLocalThresholds({ ...localThresholds, passwordSprayUniqueUsersThreshold: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 text-xs font-mono text-[#20251F] focus:outline-none focus:border-[#54765C]"
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-xl px-4 py-2.5 text-[#20251F] focus:outline-none focus:border-[#54765C]"
             />
-            <span className="text-[11px] text-[#969B91] font-mono block">Baseline: 8 distinct users</span>
+            <span className="text-[10px] text-[#969B91]">Unique usernames probed before spray detection</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[#20251F] font-semibold block font-sans">
-              Temporary IP Block TTL (minutes):
+          <div className="space-y-2">
+            <label className="text-[#20251F] font-bold block">
+              Temporary IP Block Duration (minutes)
             </label>
             <input
               type="number"
               value={localThresholds.temporaryIpBlockDurationMinutes}
               onChange={(e) => setLocalThresholds({ ...localThresholds, temporaryIpBlockDurationMinutes: Number(e.target.value) })}
-              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 text-xs font-mono text-[#20251F] focus:outline-none focus:border-[#54765C]"
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-xl px-4 py-2.5 text-[#20251F] focus:outline-none focus:border-[#54765C]"
             />
-            <span className="text-[11px] text-[#969B91] font-mono block">Baseline: 30 minutes</span>
+            <span className="text-[10px] text-[#969B91]">Ingress iptables DROP duration before auto-expiry</span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Backend Target Integration */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E3E5DC] shadow-origin-sm space-y-4">
-        <div>
-          <h3 className="font-display text-xl text-[#20251F]">FastAPI Backend Target</h3>
-          <p className="text-sm text-[#73796F] mt-0.5 font-sans">
-            Configure the target Python/FastAPI endpoint for live telemetry.
+      {/* 3. Real Backend API Connection Settings */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm space-y-5">
+        <div className="flex items-center gap-2 border-b border-[#E3E5DC] pb-4">
+          <Server className="w-4 h-4 text-[#54765C]" />
+          <h3 className="font-display text-lg text-[#20251F]">
+            FastAPI Ingestion Gateway Target
+          </h3>
+        </div>
+
+        <div className="space-y-3 font-mono text-xs">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={fastApiEndpoint}
+              onChange={(e) => setFastApiEndpoint(e.target.value)}
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-xl px-4 py-2.5 text-[#20251F] focus:outline-none focus:border-[#54765C]"
+            />
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleSaveEndpoint}
+            >
+              Update Target
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handlePingBackend}
+              isLoading={isPinging}
+            >
+              Ping /health
+            </Button>
+          </div>
+          <p className="text-[11px] font-sans text-[#73796F]">
+            All dashboard telemetry, incidents, and audit trails stream live from this service.
           </p>
         </div>
+      </section>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <input
-            value={fastApiEndpoint}
-            onChange={(e) => setFastApiEndpoint(e.target.value)}
-            placeholder="http://localhost:8000"
-            className="w-full sm:flex-1 bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 text-xs font-mono text-[#20251F] focus:outline-none focus:border-[#54765C]"
-          />
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={handlePingBackend}
-            className="shrink-0"
-          >
-            Test Endpoint
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };

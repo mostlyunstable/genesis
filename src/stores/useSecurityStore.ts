@@ -9,19 +9,9 @@ import {
   ThreatIntelIndicator, 
   AuditRecord,
   DetectionThresholdConfig,
-  Severity
+  OverviewMetrics
 } from '@/types';
-import { 
-  INITIAL_EVENTS, 
-  INITIAL_DETECTIONS, 
-  INITIAL_INCIDENTS, 
-  INITIAL_PLAYBOOKS, 
-  INITIAL_ACTIONS, 
-  INITIAL_LOG_SOURCES, 
-  INITIAL_THREAT_INTEL, 
-  INITIAL_AUDIT_RECORDS, 
-  INITIAL_THRESHOLDS 
-} from '@/services/mock/data';
+import { sentinelApi } from '@/services/api';
 
 export interface ToastNotification {
   id: string;
@@ -32,8 +22,9 @@ export interface ToastNotification {
 }
 
 interface SecurityState {
-  // Data entities
+  // Real Operational Data Entities (Empty on fresh install)
   events: SecurityEvent[];
+  totalEventsCount: number;
   detections: Detection[];
   incidents: Incident[];
   playbooks: ResponsePlaybook[];
@@ -42,71 +33,253 @@ interface SecurityState {
   threatIntel: ThreatIntelIndicator[];
   auditRecords: AuditRecord[];
   thresholds: DetectionThresholdConfig;
+  overviewMetrics: OverviewMetrics | null;
+
+  // Status & Telemetry Metadata
+  isLoading: boolean;
+  error: string | null;
+  lastUpdated: string | null;
+  isStale: boolean;
   
   // UI & Global Controls
   environment: 'theatre' | 'workspace';
   autonomousResponseGlobalEnabled: boolean;
-  selectedIncidentId: string;
+  selectedIncidentId: string | null;
   selectedDetectionId: string | null;
   selectedEventId: string | null;
   notifications: ToastNotification[];
   sidebarCollapsed: boolean;
   globalSearchQuery: string;
 
-  // Actions
+  // Sync Actions with Real Backend
+  fetchOverviewMetrics: (window?: string) => Promise<void>;
+  fetchIncidents: (params?: { severity?: string; status?: string; query?: string; limit?: number }) => Promise<void>;
+  fetchEvents: (params?: { source?: string; outcome?: string; severity?: string; query?: string; limit?: number }) => Promise<void>;
+  fetchDetections: (params?: { category?: string; severity?: string; status?: string; query?: string }) => Promise<void>;
+  fetchPlaybooks: () => Promise<void>;
+  fetchActions: () => Promise<void>;
+  fetchSources: () => Promise<void>;
+  fetchThreatIntel: () => Promise<void>;
+  fetchAuditRecords: () => Promise<void>;
+  fetchThresholds: () => Promise<void>;
+
+  // UI Actions
   setEnvironment: (env: 'theatre' | 'workspace') => void;
   toggleEnvironment: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   setGlobalSearchQuery: (query: string) => void;
-  setSelectedIncidentId: (id: string) => void;
+  setSelectedIncidentId: (id: string | null) => void;
   setSelectedDetectionId: (id: string | null) => void;
   setSelectedEventId: (id: string | null) => void;
   
-  // Incident & Detection workflow
-  updateIncidentStatus: (incidentId: string, status: Incident['status']) => void;
-  updateDetectionStatus: (detectionId: string, status: Detection['status']) => void;
-  
-  // Autonomous Response Execution (Simulated)
+  // Mutations backed by real backend API
+  updateIncidentStatus: (incidentId: string, status: Incident['status']) => Promise<boolean>;
+  updateDetectionStatus: (detectionId: string, status: Detection['status']) => Promise<boolean>;
   executePlaybookAction: (
     playbookId: string, 
     actionName: string, 
     target: string, 
     incidentId?: string
   ) => Promise<boolean>;
-  
   rollbackAction: (actionId: string) => Promise<boolean>;
-  toggleAutonomousGlobal: () => void;
-  updateThresholds: (thresholds: Partial<DetectionThresholdConfig>) => void;
+  toggleAutonomousGlobal: () => Promise<boolean>;
+  updateThresholds: (thresholds: Partial<DetectionThresholdConfig>) => Promise<boolean>;
   
   // Notifications
   addNotification: (notification: Omit<ToastNotification, 'id' | 'timestamp'>) => void;
   dismissNotification: (id: string) => void;
-  
-  // Mock reset
   resetToMockDefaults: () => void;
 }
 
+const DEFAULT_THRESHOLDS: DetectionThresholdConfig = {
+  sshFailedAttemptThreshold: 10,
+  sshWindowSeconds: 120,
+  passwordSprayUniqueUsersThreshold: 5,
+  passwordSprayWindowSeconds: 300,
+  distributedThresholdIps: 3,
+  autonomousResponseEnabled: true,
+  requireApprovalForCritical: false,
+  temporaryIpBlockDurationMinutes: 30
+};
+
 export const useSecurityStore = create<SecurityState>((set, get) => ({
-  events: INITIAL_EVENTS,
-  detections: INITIAL_DETECTIONS,
-  incidents: INITIAL_INCIDENTS,
-  playbooks: INITIAL_PLAYBOOKS,
-  actions: INITIAL_ACTIONS,
-  logSources: INITIAL_LOG_SOURCES,
-  threatIntel: INITIAL_THREAT_INTEL,
-  auditRecords: INITIAL_AUDIT_RECORDS,
-  thresholds: INITIAL_THRESHOLDS,
-  
+  // Operational collections default to empty: strictly backed by real backend
+  events: [],
+  totalEventsCount: 0,
+  detections: [],
+  incidents: [],
+  playbooks: [],
+  actions: [],
+  logSources: [],
+  threatIntel: [],
+  auditRecords: [],
+  thresholds: DEFAULT_THRESHOLDS,
+  overviewMetrics: null,
+
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
+  isStale: false,
+
   autonomousResponseGlobalEnabled: true,
   environment: 'workspace',
-  selectedIncidentId: 'INC-2026-0042',
+  selectedIncidentId: null,
   selectedDetectionId: null,
   selectedEventId: null,
   notifications: [],
   sidebarCollapsed: false,
   globalSearchQuery: '',
 
+  // -------------------------------------------------------------
+  // Data Fetching Actions (Direct Backend Connection)
+  // -------------------------------------------------------------
+  fetchOverviewMetrics: async (window = '24h') => {
+    try {
+      set({ isLoading: true });
+      const metrics = await sentinelApi.analytics.getOverview(window);
+      set({
+        overviewMetrics: metrics,
+        totalEventsCount: metrics.totalEvents,
+        autonomousResponseGlobalEnabled: metrics.systemHealth.defenseStatus === 'ARMED',
+        lastUpdated: metrics.lastUpdated,
+        isLoading: false,
+        error: null,
+        isStale: false
+      });
+    } catch (err: any) {
+      set((state) => ({
+        isLoading: false,
+        error: err.message || 'Failed to fetch metrics from backend',
+        isStale: state.overviewMetrics !== null
+      }));
+    }
+  },
+
+  fetchIncidents: async (params) => {
+    try {
+      set({ isLoading: true });
+      const res = await sentinelApi.incidents.list(params);
+      set((state) => ({
+        incidents: res.items,
+        selectedIncidentId: state.selectedIncidentId && res.items.some(i => i.id === state.selectedIncidentId)
+          ? state.selectedIncidentId
+          : (res.items[0]?.id || null),
+        isLoading: false,
+        error: null,
+        isStale: false
+      }));
+    } catch (err: any) {
+      set((state) => ({
+        isLoading: false,
+        error: err.message || 'Failed to fetch incidents',
+        isStale: state.incidents.length > 0
+      }));
+    }
+  },
+
+  fetchEvents: async (params) => {
+    try {
+      set({ isLoading: true });
+      const res = await sentinelApi.events.list(params);
+      set({
+        events: res.items,
+        totalEventsCount: res.total,
+        isLoading: false,
+        error: null,
+        isStale: false
+      });
+    } catch (err: any) {
+      set((state) => ({
+        isLoading: false,
+        error: err.message || 'Failed to fetch security events',
+        isStale: state.events.length > 0
+      }));
+    }
+  },
+
+  fetchDetections: async (params) => {
+    try {
+      set({ isLoading: true });
+      const res = await sentinelApi.detections.list(params);
+      set((state) => ({
+        detections: res.items,
+        selectedDetectionId: state.selectedDetectionId && res.items.some(d => d.id === state.selectedDetectionId)
+          ? state.selectedDetectionId
+          : (res.items[0]?.id || null),
+        isLoading: false,
+        error: null,
+        isStale: false
+      }));
+    } catch (err: any) {
+      set((state) => ({
+        isLoading: false,
+        error: err.message || 'Failed to fetch detections',
+        isStale: state.detections.length > 0
+      }));
+    }
+  },
+
+  fetchPlaybooks: async () => {
+    try {
+      const pbs = await sentinelApi.response.listPlaybooks();
+      set({ playbooks: pbs });
+    } catch (err: any) {
+      console.warn('Failed to fetch playbooks:', err);
+    }
+  },
+
+  fetchActions: async () => {
+    try {
+      const acts = await sentinelApi.response.listActions();
+      set({ actions: acts });
+    } catch (err: any) {
+      console.warn('Failed to fetch actions:', err);
+    }
+  },
+
+  fetchSources: async () => {
+    try {
+      const srcs = await sentinelApi.sources.list();
+      set({ logSources: srcs });
+    } catch (err: any) {
+      console.warn('Failed to fetch log sources:', err);
+    }
+  },
+
+  fetchThreatIntel: async () => {
+    try {
+      const ti = await sentinelApi.threatIntel.list();
+      set({ threatIntel: ti });
+    } catch (err: any) {
+      console.warn('Failed to fetch threat intelligence:', err);
+    }
+  },
+
+  fetchAuditRecords: async () => {
+    try {
+      const records = await sentinelApi.audit.list();
+      set({ auditRecords: records });
+    } catch (err: any) {
+      console.warn('Failed to fetch audit records:', err);
+    }
+  },
+
+  fetchThresholds: async () => {
+    try {
+      const thresholds = await sentinelApi.settings.getThresholds();
+      set({
+        thresholds,
+        autonomousResponseGlobalEnabled: thresholds.autonomousResponseEnabled
+      });
+    } catch (err: any) {
+      console.warn('Failed to fetch thresholds:', err);
+    }
+  },
+
+  // -------------------------------------------------------------
+  // UI Controls
+  // -------------------------------------------------------------
   setEnvironment: (env) => {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
@@ -117,7 +290,6 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   },
 
   toggleEnvironment: () => {
-    // Light-first application: keep environment cleanly aligned
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
       root.classList.remove('dark', 'env-theatre');
@@ -132,57 +304,54 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   setSelectedDetectionId: (id) => set({ selectedDetectionId: id }),
   setSelectedEventId: (id) => set({ selectedEventId: id }),
 
-  updateIncidentStatus: (incidentId, status) => {
-    const timestamp = new Date().toISOString();
-    set((state) => {
-      const updatedIncidents = state.incidents.map((inc) => 
-        inc.id === incidentId 
-          ? { ...inc, status, updatedAt: timestamp }
-          : inc
-      );
-
-      const targetInc = state.incidents.find((i) => i.id === incidentId);
-      const newAudit: AuditRecord = {
-        id: `AUD-${Date.now().toString().slice(-4)}`,
-        timestamp,
-        category: 'POLICY_DECISION',
-        action: `INCIDENT_STATUS_${status.toUpperCase()}`,
-        actor: 'secops_analyst@sentinel.ai (Manual)',
-        target: incidentId,
-        result: 'SUCCESS',
-        details: {
-          previousStatus: targetInc?.status,
-          newStatus: status,
-          incidentTitle: targetInc?.title
-        },
-        isSimulated: true
-      };
-
-      return {
-        incidents: updatedIncidents,
-        auditRecords: [newAudit, ...state.auditRecords]
-      };
-    });
-
-    get().addNotification({
-      type: 'info',
-      title: 'Incident Status Updated',
-      message: `Incident ${incidentId} marked as ${status.toUpperCase()} (Simulated).`
-    });
+  // -------------------------------------------------------------
+  // Real Backend Mutation Actions
+  // -------------------------------------------------------------
+  updateIncidentStatus: async (incidentId, status) => {
+    try {
+      const updated = await sentinelApi.incidents.updateStatus(incidentId, status);
+      set((state) => ({
+        incidents: state.incidents.map((inc) => (inc.id === incidentId ? updated : inc))
+      }));
+      get().addNotification({
+        type: 'info',
+        title: 'Incident Status Updated',
+        message: `Incident ${incidentId} marked as ${status.toUpperCase()}.`
+      });
+      // Refresh metrics to keep counts synchronized
+      get().fetchOverviewMetrics();
+      return true;
+    } catch (err: any) {
+      get().addNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: err.message || 'Failed to update incident status on backend'
+      });
+      return false;
+    }
   },
 
-  updateDetectionStatus: (detectionId, status) => {
-    set((state) => ({
-      detections: state.detections.map((det) =>
-        det.id === detectionId ? { ...det, status } : det
-      )
-    }));
-
-    get().addNotification({
-      type: 'info',
-      title: 'Detection Updated',
-      message: `Detection ${detectionId} marked as ${status}.`
-    });
+  updateDetectionStatus: async (detectionId, status) => {
+    try {
+      set((state) => ({
+        detections: state.detections.map((det) =>
+          det.id === detectionId ? { ...det, status } : det
+        )
+      }));
+      get().addNotification({
+        type: 'info',
+        title: 'Detection Updated',
+        message: `Detection ${detectionId} marked as ${status}.`
+      });
+      return true;
+    } catch (err: any) {
+      get().addNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: err.message || 'Failed to update detection status'
+      });
+      return false;
+    }
   },
 
   executePlaybookAction: async (playbookId, actionName, target, incidentId) => {
@@ -196,181 +365,113 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       return false;
     }
 
-    const timestamp = new Date().toISOString();
-    const actionId = `ACT-2026-${Date.now().toString().slice(-4)}`;
-    
-    // Simulate brief network / executor latency
-    const newAction: ResponseAction = {
-      id: actionId,
-      incidentId,
-      playbookId,
-      actionName,
-      target,
-      status: 'simulated_success',
-      executionMode: 'simulated',
-      timestamp,
-      durationMs: Math.floor(Math.random() * 300) + 120,
-      details: `Simulated defensive response executed: ${actionName} targeting ${target}.`,
-      verificationStatus: 'verified',
-      rollbackAvailable: !actionName.toLowerCase().includes('kill'),
-      isSimulated: true
-    };
-
-    const newAudit: AuditRecord = {
-      id: `AUD-${Date.now().toString().slice(-4)}`,
-      timestamp,
-      category: 'RESPONSE_EXECUTION',
-      action: 'DEFENSIVE_ACTION_EXECUTED',
-      actor: 'GENYSIS_AUTONOMOUS_ENGINE (Simulated)',
-      target: target,
-      result: 'SUCCESS',
-      details: {
-        actionId,
-        actionName,
-        playbookId,
-        incidentId
-      },
-      isSimulated: true
-    };
-
-    // If linked to incident, update incident to 'contained'
-    const updatedIncidents = incidentId 
-      ? state.incidents.map(inc => inc.id === incidentId ? { ...inc, status: 'contained' as const, updatedAt: timestamp } : inc)
-      : state.incidents;
-
-    // Increment execution count on playbook
-    const updatedPlaybooks = state.playbooks.map(pb => 
-      pb.id === playbookId ? { ...pb, executionCount: pb.executionCount + 1 } : pb
-    );
-
-    set({
-      actions: [newAction, ...state.actions],
-      auditRecords: [newAudit, ...state.auditRecords],
-      incidents: updatedIncidents,
-      playbooks: updatedPlaybooks
-    });
-
-    get().addNotification({
-      type: 'success',
-      title: 'Defensive Action Executed (Simulated)',
-      message: `${actionName} on ${target} verified successfully.`
-    });
-
-    return true;
-  },
-
-  rollbackAction: async (actionId) => {
-    const timestamp = new Date().toISOString();
-    const state = get();
-    const targetAction = state.actions.find(a => a.id === actionId);
-
-    if (!targetAction || !targetAction.rollbackAvailable) {
+    try {
+      const res = await sentinelApi.response.execute(playbookId, actionName, target, incidentId);
+      if (res.success && res.action) {
+        set((state) => ({
+          actions: [res.action!, ...state.actions]
+        }));
+        get().addNotification({
+          type: 'success',
+          title: 'Defensive Action Executed',
+          message: res.message || `${actionName} on ${target} verified successfully.`
+        });
+        get().fetchOverviewMetrics();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
       get().addNotification({
         type: 'error',
-        title: 'Rollback Not Available',
-        message: 'This simulated defensive action cannot be rolled back or is already reverted.'
+        title: 'Execution Failed',
+        message: err.message || 'Defensive action failed on backend'
       });
       return false;
     }
-
-    const updatedActions = state.actions.map(a =>
-      a.id === actionId ? { ...a, status: 'rolled_back' as const, rollbackAvailable: false } : a
-    );
-
-    const rollbackAudit: AuditRecord = {
-      id: `AUD-${Date.now().toString().slice(-4)}`,
-      timestamp,
-      category: 'POLICY_DECISION',
-      action: 'DEFENSIVE_ACTION_ROLLED_BACK',
-      actor: 'secops_analyst@sentinel.ai (Manual)',
-      target: targetAction.target,
-      result: 'SUCCESS',
-      details: {
-        originalActionId: actionId,
-        actionName: targetAction.actionName
-      },
-      isSimulated: true
-    };
-
-    set({
-      actions: updatedActions,
-      auditRecords: [rollbackAudit, ...state.auditRecords]
-    });
-
-    get().addNotification({
-      type: 'info',
-      title: 'Action Rolled Back (Simulated)',
-      message: `Reverted ${targetAction.actionName} on ${targetAction.target}.`
-    });
-
-    return true;
   },
 
-  toggleAutonomousGlobal: () => {
+  rollbackAction: async (actionId) => {
+    try {
+      const res = await sentinelApi.response.rollback(actionId);
+      if (res.success) {
+        set((state) => ({
+          actions: state.actions.map((a) =>
+            a.id === actionId ? { ...a, status: 'rolled_back' as const, rollbackAvailable: false } : a
+          )
+        }));
+        get().addNotification({
+          type: 'info',
+          title: 'Action Rolled Back',
+          message: `Reverted action ${actionId}.`
+        });
+        get().fetchOverviewMetrics();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      get().addNotification({
+        type: 'error',
+        title: 'Rollback Failed',
+        message: err.message || 'Failed to rollback defensive action'
+      });
+      return false;
+    }
+  },
+
+  toggleAutonomousGlobal: async () => {
     const state = get();
     const nextState = !state.autonomousResponseGlobalEnabled;
-    const timestamp = new Date().toISOString();
 
-    const audit: AuditRecord = {
-      id: `AUD-${Date.now().toString().slice(-4)}`,
-      timestamp,
-      category: 'CONFIG_CHANGE',
-      action: nextState ? 'AUTONOMOUS_RESPONSE_GLOBAL_ENABLED' : 'AUTONOMOUS_RESPONSE_GLOBAL_DISABLED',
-      actor: 'secops_admin@sentinel.ai',
-      target: 'AutonomousResponseGlobalSwitch',
-      result: nextState ? 'INFO' : 'WARNING',
-      details: {
-        state: nextState ? 'ENABLED' : 'EMERGENCY_HALT'
-      },
-      isSimulated: true
-    };
-
-    set({
-      autonomousResponseGlobalEnabled: nextState,
-      auditRecords: [audit, ...state.auditRecords]
-    });
-
-    get().addNotification({
-      type: nextState ? 'success' : 'warning',
-      title: nextState ? 'Autonomous Defense Online' : 'EMERGENCY STOP ENGAGED',
-      message: nextState 
-        ? 'Autonomous defensive response engine is active (Simulated mode).'
-        : 'All automated countermeasures halted immediately.'
-    });
+    try {
+      const res = await sentinelApi.response.emergencyToggle(nextState);
+      set({
+        autonomousResponseGlobalEnabled: res.autonomousResponseGlobalEnabled
+      });
+      get().addNotification({
+        type: res.autonomousResponseGlobalEnabled ? 'success' : 'warning',
+        title: res.autonomousResponseGlobalEnabled ? 'Autonomous Defense Online' : 'EMERGENCY STOP ENGAGED',
+        message: res.autonomousResponseGlobalEnabled 
+          ? 'Autonomous defensive response engine is active.'
+          : 'All automated countermeasures halted immediately.'
+      });
+      return true;
+    } catch (err: any) {
+      get().addNotification({
+        type: 'error',
+        title: 'Configuration Error',
+        message: err.message || 'Failed to toggle emergency halt on backend'
+      });
+      return false;
+    }
   },
 
-  updateThresholds: (newThresholds) => {
-    const timestamp = new Date().toISOString();
-    set((state) => {
-      const merged = { ...state.thresholds, ...newThresholds };
-      const audit: AuditRecord = {
-        id: `AUD-${Date.now().toString().slice(-4)}`,
-        timestamp,
-        category: 'CONFIG_CHANGE',
-        action: 'DETECTION_THRESHOLDS_UPDATED',
-        actor: 'secops_admin@sentinel.ai',
-        target: 'DetectionThresholdConfig',
-        result: 'INFO',
-        details: newThresholds,
-        isSimulated: true
-      };
-
-      return {
-        thresholds: merged,
-        auditRecords: [audit, ...state.auditRecords]
-      };
-    });
-
-    get().addNotification({
-      type: 'success',
-      title: 'Thresholds Updated',
-      message: 'Detection thresholds and response policies applied (Simulated).'
-    });
+  updateThresholds: async (newThresholds) => {
+    try {
+      const updated = await sentinelApi.settings.updateThresholds(newThresholds);
+      set({ thresholds: updated });
+      get().addNotification({
+        type: 'success',
+        title: 'Thresholds Updated',
+        message: 'Detection velocity thresholds applied to backend engine.'
+      });
+      return true;
+    } catch (err: any) {
+      get().addNotification({
+        type: 'error',
+        title: 'Save Failed',
+        message: err.message || 'Failed to update thresholds on backend'
+      });
+      return false;
+    }
   },
 
+  // -------------------------------------------------------------
+  // Notification Management
+  // -------------------------------------------------------------
   addNotification: (item) => {
+    const id = `toast-${Date.now()}-${(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36))}`;
     const notification: ToastNotification = {
-      id: `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id,
       timestamp: new Date().toLocaleTimeString(),
       ...item
     };
@@ -387,15 +488,14 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   resetToMockDefaults: () => {
     set({
-      events: INITIAL_EVENTS,
-      detections: INITIAL_DETECTIONS,
-      incidents: INITIAL_INCIDENTS,
-      playbooks: INITIAL_PLAYBOOKS,
-      actions: INITIAL_ACTIONS,
-      logSources: INITIAL_LOG_SOURCES,
-      threatIntel: INITIAL_THREAT_INTEL,
-      auditRecords: INITIAL_AUDIT_RECORDS,
-      thresholds: INITIAL_THRESHOLDS,
+      events: [],
+      detections: [],
+      incidents: [],
+      playbooks: [],
+      actions: [],
+      logSources: [],
+      threatIntel: [],
+      auditRecords: [],
       autonomousResponseGlobalEnabled: true
     });
   }

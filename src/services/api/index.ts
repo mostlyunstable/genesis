@@ -1,4 +1,3 @@
-import { useSecurityStore } from '@/stores/useSecurityStore';
 import { 
   SecurityEvent, 
   Detection, 
@@ -7,60 +6,109 @@ import {
   ResponseAction, 
   LogSource, 
   ThreatIntelIndicator, 
-  AuditRecord 
+  AuditRecord,
+  OverviewMetrics,
+  EventsTimelinePoint,
+  DetectionThresholdConfig,
+  ConversationSummary,
+  ConversationDetail,
+  ChatMessage,
+  EvidenceReference,
+  SuggestedAction,
+  StreamInvestigationStep
 } from '@/types';
 
 export interface SentinelApiClient {
+  chat: {
+    listConversations: (params?: { query?: string; limit?: number; offset?: number }) => Promise<ConversationSummary[]>;
+    getConversation: (id: string) => Promise<ConversationDetail>;
+    createConversation: (title?: string, contextMetadata?: Record<string, any>) => Promise<ConversationSummary>;
+    updateConversation: (id: string, updates: { title?: string; isPinned?: boolean }) => Promise<ConversationSummary>;
+    deleteConversation: (id: string) => Promise<{ status: string; conversationId: string }>;
+    sendMessageSync: (id: string, message: string, contextIncidentId?: string, contextAssetId?: string) => Promise<ChatMessage>;
+    streamMessage: (
+      id: string,
+      message: string,
+      callbacks: {
+        onStep?: (step: StreamInvestigationStep) => void;
+        onEvidence?: (evidence: EvidenceReference[]) => void;
+        onActions?: (actions: SuggestedAction[]) => void;
+        onToken?: (token: string) => void;
+        onDone?: (data: { messageId: string; tokenCount: number; timestamp: string }) => void;
+        onError?: (err: any) => void;
+      },
+      contextIncidentId?: string,
+      contextAssetId?: string,
+      abortSignal?: AbortSignal
+    ) => Promise<void>;
+    confirmAction: (payload: {
+      actionProposalId: string;
+      confirmed: boolean;
+      actionName: string;
+      target: string;
+      playbookId: string;
+      incidentId?: string;
+    }) => Promise<any>;
+  };
+  analytics: {
+    getOverview: (window?: string) => Promise<OverviewMetrics>;
+    getTimeline: (window?: string) => Promise<EventsTimelinePoint[]>;
+  };
   events: {
-    list: (params?: { source?: string; outcome?: string; query?: string; limit?: number }) => Promise<SecurityEvent[]>;
-    getById: (id: string) => Promise<SecurityEvent | undefined>;
+    list: (params?: { source?: string; outcome?: string; severity?: string; query?: string; limit?: number; offset?: number }) => Promise<{ items: SecurityEvent[]; total: number }>;
+    getById: (id: string) => Promise<SecurityEvent>;
   };
   detections: {
-    list: () => Promise<Detection[]>;
-    getById: (id: string) => Promise<Detection | undefined>;
+    list: (params?: { category?: string; severity?: string; status?: string; query?: string; limit?: number }) => Promise<{ items: Detection[]; total: number }>;
+    getById: (id: string) => Promise<Detection>;
   };
   incidents: {
-    list: () => Promise<Incident[]>;
-    getById: (id: string) => Promise<Incident | undefined>;
-    updateStatus: (id: string, status: Incident['status']) => Promise<void>;
+    list: (params?: { severity?: string; status?: string; query?: string; limit?: number }) => Promise<{ items: Incident[]; total: number }>;
+    getById: (id: string) => Promise<Incident>;
+    updateStatus: (id: string, status: Incident['status']) => Promise<Incident>;
   };
   response: {
     listPlaybooks: () => Promise<ResponsePlaybook[]>;
     listActions: () => Promise<ResponseAction[]>;
-    execute: (playbookId: string, actionName: string, target: string, incidentId?: string) => Promise<boolean>;
-    rollback: (actionId: string) => Promise<boolean>;
+    execute: (playbookId: string, actionName: string, target: string, incidentId?: string) => Promise<{ success: boolean; message: string; action?: ResponseAction }>;
+    rollback: (actionId: string) => Promise<{ success: boolean; actionId: string; status: string }>;
+    emergencyToggle: (enabled: boolean) => Promise<{ autonomousResponseGlobalEnabled: boolean; status: string }>;
   };
   sources: {
     list: () => Promise<LogSource[]>;
   };
   threatIntel: {
     list: () => Promise<ThreatIntelIndicator[]>;
-    getByIp: (ip: string) => Promise<ThreatIntelIndicator | undefined>;
+    getByIp: (ip: string) => Promise<ThreatIntelIndicator>;
   };
   audit: {
     list: () => Promise<AuditRecord[]>;
-  };
-  analyst: {
-    query: (prompt: string, contextIncidentId?: string) => Promise<{
-      reply: string;
-      referencedEventIds: string[];
-      mitreTechniques: string[];
-      recommendedPlaybookId?: string;
-      confidence: number;
+    verify: () => Promise<{
+      verified: boolean;
+      totalRecords: number;
+      tamperedCount: number;
+      tamperedRecords: any[];
+      status: string;
+      latestHash?: string;
     }>;
+  };
+  settings: {
+    getThresholds: () => Promise<DetectionThresholdConfig>;
+    updateThresholds: (thresholds: Partial<DetectionThresholdConfig>) => Promise<DetectionThresholdConfig>;
   };
   system: {
     getBackendUrl: () => string;
     setBackendUrl: (url: string) => void;
-    isLiveMode: () => boolean;
-    setLiveMode: (enabled: boolean) => void;
     pingHealth: () => Promise<{ healthy: boolean; details?: any }>;
   };
 }
 
-let activeBackendUrl = localStorage.getItem('sentinel_backend_url') || 'http://localhost:8000';
-let liveBackendMode = localStorage.getItem('sentinel_live_mode') === 'true';
-let authToken = localStorage.getItem('sentinel_auth_token') || '';
+let activeBackendUrl = (typeof window !== 'undefined' && localStorage.getItem('sentinel_backend_url')) || 'http://127.0.0.1:8000';
+let authToken = (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
+
+function getAuthToken(): string {
+  return (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
+}
 
 async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${activeBackendUrl}/api/v1${endpoint}`;
@@ -69,277 +117,309 @@ async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}):
     ...(options.headers as Record<string, string> || {})
   };
 
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(errorData.detail?.message || errorData.detail || `HTTP Error ${res.status}`);
+    const msg = errorData.detail?.message || errorData.detail || `HTTP Error ${res.status}: ${res.statusText}`;
+    throw new Error(msg);
   }
   return res.json();
 }
 
 export const sentinelApi: SentinelApiClient = {
-  events: {
-    list: async (params) => {
-      if (liveBackendMode) {
-        try {
-          const queryParts: string[] = [];
-          if (params?.source && params.source !== 'all') queryParts.push(`source=${encodeURIComponent(params.source)}`);
-          if (params?.outcome && params.outcome !== 'all') queryParts.push(`outcome=${encodeURIComponent(params.outcome)}`);
-          if (params?.query) queryParts.push(`query=${encodeURIComponent(params.query)}`);
-          if (params?.limit) queryParts.push(`limit=${params.limit}`);
-          const qs = queryParts.length ? `?${queryParts.join('&')}` : '';
-          const data = await fetchFromBackend<{ items: SecurityEvent[]; total: number }>(`/events${qs}`);
-          return data.items;
-        } catch (err) {
-          console.warn('[SentinelApi] Failed to fetch live events, falling back to local store:', err);
-        }
-      }
+  chat: {
+    listConversations: async (params?: { query?: string; limit?: number; offset?: number }) => {
+      const q = new URLSearchParams();
+      if (params?.query) q.append('query', params.query);
+      if (params?.limit) q.append('limit', params.limit.toString());
+      if (params?.offset) q.append('offset', params.offset.toString());
+      const queryStr = q.toString() ? `?${q.toString()}` : '';
+      return await fetchFromBackend<ConversationSummary[]>(`/chat/conversations${queryStr}`);
+    },
 
-      // Demo / Mock fallback
-      const events = useSecurityStore.getState().events;
-      if (!params) return events;
-      return events.filter(e => {
-        if (params.source && params.source !== 'all' && e.source !== params.source) return false;
-        if (params.outcome && params.outcome !== 'all' && e.outcome !== params.outcome) return false;
-        if (params.query) {
-          const q = params.query.toLowerCase();
-          return (
-            e.username.toLowerCase().includes(q) ||
-            e.sourceIp.includes(q) ||
-            e.rawEvent.toLowerCase().includes(q) ||
-            e.id.toLowerCase().includes(q)
-          );
-        }
-        return true;
+    getConversation: async (id: string) => {
+      return await fetchFromBackend<ConversationDetail>(`/chat/conversations/${encodeURIComponent(id)}`);
+    },
+
+    createConversation: async (title?: string, contextMetadata: Record<string, any> = {}) => {
+      return await fetchFromBackend<ConversationSummary>('/chat/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ title, contextMetadata })
       });
     },
-    getById: async (id) => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<SecurityEvent>(`/events/${id}`);
-        } catch {
-          // fallback
-        }
+
+    updateConversation: async (id: string, updates: { title?: string; isPinned?: boolean }) => {
+      return await fetchFromBackend<ConversationSummary>(`/chat/conversations/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+      });
+    },
+
+    deleteConversation: async (id: string) => {
+      return await fetchFromBackend<{ status: string; conversationId: string }>(`/chat/conversations/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+    },
+
+    sendMessageSync: async (id: string, message: string, contextIncidentId?: string, contextAssetId?: string) => {
+      return await fetchFromBackend<ChatMessage>(`/chat/conversations/${encodeURIComponent(id)}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ message, contextIncidentId, contextAssetId })
+      });
+    },
+
+    streamMessage: async (
+      id: string,
+      message: string,
+      callbacks: {
+        onStep?: (step: StreamInvestigationStep) => void;
+        onEvidence?: (evidence: EvidenceReference[]) => void;
+        onActions?: (actions: SuggestedAction[]) => void;
+        onToken?: (token: string) => void;
+        onDone?: (data: { messageId: string; tokenCount: number; timestamp: string }) => void;
+        onError?: (err: any) => void;
+      },
+      contextIncidentId?: string,
+      contextAssetId?: string,
+      abortSignal?: AbortSignal
+    ) => {
+      const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(id)}/stream`;
+      const token = getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      return useSecurityStore.getState().events.find(e => e.id === id);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          message,
+          contextIncidentId,
+          contextAssetId
+        }),
+        signal: abortSignal
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ detail: res.statusText }));
+        const msg = errorData.detail?.message || errorData.detail || `Stream error ${res.status}`;
+        throw new Error(msg);
+      }
+
+      if (!res.body) {
+        throw new Error('ReadableStream not supported by response');
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n\n');
+          buffer = parts.pop() || '';
+
+          for (const block of parts) {
+            if (!block.trim()) continue;
+            let eventType = 'message';
+            let dataStr = '';
+
+            for (const line of block.split('\n')) {
+              if (line.startsWith('event:')) {
+                eventType = line.substring(6).trim();
+              } else if (line.startsWith('data:')) {
+                dataStr = line.substring(5).trim();
+              }
+            }
+
+            if (!dataStr) continue;
+            try {
+              const data = JSON.parse(dataStr);
+              if (eventType === 'step' && callbacks.onStep) {
+                callbacks.onStep(data);
+              } else if (eventType === 'evidence' && callbacks.onEvidence) {
+                callbacks.onEvidence(data.references || []);
+              } else if (eventType === 'actions' && callbacks.onActions) {
+                callbacks.onActions(data.actions || []);
+              } else if (eventType === 'token' && callbacks.onToken) {
+                callbacks.onToken(data.token || '');
+              } else if (eventType === 'done' && callbacks.onDone) {
+                callbacks.onDone(data);
+              } else if (eventType === 'error' && callbacks.onError) {
+                callbacks.onError(data);
+              }
+            } catch (e) {
+              console.warn('Failed to parse SSE payload', dataStr, e);
+            }
+          }
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          return;
+        }
+        if (callbacks.onError) {
+          callbacks.onError(err);
+        }
+        throw err;
+      }
+    },
+
+    confirmAction: async (payload: {
+      actionProposalId: string;
+      confirmed: boolean;
+      actionName: string;
+      target: string;
+      playbookId: string;
+      incidentId?: string;
+    }) => {
+      return await fetchFromBackend('/chat/actions/confirm', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    }
+  },
+
+  analytics: {
+    getOverview: async (window = '24h') => {
+      return await fetchFromBackend<OverviewMetrics>(`/analytics/overview?window=${encodeURIComponent(window)}`);
+    },
+    getTimeline: async (window = '24h') => {
+      return await fetchFromBackend<EventsTimelinePoint[]>(`/analytics/events-timeline?window=${encodeURIComponent(window)}`);
+    }
+  },
+
+  events: {
+    list: async (params) => {
+      const queryParts: string[] = [];
+      if (params?.source && params.source !== 'all') queryParts.push(`source=${encodeURIComponent(params.source)}`);
+      if (params?.outcome && params.outcome !== 'all') queryParts.push(`outcome=${encodeURIComponent(params.outcome)}`);
+      if (params?.severity && params.severity !== 'all') queryParts.push(`severity=${encodeURIComponent(params.severity)}`);
+      if (params?.query) queryParts.push(`query=${encodeURIComponent(params.query)}`);
+      if (params?.limit) queryParts.push(`limit=${params.limit}`);
+      if (params?.offset) queryParts.push(`offset=${params.offset}`);
+      const qs = queryParts.length ? `?${queryParts.join('&')}` : '';
+      return await fetchFromBackend<{ items: SecurityEvent[]; total: number }>(`/events${qs}`);
+    },
+    getById: async (id) => {
+      return await fetchFromBackend<SecurityEvent>(`/events/${encodeURIComponent(id)}`);
     }
   },
 
   detections: {
-    list: async () => {
-      if (liveBackendMode) {
-        try {
-          const data = await fetchFromBackend<{ items: Detection[]; total: number }>('/detections');
-          return data.items;
-        } catch (err) {
-          console.warn('[SentinelApi] Failed to fetch live detections:', err);
-        }
-      }
-      return useSecurityStore.getState().detections;
+    list: async (params) => {
+      const queryParts: string[] = [];
+      if (params?.category && params.category !== 'all') queryParts.push(`category=${encodeURIComponent(params.category)}`);
+      if (params?.severity && params.severity !== 'all') queryParts.push(`severity=${encodeURIComponent(params.severity)}`);
+      if (params?.status && params.status !== 'all') queryParts.push(`status=${encodeURIComponent(params.status)}`);
+      if (params?.query) queryParts.push(`query=${encodeURIComponent(params.query)}`);
+      if (params?.limit) queryParts.push(`limit=${params.limit}`);
+      const qs = queryParts.length ? `?${queryParts.join('&')}` : '';
+      return await fetchFromBackend<{ items: Detection[]; total: number }>(`/detections${qs}`);
     },
     getById: async (id) => {
-      return useSecurityStore.getState().detections.find(d => d.id === id);
+      return await fetchFromBackend<Detection>(`/detections/${encodeURIComponent(id)}`);
     }
   },
 
   incidents: {
-    list: async () => {
-      if (liveBackendMode) {
-        try {
-          const data = await fetchFromBackend<{ items: Incident[]; total: number }>('/incidents');
-          return data.items;
-        } catch (err) {
-          console.warn('[SentinelApi] Failed to fetch live incidents:', err);
-        }
-      }
-      return useSecurityStore.getState().incidents;
+    list: async (params) => {
+      const queryParts: string[] = [];
+      if (params?.severity && params.severity !== 'all') queryParts.push(`severity=${encodeURIComponent(params.severity)}`);
+      if (params?.status && params.status !== 'all') queryParts.push(`status=${encodeURIComponent(params.status)}`);
+      if (params?.query) queryParts.push(`query=${encodeURIComponent(params.query)}`);
+      if (params?.limit) queryParts.push(`limit=${params.limit}`);
+      const qs = queryParts.length ? `?${queryParts.join('&')}` : '';
+      return await fetchFromBackend<{ items: Incident[]; total: number }>(`/incidents${qs}`);
     },
     getById: async (id) => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<Incident>(`/incidents/${id}`);
-        } catch {
-          // fallback
-        }
-      }
-      return useSecurityStore.getState().incidents.find(i => i.id === id);
+      return await fetchFromBackend<Incident>(`/incidents/${encodeURIComponent(id)}`);
     },
     updateStatus: async (id, status) => {
-      if (liveBackendMode) {
-        try {
-          await fetchFromBackend(`/incidents/${id}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status })
-          });
-        } catch (err) {
-          console.warn('[SentinelApi] Live incident status update failed:', err);
-        }
-      }
-      useSecurityStore.getState().updateIncidentStatus(id, status);
+      return await fetchFromBackend<Incident>(`/incidents/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
     }
   },
 
   response: {
     listPlaybooks: async () => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<ResponsePlaybook[]>('/response/playbooks');
-        } catch (err) {
-          console.warn('[SentinelApi] Live playbooks fetch failed:', err);
-        }
-      }
-      return useSecurityStore.getState().playbooks;
+      return await fetchFromBackend<ResponsePlaybook[]>('/response/playbooks');
     },
     listActions: async () => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<ResponseAction[]>('/response/actions');
-        } catch (err) {
-          console.warn('[SentinelApi] Live actions fetch failed:', err);
-        }
-      }
-      return useSecurityStore.getState().actions;
+      return await fetchFromBackend<ResponseAction[]>('/response/actions');
     },
     execute: async (playbookId, actionName, target, incidentId) => {
-      if (liveBackendMode) {
-        try {
-          const res = await fetchFromBackend<{ success: boolean; action: ResponseAction }>('/response/execute', {
-            method: 'POST',
-            body: JSON.stringify({ playbookId, actionName, target, incidentId })
-          });
-          if (res.success) {
-            useSecurityStore.getState().addNotification({
-              type: 'success',
-              title: 'Live Action Executed',
-              message: `Playbook ${actionName} applied to ${target}.`
-            });
-            return true;
-          }
-        } catch (err: any) {
-          useSecurityStore.getState().addNotification({
-            type: 'error',
-            title: 'Policy Execution Blocked',
-            message: err.message || 'Execution failed'
-          });
-          return false;
-        }
-      }
-      return useSecurityStore.getState().executePlaybookAction(playbookId, actionName, target, incidentId);
+      return await fetchFromBackend<{ success: boolean; message: string; action?: ResponseAction }>('/response/execute', {
+        method: 'POST',
+        body: JSON.stringify({ playbookId, actionName, target, incidentId })
+      });
     },
     rollback: async (actionId) => {
-      if (liveBackendMode) {
-        try {
-          await fetchFromBackend(`/response/actions/${actionId}/rollback`, { method: 'POST' });
-        } catch (err) {
-          console.warn('[SentinelApi] Live rollback failed:', err);
-        }
-      }
-      return useSecurityStore.getState().rollbackAction(actionId);
+      return await fetchFromBackend<{ success: boolean; actionId: string; status: string }>(`/response/actions/${encodeURIComponent(actionId)}/rollback`, {
+        method: 'POST'
+      });
+    },
+    emergencyToggle: async (enabled) => {
+      return await fetchFromBackend<{ autonomousResponseGlobalEnabled: boolean; status: string }>('/response/emergency-toggle', {
+        method: 'POST',
+        body: JSON.stringify({ enabled })
+      });
     }
   },
 
   sources: {
     list: async () => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<LogSource[]>('/sources');
-        } catch (err) {
-          console.warn('[SentinelApi] Live log sources fetch failed:', err);
-        }
-      }
-      return useSecurityStore.getState().logSources;
+      return await fetchFromBackend<LogSource[]>('/sources');
     }
   },
 
   threatIntel: {
     list: async () => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<ThreatIntelIndicator[]>('/threat-intel');
-        } catch (err) {
-          console.warn('[SentinelApi] Live threat intel fetch failed:', err);
-        }
-      }
-      return useSecurityStore.getState().threatIntel;
+      return await fetchFromBackend<ThreatIntelIndicator[]>('/threat-intel');
     },
     getByIp: async (ip) => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<ThreatIntelIndicator>(`/threat-intel/${ip}`);
-        } catch {
-          // fallback
-        }
-      }
-      return useSecurityStore.getState().threatIntel.find(ti => ti.ip === ip);
+      return await fetchFromBackend<ThreatIntelIndicator>(`/threat-intel/${encodeURIComponent(ip)}`);
     }
   },
 
   audit: {
     list: async () => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<AuditRecord[]>('/audit');
-        } catch (err) {
-          console.warn('[SentinelApi] Live audit trail fetch failed:', err);
-        }
-      }
-      return useSecurityStore.getState().auditRecords;
+      return await fetchFromBackend<AuditRecord[]>('/audit');
+    },
+    verify: async () => {
+      return await fetchFromBackend<{
+        verified: boolean;
+        totalRecords: number;
+        tamperedCount: number;
+        tamperedRecords: any[];
+        status: string;
+        latestHash?: string;
+      }>('/audit/verify');
     }
   },
 
-  analyst: {
-    query: async (prompt, contextIncidentId) => {
-      if (liveBackendMode) {
-        try {
-          return await fetchFromBackend<{
-            reply: string;
-            referencedEventIds: string[];
-            mitreTechniques: string[];
-            recommendedPlaybookId?: string;
-            confidence: number;
-          }>('/analyst/query', {
-            method: 'POST',
-            body: JSON.stringify({ prompt, contextIncidentId })
-          });
-        } catch (err) {
-          console.warn('[SentinelApi] Live analyst query failed, falling back:', err);
-        }
-      }
-
-      // Local deterministic simulated response
-      const p = prompt.toLowerCase();
-      const state = useSecurityStore.getState();
-      const inc = state.incidents.find(i => i.id === contextIncidentId) || state.incidents[0];
-
-      if (p.includes('ssh') || p.includes('brute') || p.includes('198.51.100.42')) {
-        return {
-          reply: `Analysis of SSH attack sequence from **198.51.100.42**:\n\n1. **Attack Pattern**: High-velocity password guessing targeting 15 distinct service and root usernames across 35 consecutive attempts between 10:15:00 and 10:16:27 UTC.\n2. **Critical Breakthrough**: At 10:16:31 UTC, an accepted password logon occurred for user \`deploy\` (\`EVT-2026-SSH-036\`), establishing an interactive shell session (\`sess_993429ab\`).\n3. **Risk Vector**: The \`deploy\` account holds sudo privileges on host \`bastion-01\`.\n4. **Autonomous Action Executed**: The system simulated an iptables DROP rule on 198.51.100.42 and sent SIGKILL to session PID 12436.`,
-          referencedEventIds: ['EVT-2026-SSH-001', 'EVT-2026-SSH-020', 'EVT-2026-SSH-035', 'EVT-2026-SSH-036'],
-          mitreTechniques: ['T1110.001 (Password Guessing)', 'T1078.003 (Local Accounts)'],
-          recommendedPlaybookId: 'PB-SSH-BRUTE-01',
-          confidence: 0.98
-        };
-      } else if (p.includes('spray') || p.includes('sso') || p.includes('203.0.113.88')) {
-        return {
-          reply: `Analysis of Password Spraying Campaign:\n\n1. **Actor Profile**: Originating from **203.0.113.88**, utilizing automated script client (\`Python-urllib/3.11\`).\n2. **Scope**: 18 corporate user identities systematically probed with 12.0s timing intervals.\n3. **Impact**: Active Directory accounts \`a.smith\` and \`c.williams\` exceeded bad-password lockout thresholds (\`EVT-2026-WIN-001\`). No successful authentications registered.\n4. **Countermeasure**: Throttling applied at reverse proxy tier with MFA challenge enforcement.`,
-          referencedEventIds: ['EVT-2026-SSO-001', 'EVT-2026-SSO-018', 'EVT-2026-WIN-001'],
-          mitreTechniques: ['T1110.003 (Password Spraying)'],
-          recommendedPlaybookId: 'PB-SPRAY-DEFENSE-02',
-          confidence: 0.89
-        };
-      } else {
-        return {
-          reply: `Investigation note for incident **${inc.id}** (${inc.title}):\n\n- Correlated **${inc.eventCount} telemetry events** across ${inc.sourceIps.join(', ')}.\n- Attack vector matches MITRE technique **${inc.mitreAttack[0]?.techniqueName || 'Brute Force'}** (${inc.mitreAttack[0]?.techniqueId || 'T1110'}).\n- Defense playbook **${inc.assignedPlaybookId || 'PB-SSH-BRUTE-01'}** is configured for autonomous remediation.`,
-          referencedEventIds: inc.eventIds,
-          mitreTechniques: inc.mitreAttack.map(m => `${m.techniqueId} - ${m.techniqueName}`),
-          recommendedPlaybookId: inc.assignedPlaybookId,
-          confidence: inc.confidenceScore / 100
-        };
-      }
+  settings: {
+    getThresholds: async () => {
+      return await fetchFromBackend<DetectionThresholdConfig>('/settings/thresholds');
+    },
+    updateThresholds: async (thresholds) => {
+      return await fetchFromBackend<DetectionThresholdConfig>('/settings/thresholds', {
+        method: 'PATCH',
+        body: JSON.stringify(thresholds)
+      });
     }
   },
 
@@ -347,12 +427,9 @@ export const sentinelApi: SentinelApiClient = {
     getBackendUrl: () => activeBackendUrl,
     setBackendUrl: (url) => {
       activeBackendUrl = url.replace(/\/$/, '');
-      localStorage.setItem('sentinel_backend_url', activeBackendUrl);
-    },
-    isLiveMode: () => liveBackendMode,
-    setLiveMode: (enabled) => {
-      liveBackendMode = enabled;
-      localStorage.setItem('sentinel_live_mode', enabled ? 'true' : 'false');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sentinel_backend_url', activeBackendUrl);
+      }
     },
     pingHealth: async () => {
       try {

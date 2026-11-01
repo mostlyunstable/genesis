@@ -14,12 +14,18 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { IntegrationsPage } from '@/features/integrations/IntegrationsPage';
 import { AssetsPage } from '@/features/assets/AssetsPage';
 import { MitreMatrixPage } from '@/features/mitre/MitreMatrixPage';
+import { SecurityCopilotPage } from '@/features/copilot/SecurityCopilotPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
+      // Security Copilot (Autonomous Conversational Security Analyst)
+      {
+        path: 'copilot',
+        element: <SecurityCopilotPage />
+      },
       // 1. Autonomous Security Intelligence Briefing (Primary Overview)
       {
         index: true,

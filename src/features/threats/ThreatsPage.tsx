@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, 
   Search, 
@@ -11,18 +11,32 @@ import {
   Tag,
   Clock,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  RefreshCw,
+  Inbox
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { ThreatIntelIndicator } from '@/types';
 import { Button } from '@/components/ui/Button';
 
 export const ThreatsPage: React.FC = () => {
-  const { threatIntel, incidents, setSelectedIncidentId } = useSecurityStore();
+  const { threatIntel, incidents, setSelectedIncidentId, fetchThreatIntel } = useSecurityStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIp, setSelectedIp] = useState<string>(threatIntel[0]?.ip || '198.51.100.42');
+  const [selectedIp, setSelectedIp] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const selectedIndicator = threatIntel.find(t => t.ip === selectedIp) || threatIntel[0];
+  useEffect(() => {
+    fetchThreatIntel();
+  }, [fetchThreatIntel]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchThreatIntel();
+    setIsRefreshing(false);
+  };
+
+  const selectedIndicator = threatIntel.find(t => t.ip === selectedIp) || (threatIntel.length > 0 ? threatIntel[0] : null);
 
   const filteredIndicators = threatIntel.filter(item => {
     if (!searchQuery) return true;
@@ -30,8 +44,8 @@ export const ThreatsPage: React.FC = () => {
     return (
       item.ip.toLowerCase().includes(q) ||
       item.threatClassification.toLowerCase().includes(q) ||
-      item.country.toLowerCase().includes(q) ||
-      item.asn.toLowerCase().includes(q)
+      (item.country && item.country.toLowerCase().includes(q)) ||
+      (item.asn && item.asn.toLowerCase().includes(q))
     );
   });
 
@@ -50,7 +64,9 @@ export const ThreatsPage: React.FC = () => {
                 ADVERSARY INTELLIGENCE DATABASE
               </span>
               <span className="text-[#CFD4C9]">•</span>
-              <span className="text-[10px] font-mono text-[#73796F]">REPUTATION &amp; CORRELATION</span>
+              <span className="text-[10px] font-mono text-[#73796F]">
+                PERSISTED IOC REPOSITORIES ({threatIntel.length})
+              </span>
             </div>
             <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
               Threat Landscape
@@ -60,17 +76,26 @@ export const ThreatsPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="w-full md:w-84">
-            <div className="relative">
+          <div className="flex items-center gap-3">
+            <div className="relative w-full md:w-72">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter by IP, ASN, country, or classification..."
-                className="w-full bg-[#F0F1EB] border border-[#E3E5DC] focus:border-[#54765C] rounded-full px-4 py-2.5 pl-10 text-xs text-[#20251F] placeholder-[#969B91] font-mono focus:outline-none transition-colors shadow-inner"
+                placeholder="Search IP, ASN, country..."
+                className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 pl-10 text-xs text-[#20251F] placeholder-[#969B91] focus:outline-none focus:border-[#54765C]"
               />
               <Search className="w-4 h-4 text-[#969B91] absolute left-3.5 top-3 pointer-events-none" />
             </div>
+
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="p-2.5 rounded-full bg-[#F0F1EB] hover:bg-white border border-[#E3E5DC] text-[#73796F] hover:text-[#20251F] transition-colors cursor-pointer"
+              title="Refresh intelligence"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
       </section>
@@ -80,52 +105,60 @@ export const ThreatsPage: React.FC = () => {
           ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column (5 cols): Adversary Indicators Queue */}
+        {/* Left Column (5 cols): Indicator Repository */}
         <div className="lg:col-span-5 space-y-3">
           <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91] px-1">
-            Tracked Adversary IPs ({filteredIndicators.length})
+            Tracked External Indicators ({filteredIndicators.length})
           </div>
 
-          <div className="space-y-3">
-            {filteredIndicators.map((indicator) => {
-              const isSelected = indicator.ip === selectedIndicator?.ip;
+          {filteredIndicators.length === 0 ? (
+            <div className="p-8 rounded-3xl bg-white border border-[#E3E5DC] text-center space-y-3">
+              <div className="w-10 h-10 rounded-full bg-[#EAF0E6] text-[#54765C] mx-auto flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-display text-base text-[#20251F]">No threat indicators</h3>
+              <p className="text-xs text-[#73796F] max-w-xs mx-auto">
+                No adversary indicators match the current query. Threat indicators populate when suspicious external actors are observed in telemetry.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredIndicators.map((item) => {
+                const isSelected = item.ip === selectedIndicator?.ip;
 
-              return (
-                <div
-                  key={indicator.ip}
-                  onClick={() => setSelectedIp(indicator.ip)}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-white border-[#54765C] shadow-origin-sm ring-1 ring-[#54765C]/30'
-                      : 'bg-white border-[#E3E5DC] hover:border-[#CFD4C9] hover:bg-[#FAFAF7]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="font-bold text-[#20251F] text-sm">{indicator.ip}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      indicator.reputationScore >= 80 ? 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]' :
-                      indicator.reputationScore >= 50 ? 'bg-[#FAF2EC] text-[#C47A45] border border-[#F4E2D5]' :
-                      'bg-[#EDF3EF] text-[#64856C] border border-[#DBE7DF]'
-                    }`}>
-                      REP: {indicator.reputationScore}/100
-                    </span>
+                return (
+                  <div
+                    key={item.ip}
+                    onClick={() => setSelectedIp(item.ip)}
+                    className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white border-[#54765C] shadow-origin-sm ring-1 ring-[#54765C]/30'
+                        : 'bg-white border-[#E3E5DC] hover:border-[#CFD4C9] hover:bg-[#FAFAF7]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="font-bold text-[#B94C43] text-sm">{item.ip}</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]">
+                        REP: {item.reputationScore}/100
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-bold text-[#20251F] mt-1.5 line-clamp-1">
+                      {item.threatClassification}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E3E5DC] text-[11px] font-mono text-[#73796F]">
+                      <span>{item.country || 'Unknown'} ({item.countryCode || 'N/A'})</span>
+                      <span>Confidence: <strong className="text-[#54765C]">{item.confidence}%</strong></span>
+                    </div>
                   </div>
-
-                  <p className="text-xs text-[#73796F] font-sans mt-2 line-clamp-1">
-                    {indicator.threatClassification}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E3E5DC] text-[11px] font-mono text-[#969B91]">
-                    <span>{indicator.country}</span>
-                    <span>{indicator.asn}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Right Column (7 cols): Selected Threat Dossier */}
+        {/* Right Column (7 cols): Full Indicator Dossier */}
         <div className="lg:col-span-7">
           {selectedIndicator ? (
             <div className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-origin-sm space-y-6">
@@ -133,106 +166,101 @@ export const ThreatsPage: React.FC = () => {
               {/* Dossier Header */}
               <div className="p-6 border-b border-[#E3E5DC] bg-[#FAFAF7] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-mono text-[#73796F]">
-                    <Globe className="w-3.5 h-3.5 text-[#54765C]" />
-                    <span>{selectedIndicator.country} • {selectedIndicator.asn}</span>
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="text-[#B94C43] font-bold">{selectedIndicator.ip}</span>
+                    <span className="text-[#969B91]">•</span>
+                    <span className="text-[#73796F]">{selectedIndicator.asn || 'Autonomous System'}</span>
                   </div>
-                  <h2 className="font-display text-2xl text-[#20251F] mt-1 font-mono">
-                    {selectedIndicator.ip}
+                  <h2 className="font-display text-2xl text-[#20251F] mt-1 font-bold">
+                    {selectedIndicator.threatClassification}
                   </h2>
                 </div>
 
-                <div className="flex items-center gap-2 font-mono text-xs shrink-0">
-                  <div className="px-3.5 py-1.5 rounded-full bg-white border border-[#E3E5DC] text-center">
-                    <div className="text-[9px] text-[#969B91] uppercase">Confidence</div>
-                    <div className="font-bold text-[#54765C]">{selectedIndicator.confidence}%</div>
+                <div className="text-right font-mono">
+                  <div className="text-2xl font-bold text-[#B94C43]">
+                    {selectedIndicator.reputationScore}<span className="text-xs text-[#73796F]">/100</span>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-full bg-white border border-[#E3E5DC] text-center">
-                    <div className="text-[9px] text-[#969B91] uppercase">Reputation</div>
-                    <div className="font-bold text-[#B94C43]">{selectedIndicator.reputationScore}/100</div>
-                  </div>
+                  <div className="text-[10px] uppercase font-bold text-[#969B91]">Reputation Penalty</div>
                 </div>
               </div>
 
               {/* Dossier Body */}
               <div className="p-6 sm:p-8 space-y-6">
                 
-                {/* Threat Profile Narrative */}
-                <div className="space-y-1.5">
-                  <div className="text-[10px] font-mono uppercase text-[#969B91] font-bold tracking-wider">
-                    THREAT PROFILE &amp; HEURISTIC CLASSIFICATION
+                {/* Geolocation & Origin Context */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[10px] text-[#969B91] uppercase font-bold">Country</span>
+                    <div className="text-sm font-bold text-[#20251F] mt-1">
+                      {selectedIndicator.country} ({selectedIndicator.countryCode})
+                    </div>
                   </div>
-                  <p className="text-base text-[#20251F] leading-relaxed font-sans">
-                    {selectedIndicator.threatClassification}. Observed conducting automated credential brute force against perimeter SSH bastions. Activity exhibits dictionary rotation across standard administrative accounts. Associated with RFC 5737 benchmark evaluation range.
-                  </p>
-                </div>
 
-                {/* Behavioral Metadata Strip */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#E3E5DC] font-mono text-xs">
                   <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                    <span className="text-[10px] text-[#969B91] uppercase block">First Seen Telemetry</span>
-                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
-                      {selectedIndicator.firstSeen.replace('T', ' ').replace('Z', ' UTC')}
-                    </span>
+                    <span className="text-[10px] text-[#969B91] uppercase font-bold">Confidence</span>
+                    <div className="text-sm font-bold text-[#54765C] mt-1">
+                      {selectedIndicator.confidence}%
+                    </div>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                    <span className="text-[10px] text-[#969B91] uppercase block">Last Seen Telemetry</span>
-                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
-                      {selectedIndicator.lastSeen.replace('T', ' ').replace('Z', ' UTC')}
-                    </span>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                    <span className="text-[10px] text-[#969B91] uppercase block">Data Feed Source</span>
-                    <span className="text-[#54765C] font-bold text-xs mt-1 block">
+
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] col-span-2 sm:col-span-1">
+                    <span className="text-[10px] text-[#969B91] uppercase font-bold">Data Feed Source</span>
+                    <div className="text-xs font-bold text-[#20251F] mt-1 truncate">
                       {selectedIndicator.simulatedDataSource}
-                    </span>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                    <span className="text-[10px] text-[#969B91] uppercase block">Geographic Origin</span>
-                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
-                      {selectedIndicator.country}
-                    </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Associated Incidents & Targeted Assets */}
-                <div className="pt-4 border-t border-[#E3E5DC] space-y-3">
-                  <div className="text-[10px] font-mono uppercase text-[#969B91] font-bold tracking-wider">
-                    CORRELATED ENTERPRISE INCIDENTS ({selectedIndicator.associatedIncidents.length})
-                  </div>
-
-                  <div className="space-y-2">
-                    {selectedIndicator.associatedIncidents.map((incId) => {
-                      const incident = incidents.find(i => i.id === incId);
-
-                      return (
-                        <div
-                          key={incId}
-                          onClick={() => setSelectedIncidentId(incId)}
-                          className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] transition-colors cursor-pointer flex items-center justify-between"
+                {/* MITRE Techniques Mapped to IOC */}
+                {selectedIndicator.mitreTechniques && selectedIndicator.mitreTechniques.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-[#E3E5DC]">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91]">
+                      MAPPED MITRE ATT&amp;CK TECHNIQUES
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIndicator.mitreTechniques.map((tech) => (
+                        <span
+                          key={tech}
+                          className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9]"
                         >
-                          <div>
-                            <div className="flex items-center gap-2 font-mono text-xs">
-                              <span className="font-bold text-[#54765C]">{incId}</span>
-                              <span className="text-[#73796F] font-sans font-medium">{incident?.title || 'Active Correlated Threat'}</span>
-                            </div>
-                            <div className="text-[11px] text-[#969B91] mt-0.5 font-mono">
-                              Risk Score: {incident?.riskScore || 90}/100 • Target: {incident?.targetAccounts.join(', ') || 'bastion-01'}
-                            </div>
-                          </div>
-                          <ArrowRight className="w-4 h-4 text-[#969B91]" />
-                        </div>
-                      );
-                    })}
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Tags */}
+                {selectedIndicator.tags && selectedIndicator.tags.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-[#E3E5DC]">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91]">
+                      BEHAVIORAL TAGS
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedIndicator.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-[#F0F1EB] text-[#73796F] border border-[#E3E5DC]"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               </div>
 
             </div>
           ) : (
-            <div className="p-8 text-center bg-white border border-[#E3E5DC] rounded-3xl text-xs text-[#969B91] font-mono">
-              Select an indicator on the left to inspect intelligence dossier.
+            <div className="bg-white border border-[#E3E5DC] rounded-3xl p-12 text-center space-y-3 shadow-origin-sm">
+              <div className="w-12 h-12 rounded-full bg-[#F0F1EB] text-[#73796F] mx-auto flex items-center justify-center">
+                <Inbox className="w-6 h-6" />
+              </div>
+              <h3 className="font-display text-lg text-[#20251F]">No indicator selected</h3>
+              <p className="text-sm text-[#73796F] max-w-sm mx-auto">
+                Select an indicator from the repository to inspect autonomous reputation scoring, geolocations, and ATT&amp;CK mappings.
+              </p>
             </div>
           )}
         </div>

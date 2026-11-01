@@ -13,7 +13,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Activity,
-  Server
+  Server,
+  Sparkles
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SentinelLogo } from '@/components/ui/SentinelLogo';
@@ -33,7 +34,15 @@ interface NavSection {
 }
 
 export const Sidebar: React.FC = () => {
-  const { sidebarCollapsed, toggleSidebar, incidents, detections } = useSecurityStore();
+  const { 
+    sidebarCollapsed, 
+    toggleSidebar, 
+    incidents, 
+    detections,
+    logSources,
+    totalEventsCount,
+    autonomousResponseGlobalEnabled
+  } = useSecurityStore();
   const location = useLocation();
 
   const activeIncidentsCount = incidents.filter(i => i.status === 'active').length;
@@ -45,6 +54,14 @@ export const Sidebar: React.FC = () => {
       title: 'INTELLIGENCE',
       items: [
         { name: 'Intelligence Briefing', path: '/', id: 'overview', icon: LayoutDashboard },
+        { 
+          name: 'Security Copilot', 
+          path: '/copilot', 
+          id: 'security-copilot', 
+          icon: Sparkles,
+          badge: 'AI',
+          badgeType: 'info'
+        },
         { 
           name: 'Threat Landscape', 
           path: '/threats', 
@@ -176,10 +193,12 @@ export const Sidebar: React.FC = () => {
                   <span className="w-2 h-2 rounded-full bg-[#54765C] animate-pulse" />
                   Sentinel Engine
                 </span>
-                <span className="text-[10px] font-mono font-bold text-[#54765C]">ARMED</span>
+                <span className="text-[10px] font-mono font-bold text-[#54765C]">
+                  {autonomousResponseGlobalEnabled ? 'ARMED' : 'HALTED'}
+                </span>
               </div>
               <p className="text-[10px] text-[#73796F] mt-1 leading-tight font-mono">
-                5 sensors • 8.42M evts/24h
+                {logSources.length} sensors • {totalEventsCount.toLocaleString()} evts
               </p>
             </div>
           ) : (

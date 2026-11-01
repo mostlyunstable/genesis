@@ -17,91 +17,78 @@ import {
   ChevronRight,
   Send,
   AlertTriangle,
-  FileText
+  FileText,
+  RefreshCw,
+  Activity,
+  Layers,
+  Inbox
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { SeverityBadge, OutcomeBadge, Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { SentinelLogo } from '@/components/ui/SentinelLogo';
-import { sentinelApi } from '@/services/api';
-
-const BRIEFING_DIRECTIVES = [
-  { label: 'Investigate IP 198.51.100.42', query: 'Investigate adversary IP 198.51.100.42' },
-  { label: 'Explain INC-2026-0042', query: 'Explain root cause for INC-2026-0042' },
-  { label: 'Audit SAML Password Spray', query: 'Audit horizontal password spraying' },
-  { label: 'Trace Bastion Blast Radius', query: 'Assess blast radius of bastion-01' }
-];
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { 
+    overviewMetrics,
     incidents, 
-    detections, 
     events, 
-    actions, 
     logSources, 
+    isLoading,
+    error,
+    isStale,
+    lastUpdated,
     autonomousResponseGlobalEnabled,
-    executePlaybookAction,
+    fetchOverviewMetrics,
+    fetchIncidents,
+    fetchEvents,
+    fetchSources,
     setSelectedIncidentId,
-    addNotification
+    executePlaybookAction
   } = useSecurityStore();
 
-  const [backendHealth, setBackendHealth] = useState<'HEALTHY' | 'OFFLINE' | 'CHECKING'>('CHECKING');
-  const [isExecutingDryRun, setIsExecutingDryRun] = useState(false);
-  const [dryRunConfirmed, setDryRunConfirmed] = useState(false);
   const [promptInput, setPromptInput] = useState('');
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedWindow, setSelectedWindow] = useState<'1h' | '24h' | '7d'>('24h');
 
-  // Operational metrics
-  const activeIncidents = incidents.filter(i => i.status === 'active' || i.status === 'investigating');
-  const criticalDetections = detections.filter(d => d.severity === 'critical');
-  const primaryIncident = incidents[0] || {
-    id: 'INC-2026-0042',
-    title: 'SSH Brute Force with Valid User Compromise',
-    severity: 'critical' as const,
-    riskScore: 94,
-    createdAt: new Date().toISOString(),
-    targetAccounts: ['deploy'],
-    sourceIps: ['198.51.100.42'],
-    eventCount: 36,
-    aiSummary: {
-      executiveSummary: 'Sentinel AI correlated 35 high-velocity SSH password failures followed within 4.0 seconds by valid interactive session acquisition on production host bastion-01.',
-      rootCauseAnalysis: 'Local account credential guessing enabled by absence of public key exclusivity.'
-    }
-  };
-
+  // Load real data from backend on mount and when window changes
   useEffect(() => {
     let isMounted = true;
-    sentinelApi.system.pingHealth()
-      .then((res: { healthy: boolean }) => {
-        if (isMounted) setBackendHealth(res.healthy ? 'HEALTHY' : 'OFFLINE');
-      })
-      .catch(() => {
-        if (isMounted) setBackendHealth('HEALTHY');
-      });
-    return () => { isMounted = false; };
-  }, []);
+    const loadAll = async () => {
+      await Promise.all([
+        fetchOverviewMetrics(selectedWindow),
+        fetchIncidents({ limit: 5 }),
+        fetchEvents({ limit: 8 }),
+        fetchSources()
+      ]);
+    };
+    loadAll();
 
-  const handleExecuteDryRun = async () => {
-    setIsExecutingDryRun(true);
-    try {
-      const ok = await executePlaybookAction(
-        'PB-SSH-BRUTE-01',
-        'Simulated Host Session Revocation & Ingress Drop',
-        '198.51.100.42',
-        primaryIncident.id
-      );
-      if (ok) {
-        setDryRunConfirmed(true);
-        addNotification({
-          type: 'success',
-          title: 'Defensive Action Simulated',
-          message: 'Playbook PB-SSH-BRUTE-01 executed in deterministic sandbox.'
-        });
+    // Auto-refresh metrics every 15 seconds to reflect incoming events
+    const interval = setInterval(() => {
+      if (isMounted) {
+        fetchOverviewMetrics(selectedWindow);
+        fetchEvents({ limit: 8 });
+        fetchIncidents({ limit: 5 });
       }
-    } finally {
-      setIsExecutingDryRun(false);
-    }
+    }, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedWindow]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      fetchOverviewMetrics(selectedWindow),
+      fetchIncidents({ limit: 5 }),
+      fetchEvents({ limit: 8 }),
+      fetchSources()
+    ]);
+    setIsRefreshing(false);
   };
 
   const handlePromptSubmit = (e: React.FormEvent) => {
@@ -111,12 +98,61 @@ export const OverviewPage: React.FC = () => {
     setTimeout(() => {
       setIsSynthesizing(false);
       navigate('/investigator');
-    }, 450);
+    }, 350);
   };
+
+  // Find real critical incident needing operator attention, if any exists in DB
+  const criticalIncident = incidents.find(i => i.severity === 'critical' && (i.status === 'active' || i.status === 'investigating'));
+  const primaryIncident = incidents[0] || null;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto font-sans pb-16">
       
+      {/* ─────────────────────────────────────────────────────────────
+          ERROR / STALE DATA ALERT (Visible if Backend Fails)
+          ───────────────────────────────────────────────────────────── */}
+      {error && (
+        <div className="bg-[#FBF1F0] border-l-4 border-l-[#B94C43] border-y border-r border-[#E3E5DC] rounded-r-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-[#B94C43] shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-sm text-[#20251F]">
+                Backend Telemetry Unavailable
+              </h4>
+              <p className="text-xs text-[#73796F] mt-0.5">
+                {error}. Ensure FastAPI backend server is running on <code className="bg-[#F0F1EB] px-1 py-0.5 rounded text-[11px] text-[#20251F]">http://127.0.0.1:8000</code>.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleManualRefresh}
+            isLoading={isRefreshing}
+            icon={<RefreshCw className="w-3.5 h-3.5" />}
+          >
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
+      {isStale && !error && (
+        <div className="bg-[#FAF7EB] border border-[#E9E1B8] rounded-2xl p-3 px-4 flex items-center justify-between text-xs text-[#B28A42]">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>
+              Showing stale cached data from {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'prior sync'}. Synchronizing with backend...
+            </span>
+          </div>
+          <button 
+            onClick={handleManualRefresh} 
+            className="font-bold underline hover:text-[#916E2E] cursor-pointer"
+          >
+            Refresh Now
+          </button>
+        </div>
+      )}
+
       {/* ─────────────────────────────────────────────────────────────
           1. EDITORIAL INTELLIGENCE BRIEFING MASTHEAD (Light Botanical)
           ───────────────────────────────────────────────────────────── */}
@@ -129,24 +165,34 @@ export const OverviewPage: React.FC = () => {
           {/* Top metadata kicker */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E3E5DC] pb-4 text-xs font-mono">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#54765C] animate-pulse" />
+              <span className={`w-2 h-2 rounded-full ${overviewMetrics?.systemHealth.databaseConnected ? 'bg-[#54765C] animate-pulse' : 'bg-[#B94C43]'}`} />
               <span className="text-[10px] tracking-[0.16em] uppercase font-bold text-[#54765C]">
                 SENTINEL AUTONOMOUS INTELLIGENCE BRIEFING
               </span>
               <span className="text-[#CFD4C9]">•</span>
               <span className="text-[#73796F] text-[11px]">
-                CYCLE: 24h CONTINUOUS CORRELATION
+                {lastUpdated ? `SYNC: ${new Date(lastUpdated).toLocaleTimeString()} UTC` : 'INITIALIZING...'}
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] text-[10px] font-bold uppercase tracking-wider">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                autonomousResponseGlobalEnabled 
+                  ? 'bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9]' 
+                  : 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]'
+              }`}>
                 <Cpu className="w-3 h-3" />
-                {autonomousResponseGlobalEnabled ? 'ARMED (SIMULATED)' : 'DEFENSE HALTED'}
+                {autonomousResponseGlobalEnabled ? 'DEFENSE ARMED' : 'DEFENSE HALTED'}
               </span>
-              <span className="text-[#73796F] text-[10px]">
-                POSTURE: <strong className="text-[#20251F]">DEFENSIVE SURVEILLANCE</strong>
-              </span>
+              <button
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+                className="text-[#73796F] hover:text-[#20251F] text-[10px] flex items-center gap-1 cursor-pointer"
+                title="Sync telemetry"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>SYNC</span>
+              </button>
             </div>
           </div>
 
@@ -156,7 +202,7 @@ export const OverviewPage: React.FC = () => {
               Every signal. <span className="text-[#54765C]">One truth.</span>
             </h1>
             <p className="text-base sm:text-lg text-[#73796F] leading-relaxed font-sans max-w-2xl">
-              Continuous autonomous security intelligence across 5 telemetry sensors. Ingesting, correlating, and evaluating defensive actions without manual fatigue.
+              Real-time autonomous cybersecurity intelligence backed by live telemetry. Ingesting, correlating, and evaluating defensive actions without manufactured data.
             </p>
           </div>
 
@@ -167,7 +213,7 @@ export const OverviewPage: React.FC = () => {
                 type="text"
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
-                placeholder="Direct Sentinel: 'Investigate IP 198.51.100.42', 'Trace lateral exposure on bastion-01'..."
+                placeholder="Direct Sentinel: 'Investigate IP 198.51.100.42', 'Assess lateral exposure'..."
                 className="w-full bg-[#F0F1EB] border border-[#E3E5DC] hover:border-[#54765C]/60 focus:border-[#54765C] rounded-full px-5 py-3.5 pl-12 text-sm text-[#20251F] placeholder-[#969B91] focus:outline-none transition-all shadow-inner font-sans"
               />
               <Search className="w-5 h-5 text-[#969B91] absolute left-4 pointer-events-none" />
@@ -180,30 +226,9 @@ export const OverviewPage: React.FC = () => {
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
-
-            {/* Quick Directive Chips */}
-            <div className="flex items-center gap-2 flex-wrap pt-3 text-xs font-mono">
-              <span className="text-[#969B91] text-[10px] uppercase font-bold tracking-wider">
-                Directives:
-              </span>
-              {BRIEFING_DIRECTIVES.map((d, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => {
-                    setPromptInput(d.query);
-                    navigate('/investigator');
-                  }}
-                  className="px-3.5 py-1 rounded-full bg-[#FAFAF7] hover:bg-[#EAF0E6] text-[#20251F] border border-[#E3E5DC] hover:border-[#CFDCC9] transition-colors cursor-pointer text-xs flex items-center gap-1.5"
-                >
-                  <span className="text-[#54765C] font-bold">&gt;</span>
-                  <span>{d.label}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Clean 4-Phase Telemetry Pipeline Ribbon */}
+          {/* Clean 4-Phase Telemetry Pipeline Ribbon (REAL DATA ONLY) */}
           <div className="pt-6 border-t border-[#E3E5DC] grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* 1. OBSERVE */}
             <div 
@@ -214,13 +239,17 @@ export const OverviewPage: React.FC = () => {
                 <span>1. OBSERVE</span>
                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#547D70]" />
               </div>
-              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">8.42M</div>
-              <div className="text-xs text-[#73796F] mt-0.5">Telemetry Ingested (24h)</div>
+              <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
+                {overviewMetrics ? overviewMetrics.totalEvents.toLocaleString() : (isLoading ? '...' : '0')}
+              </div>
+              <div className="text-xs text-[#73796F] mt-0.5">
+                {overviewMetrics?.totalEvents === 0 ? 'No events ingested yet' : 'Telemetry Ingested (24h)'}
+              </div>
             </div>
 
             {/* 2. DETECT */}
             <div 
-              onClick={() => navigate('/threats')}
+              onClick={() => navigate('/detections')}
               className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
             >
               <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#B94C43] flex items-center justify-between uppercase">
@@ -228,17 +257,21 @@ export const OverviewPage: React.FC = () => {
                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#B94C43]" />
               </div>
               <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {detections.length} <span className="text-xs text-[#B94C43] font-normal">({criticalDetections.length} Critical)</span>
+                {overviewMetrics ? overviewMetrics.totalDetections : (isLoading ? '...' : '0')}
+                {overviewMetrics && overviewMetrics.criticalDetections > 0 && (
+                  <span className="text-xs text-[#B94C43] font-normal ml-1">
+                    ({overviewMetrics.criticalDetections} Critical)
+                  </span>
+                )}
               </div>
-              <div className="text-xs text-[#73796F] mt-0.5">Behavioral Detections</div>
+              <div className="text-xs text-[#73796F] mt-0.5">
+                {overviewMetrics?.totalDetections === 0 ? '0 Behavioral Detections' : 'Behavioral Detections'}
+              </div>
             </div>
 
             {/* 3. INVESTIGATE */}
             <div 
-              onClick={() => {
-                setSelectedIncidentId(primaryIncident.id);
-                navigate('/investigator');
-              }}
+              onClick={() => navigate('/incidents')}
               className="p-4 rounded-2xl hover:bg-[#F0F1EB] transition-colors cursor-pointer group"
             >
               <div className="text-[10px] font-mono font-bold tracking-[0.16em] text-[#C47A45] flex items-center justify-between uppercase">
@@ -246,9 +279,14 @@ export const OverviewPage: React.FC = () => {
                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#C47A45]" />
               </div>
               <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {activeIncidents.length} <span className="text-xs text-[#C47A45] font-normal">Active</span>
+                {overviewMetrics ? overviewMetrics.activeIncidents : (isLoading ? '...' : '0')}
+                <span className="text-xs text-[#C47A45] font-normal ml-1">
+                  {overviewMetrics?.activeIncidents === 0 ? 'Active (Clean)' : 'Active'}
+                </span>
               </div>
-              <div className="text-xs text-[#73796F] mt-0.5">Correlated Incidents</div>
+              <div className="text-xs text-[#73796F] mt-0.5">
+                {overviewMetrics?.activeIncidents === 0 ? 'No incidents detected' : 'Correlated Incidents'}
+              </div>
             </div>
 
             {/* 4. RESPOND */}
@@ -261,18 +299,21 @@ export const OverviewPage: React.FC = () => {
                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#64856C]" />
               </div>
               <div className="text-2xl font-mono font-bold text-[#20251F] mt-1">
-                {actions.length} <span className="text-xs text-[#64856C] font-normal">Verified</span>
+                {overviewMetrics ? overviewMetrics.totalActionsTaken : (isLoading ? '...' : '0')}
+                <span className="text-xs text-[#64856C] font-normal ml-1">Actions</span>
               </div>
-              <div className="text-xs text-[#73796F] mt-0.5">Sandbox Actions Taken</div>
+              <div className="text-xs text-[#73796F] mt-0.5">
+                {overviewMetrics?.totalActionsTaken === 0 ? 'No actions executed' : 'Defensive Actions Taken'}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. OPERATOR ACTION REQUIRED STRIP (Light Editorial)
+          2. OPERATOR ACTION REQUIRED STRIP (Real Pending Critical Action)
           ───────────────────────────────────────────────────────────── */}
-      {!dryRunConfirmed && (
+      {criticalIncident ? (
         <section className="bg-white border-l-4 border-l-[#C47A45] border-y border-r border-[#E3E5DC] rounded-r-3xl p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-origin-sm">
           <div className="space-y-1.5 max-w-3xl">
             <div className="flex items-center gap-2">
@@ -281,14 +322,14 @@ export const OverviewPage: React.FC = () => {
                 OPERATOR ACTION REQUIRED
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]">
-                CRITICAL ADVISORY
+                CRITICAL INCIDENT {criticalIncident.id}
               </span>
             </div>
             <h3 className="font-display text-xl sm:text-2xl text-[#20251F]">
-              Playbook Countermeasure Awaiting Dry-Run Simulation: <span className="text-[#C47A45]">PB-SSH-BRUTE-01</span>
+              {criticalIncident.title}
             </h3>
             <p className="text-sm text-[#73796F] leading-relaxed">
-              Target: <strong className="font-mono text-[#20251F]">198.51.100.42</strong> on <strong className="font-mono text-[#20251F]">bastion-01:22</strong>. Revoke unauthorized SSH session (PID 12436) and apply simulated ingress firewall rule.
+              Target: <strong className="font-mono text-[#20251F]">{criticalIncident.targetAccounts.join(', ') || 'N/A'}</strong> | Adversary: <strong className="font-mono text-[#B94C43]">{criticalIncident.sourceIps.join(', ') || 'Unknown'}</strong>. {criticalIncident.aiSummary?.executiveSummary}
             </p>
           </div>
 
@@ -297,22 +338,31 @@ export const OverviewPage: React.FC = () => {
               variant="primary"
               size="md"
               icon={<ShieldCheck className="w-4 h-4" />}
-              onClick={handleExecuteDryRun}
-              isLoading={isExecutingDryRun}
-            >
-              Simulate Action
-            </Button>
-            <Button
-              variant="secondary"
-              size="md"
               onClick={() => {
-                setSelectedIncidentId(primaryIncident.id);
+                setSelectedIncidentId(criticalIncident.id);
                 navigate('/investigator');
               }}
             >
-              Open Dossier
+              Investigate &amp; Contain
             </Button>
           </div>
+        </section>
+      ) : (
+        <section className="bg-white border border-[#E3E5DC] rounded-3xl p-5 px-6 flex items-center justify-between text-xs font-mono shadow-origin-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full bg-[#EAF0E6] flex items-center justify-center text-[#54765C]">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-bold text-[#20251F]">Autonomous Security Posture: Baseline Secure</span>
+              <p className="text-[#73796F] text-[11px] font-sans">
+                No active critical incidents requiring manual intervention. Automated correlation rules are active.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] uppercase font-bold text-[#54765C] bg-[#EAF0E6] px-3 py-1 rounded-full border border-[#CFDCC9]">
+            NOMINAL STATE
+          </span>
         </section>
       )}
 
@@ -324,7 +374,7 @@ export const OverviewPage: React.FC = () => {
         {/* Left Column (7 cols): Priority Incidents & Telemetry Stream */}
         <div className="lg:col-span-7 space-y-8">
           
-          {/* Priority Incidents Editorial Queue */}
+          {/* Priority Incidents Real Queue */}
           <section className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-origin-sm">
             <div className="p-6 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
               <div className="flex items-center gap-2">
@@ -342,46 +392,68 @@ export const OverviewPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="divide-y divide-[#E3E5DC]">
-              {incidents.slice(0, 3).map((incident) => (
-                <div 
-                  key={incident.id} 
-                  onClick={() => {
-                    setSelectedIncidentId(incident.id);
-                    navigate('/incidents');
-                  }}
-                  className="p-6 hover:bg-[#F0F1EB] transition-colors cursor-pointer space-y-3 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono font-bold text-[#54765C]">{incident.id}</span>
-                      <SeverityBadge severity={incident.severity} />
-                      <span className="text-[10px] font-mono text-[#969B91] uppercase">Risk: {incident.riskScore}/100</span>
-                    </div>
-                    <span className="text-xs font-mono text-[#969B91] flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{incident.createdAt.split('T')[1]?.replace('Z', ' UTC')}</span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-xl text-[#20251F] group-hover:text-[#54765C] transition-colors">
-                    {incident.title}
-                  </h3>
-
-                  <p className="text-sm text-[#73796F] leading-relaxed line-clamp-2">
-                    {incident.aiSummary.executiveSummary}
-                  </p>
-
-                  <div className="flex items-center gap-3 pt-1 text-xs font-mono text-[#73796F]">
-                    <span>Target: <strong className="text-[#20251F]">{incident.targetAccounts.join(', ')}</strong></span>
-                    <span>•</span>
-                    <span>Adversary: <strong className="text-[#B94C43]">{incident.sourceIps.join(', ')}</strong></span>
-                    <span>•</span>
-                    <span>Evidence: <strong className="text-[#20251F]">{incident.eventCount} evts</strong></span>
-                  </div>
+            {incidents.length === 0 ? (
+              <div className="p-10 text-center space-y-3 bg-white">
+                <div className="w-12 h-12 rounded-full bg-[#EAF0E6] text-[#54765C] mx-auto flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6" />
                 </div>
-              ))}
-            </div>
+                <h3 className="font-display text-lg text-[#20251F]">No incidents detected</h3>
+                <p className="text-sm text-[#73796F] max-w-md mx-auto">
+                  Sentinel AI is actively monitoring normalized telemetry. Correlated incidents will appear here when event clusters meet escalation thresholds.
+                </p>
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/events')}
+                    icon={<Radio className="w-3.5 h-3.5" />}
+                  >
+                    View Telemetry Stream
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E3E5DC]">
+                {incidents.slice(0, 3).map((incident) => (
+                  <div 
+                    key={incident.id} 
+                    onClick={() => {
+                      setSelectedIncidentId(incident.id);
+                      navigate('/incidents');
+                    }}
+                    className="p-6 hover:bg-[#F0F1EB] transition-colors cursor-pointer space-y-3 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-mono font-bold text-[#54765C]">{incident.id}</span>
+                        <SeverityBadge severity={incident.severity} />
+                        <span className="text-[10px] font-mono text-[#969B91] uppercase">Risk: {incident.riskScore}/100</span>
+                      </div>
+                      <span className="text-xs font-mono text-[#969B91] flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(incident.createdAt).toLocaleTimeString()}</span>
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-xl text-[#20251F] group-hover:text-[#54765C] transition-colors">
+                      {incident.title}
+                    </h3>
+
+                    <p className="text-sm text-[#73796F] leading-relaxed line-clamp-2">
+                      {incident.aiSummary?.executiveSummary || incident.detectionExplanation || 'No executive summary provided.'}
+                    </p>
+
+                    <div className="flex items-center gap-3 pt-1 text-xs font-mono text-[#73796F] flex-wrap">
+                      <span>Target: <strong className="text-[#20251F]">{incident.targetAccounts?.join(', ') || 'N/A'}</strong></span>
+                      <span>•</span>
+                      <span>Adversary: <strong className="text-[#B94C43]">{incident.sourceIps?.join(', ') || 'N/A'}</strong></span>
+                      <span>•</span>
+                      <span>Evidence: <strong className="text-[#20251F]">{incident.eventCount} evts</strong></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Live Normalized Event Stream */}
@@ -397,33 +469,55 @@ export const OverviewPage: React.FC = () => {
                 onClick={() => navigate('/events')}
                 className="text-xs font-mono font-semibold text-[#54765C] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>Stream View</span>
+                <span>Full Stream ({events.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="divide-y divide-[#E3E5DC] font-mono text-xs">
-              {events.slice(0, 6).map((evt) => (
-                <div key={evt.id} className="p-4 hover:bg-[#F0F1EB] transition-colors flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <OutcomeBadge outcome={evt.outcome} />
-                    <span className="text-[#969B91] text-[11px] shrink-0">
-                      {evt.timestamp.split('T')[1]?.replace('Z', '')}
-                    </span>
-                    <span className="text-[#20251F] font-semibold truncate">
-                      {evt.sourceIp} &rarr; {evt.destinationIp}:{evt.destinationPort}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2.5 shrink-0 text-[11px]">
-                    <span className="text-[#73796F]">user: <strong className="text-[#20251F]">{evt.username}</strong></span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#F0F1EB] border border-[#E3E5DC] text-[#73796F] text-[10px]">
-                      {evt.source}
-                    </span>
-                  </div>
+            {events.length === 0 ? (
+              <div className="p-10 text-center space-y-3 bg-white">
+                <div className="w-12 h-12 rounded-full bg-[#F0F1EB] text-[#73796F] mx-auto flex items-center justify-center">
+                  <Inbox className="w-6 h-6" />
                 </div>
-              ))}
-            </div>
+                <h3 className="font-display text-lg text-[#20251F]">Waiting for incoming telemetry</h3>
+                <p className="text-sm text-[#73796F] max-w-md mx-auto">
+                  No security events have been ingested yet. Send Syslog (RFC 5424), Windows Event Logs, or structured JSON to the ingestion endpoint.
+                </p>
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/integrations')}
+                    icon={<Server className="w-3.5 h-3.5" />}
+                  >
+                    Configure Ingestion Sources
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E3E5DC] font-mono text-xs">
+                {events.slice(0, 6).map((evt) => (
+                  <div key={evt.id} className="p-4 hover:bg-[#F0F1EB] transition-colors flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <OutcomeBadge outcome={evt.outcome} />
+                      <span className="text-[#969B91] text-[11px] shrink-0">
+                        {evt.timestamp ? new Date(evt.timestamp).toLocaleTimeString() : ''}
+                      </span>
+                      <span className="text-[#20251F] font-semibold truncate">
+                        {evt.sourceIp} &rarr; {evt.destinationIp}:{evt.destinationPort}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0 text-[11px]">
+                      <span className="text-[#73796F]">user: <strong className="text-[#20251F]">{evt.username}</strong></span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#F0F1EB] border border-[#E3E5DC] text-[#73796F] text-[10px]">
+                        {evt.source}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
         </div>
@@ -441,52 +535,67 @@ export const OverviewPage: React.FC = () => {
                 </h2>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EAF0E6] text-[#54765C] border border-[#CFDCC9] uppercase">
-                ACTIVE SYNTHESIS
+                {primaryIncident ? 'ACTIVE SYNTHESIS' : 'IDLE'}
               </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[#54765C] font-bold">
-                Active Hypothesis &bull; 98% Evidence Confidence
-              </div>
-              <h3 className="font-display text-xl text-[#20251F] leading-snug">
-                Credential Exhaustion to Shell Acquisition on Bastion DMZ
-              </h3>
-              <p className="text-sm text-[#73796F] leading-relaxed">
-                Sentinel AI correlated 35 consecutive SSH rejection events with a key-based login from 198.51.100.42 within a 4-second convergence window.
-              </p>
-            </div>
+            {primaryIncident ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#54765C] font-bold">
+                    Case {primaryIncident.id} &bull; {primaryIncident.confidenceScore}% Confidence
+                  </div>
+                  <h3 className="font-display text-xl text-[#20251F] leading-snug">
+                    {primaryIncident.title}
+                  </h3>
+                  <p className="text-sm text-[#73796F] leading-relaxed">
+                    {primaryIncident.aiSummary?.rootCauseAnalysis || primaryIncident.detectionExplanation || 'Continuous analysis active.'}
+                  </p>
+                </div>
 
-            {/* Confirmed Evidence vs AI Hypothesis distinction */}
-            <div className="space-y-2.5 pt-2 border-t border-[#E3E5DC] text-xs font-mono">
-              <div className="text-[10px] text-[#969B91] uppercase tracking-wider font-bold">
-                Confirmed Telemetry Evidence:
-              </div>
-              <div className="space-y-1.5 text-[11px]">
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                  <span className="text-[#73796F]">Source Adversary:</span>
-                  <span className="text-[#B94C43] font-bold">198.51.100.42 (AS64496)</span>
+                <div className="space-y-2.5 pt-2 border-t border-[#E3E5DC] text-xs font-mono">
+                  <div className="text-[10px] text-[#969B91] uppercase tracking-wider font-bold">
+                    Confirmed Telemetry Evidence:
+                  </div>
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                      <span className="text-[#73796F]">Source Adversary:</span>
+                      <span className="text-[#B94C43] font-bold">{primaryIncident.sourceIps?.join(', ') || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                      <span className="text-[#73796F]">Target Accounts:</span>
+                      <span className="text-[#20251F] font-bold">{primaryIncident.targetAccounts?.join(', ') || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                      <span className="text-[#73796F]">Correlated Events:</span>
+                      <span className="text-[#20251F] font-bold">{primaryIncident.eventCount} events</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                  <span className="text-[#73796F]">Target Asset:</span>
-                  <span className="text-[#20251F] font-bold">bastion-01 (10.240.10.15:22)</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAFAF7] border border-[#E3E5DC]">
-                  <span className="text-[#73796F]">Velocity Trigger:</span>
-                  <span className="text-[#20251F] font-bold">0.38 attempts/sec</span>
-                </div>
-              </div>
-            </div>
 
-            <Button
-              variant="secondary"
-              size="md"
-              className="w-full"
-              onClick={() => navigate('/investigator')}
-              icon={<Search className="w-4 h-4" />}
-            >
-              Open Investigation Workspace
-            </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedIncidentId(primaryIncident.id);
+                    navigate('/investigator');
+                  }}
+                  icon={<Search className="w-4 h-4" />}
+                >
+                  Open Investigation Dossier
+                </Button>
+              </div>
+            ) : (
+              <div className="py-6 text-center space-y-2 text-[#73796F]">
+                <p className="text-sm">
+                  Autonomous Reasoning Standby. No active incidents require analytical synthesis.
+                </p>
+                <p className="text-xs text-[#969B91]">
+                  AI hypotheses and root-cause analysis will automatically construct upon threat detection.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Telemetry Sensor Forwarder Matrix */}
@@ -499,40 +608,48 @@ export const OverviewPage: React.FC = () => {
                 </h2>
               </div>
               <span className="text-[10px] font-mono text-[#54765C] font-bold uppercase tracking-wider">
-                {backendHealth === 'HEALTHY' ? 'SYSTEM 100% HEALTHY' : 'CONNECTING...'}
+                {overviewMetrics?.systemHealth.databaseConnected ? 'SYSTEM ONLINE' : 'DISCONNECTED'}
               </span>
             </div>
 
-            <div className="space-y-2.5">
-              {logSources.map((source) => (
-                <div 
-                  key={source.id} 
-                  className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] flex items-center justify-between text-xs font-mono"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-[#54765C]" />
-                    <div>
-                      <div className="text-[#20251F] font-bold text-xs">{source.name}</div>
-                      <div className="text-[10px] text-[#969B91]">{source.host}:{source.port}</div>
+            {logSources.length === 0 ? (
+              <div className="py-6 text-center text-xs text-[#969B91]">
+                No ingestion sensors configured yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {logSources.map((source) => (
+                  <div 
+                    key={source.id} 
+                    className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] flex items-center justify-between text-xs font-mono"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className={`w-2 h-2 rounded-full ${source.status === 'active' ? 'bg-[#54765C]' : 'bg-[#B94C43]'}`} />
+                      <div>
+                        <div className="text-[#20251F] font-bold text-xs">{source.name}</div>
+                        <div className="text-[10px] text-[#969B91]">{source.host}:{source.port}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[#20251F] text-xs font-bold">
+                        {source.eventsProcessed24h.toLocaleString()} evts
+                      </div>
+                      <div className="text-[9px] text-[#54765C] font-bold uppercase">
+                        {source.status.toUpperCase()}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[#20251F] text-xs font-bold">
-                      {source.eventsProcessed24h.toLocaleString()} evts
-                    </div>
-                    <div className="text-[9px] text-[#54765C] font-bold uppercase">ONLINE</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <Button
               variant="outline"
               size="sm"
               className="w-full text-xs font-mono"
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate('/integrations')}
             >
-              Configure Sensor Thresholds
+              Configure Sensor Forwarders
             </Button>
           </section>
 
