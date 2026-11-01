@@ -5,13 +5,15 @@ import {
   Bell, 
   X,
   Radio,
-  Menu
+  Menu,
+  Sparkles
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
+import { useChatStore } from '@/stores/useChatStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, string> = {
-  '/': 'Copilot',
+  '/': 'Overview',
   '/copilot': 'Copilot',
   '/response': 'Response',
   '/audit': 'Audit Trail',
@@ -27,8 +29,9 @@ export const TopNav: React.FC = () => {
     dismissNotification, 
     toggleMobileSidebar
   } = useSecurityStore();
+  const { setSideDrawerOpen } = useChatStore();
 
-  const title = routeTitleMap[location.pathname] || 'Copilot';
+  const title = routeTitleMap[location.pathname] || 'Overview';
 
   return (
     <>
@@ -65,6 +68,18 @@ export const TopNav: React.FC = () => {
 
         {/* Right Tools */}
         <div className="flex items-center gap-2">
+          {/* Quick Copilot Side Drawer Trigger */}
+          {location.pathname !== '/copilot' && (
+            <button
+              onClick={() => setSideDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#111417] hover:bg-[#1E4BD8] text-white transition-all cursor-pointer shadow-xs"
+              title="Open Copilot Assistant"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#A7C1FF]" />
+              <span className="hidden sm:inline">Copilot</span>
+            </button>
+          )}
+
           {/* Status Indicator */}
           <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-[#1E824C] bg-[#EDF7F1] border border-[#C6E8D5]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#1E824C]" />

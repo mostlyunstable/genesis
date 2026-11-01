@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
+import { LandingPage } from '@/features/landing/LandingPage';
 import { SecurityCopilotPage } from '@/features/copilot/SecurityCopilotPage';
 import { AutonomousResponsePage } from '@/features/response/AutonomousResponsePage';
 import { AuditTrailPage } from '@/features/audit/AuditTrailPage';
@@ -13,7 +14,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <SecurityCopilotPage />
+        element: <LandingPage />
       },
       {
         path: 'copilot',
@@ -31,10 +32,10 @@ export const router = createBrowserRouter([
         path: 'settings',
         element: <SettingsPage />
       },
-      // Redirect legacy paths to Copilot or Response
+      // Redirect legacy paths to Landing Page
       {
         path: '*',
-        element: <Navigate to="/copilot" replace />
+        element: <Navigate to="/" replace />
       }
     ]
   }

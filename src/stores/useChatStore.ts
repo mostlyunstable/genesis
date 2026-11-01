@@ -27,6 +27,8 @@ interface ChatState {
   suggestedActions: SuggestedAction[];
   selectedEvidence: EvidenceReference | null;
   isEvidencePanelOpen: boolean;
+  isSideDrawerOpen: boolean;
+  pendingDrawerPrompt: string | null;
   searchQuery: string;
   error: string | null;
   abortController: AbortController | null;
@@ -46,6 +48,8 @@ interface ChatState {
   confirmAction: (action: SuggestedAction, confirmed: boolean) => Promise<void>;
   setSelectedEvidence: (ev: EvidenceReference | null) => void;
   setEvidencePanelOpen: (open: boolean) => void;
+  setSideDrawerOpen: (open: boolean) => void;
+  setPendingDrawerPrompt: (prompt: string | null) => void;
   setSearchQuery: (query: string) => void;
   clearError: () => void;
 }
@@ -67,6 +71,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   suggestedActions: [],
   selectedEvidence: null,
   isEvidencePanelOpen: false,
+  isSideDrawerOpen: false,
+  pendingDrawerPrompt: null,
   searchQuery: '',
   error: null,
   abortController: null,
@@ -415,6 +421,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setEvidencePanelOpen: (open: boolean) => {
     set({ isEvidencePanelOpen: open });
+  },
+
+  setSideDrawerOpen: (open: boolean) => {
+    set({ isSideDrawerOpen: open });
+  },
+
+  setPendingDrawerPrompt: (prompt: string | null) => {
+    set({ pendingDrawerPrompt: prompt });
   },
 
   setSearchQuery: (query: string) => {

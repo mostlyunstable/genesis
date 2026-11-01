@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
+  Compass,
   ShieldCheck, 
   FileText, 
   Settings, 
@@ -28,8 +29,9 @@ export const Sidebar: React.FC = () => {
   } = useSecurityStore();
   const location = useLocation();
 
-  // Exactly the 4 items requested: Copilot, Response, Audit Trail, Settings
+  // Navigation Items: Overview (Landing), Copilot, Response, Audit Trail, Settings
   const navItems: NavItem[] = [
+    { name: 'Overview', path: '/', id: 'overview', icon: Compass },
     { name: 'Copilot', path: '/copilot', id: 'copilot', icon: Sparkles },
     { name: 'Response', path: '/response', id: 'response', icon: ShieldCheck },
     { name: 'Audit Trail', path: '/audit', id: 'audit', icon: FileText },
@@ -58,7 +60,7 @@ export const Sidebar: React.FC = () => {
         {/* Brand Header */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-[#E2E4DC] shrink-0">
           <NavLink 
-            to="/copilot" 
+            to="/" 
             onClick={() => setMobileSidebarOpen(false)}
             className="flex items-center gap-2 group overflow-hidden"
           >
@@ -92,8 +94,8 @@ export const Sidebar: React.FC = () => {
         <nav className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = item.path === '/copilot'
-              ? location.pathname === '/' || location.pathname.startsWith('/copilot')
+            const isActive = item.path === '/'
+              ? location.pathname === '/'
               : location.pathname.startsWith(item.path);
 
             return (
