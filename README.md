@@ -386,8 +386,8 @@ Base URL: `http://localhost:8000/api/v1` (Swagger documentation at `http://local
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/mayank-kumar/genysis.git
-cd genysis
+git clone https://github.com/mostlyunstable/genesis.git
+cd genesis
 ```
 
 ### Step 2: Set Up Backend
@@ -406,7 +406,7 @@ pip install -r requirements.txt
 # Start FastAPI backend (SQLite WAL development mode)
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*The backend automatically initializes `sentinel.db`, seeds the default analyst user, and launches at `http://localhost:8000`.*
+*The backend automatically initializes `genesis.db` (or `sentinel.db`), seeds the default analyst user, and launches at `http://localhost:8000`.*
 
 ### Step 3: Set Up Frontend
 In a new terminal window:
@@ -420,8 +420,8 @@ npm run dev
 *The frontend development server launches at `http://localhost:5173`.*
 
 ### Default Development Credentials
-- **Username**: `secops_analyst@sentinel.ai`
-- **Password**: `sentinel_secops_2026!`
+- **Primary Genesis AI Account**: `secops_analyst@genesis.ai` (Password: `genesis_secops_2026!`)
+- **Compatibility Account**: `secops_analyst@sentinel.ai` (Password: `sentinel_secops_2026!`)
 - **Forwarder Ingestion Key**: `sentinel_fwd_live_9942a8b9e1`
 
 ---

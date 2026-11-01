@@ -20,12 +20,25 @@ async def init_db() -> None:
 
     async with async_session_factory() as session:
         # 1. Seed Default Analyst User
-        res_user = await session.execute(select(User).where(User.username == "secops_analyst@sentinel.ai"))
+        res_user = await session.execute(select(User).where(User.username == "secops_analyst@genesis.ai"))
         if not res_user.scalar_one_or_none():
+            genesis_user = User(
+                id="USR-000",
+                username="secops_analyst@genesis.ai",
+                full_name="SecOps Lead Analyst",
+                hashed_password=get_password_hash("genesis_secops_2026!"),
+                role="admin",
+                is_active=True,
+                created_at=datetime.now(timezone.utc)
+            )
+            session.add(genesis_user)
+
+        res_user_compat = await session.execute(select(User).where(User.username == "secops_analyst@sentinel.ai"))
+        if not res_user_compat.scalar_one_or_none():
             admin_user = User(
                 id="USR-001",
                 username="secops_analyst@sentinel.ai",
-                full_name="SecOps Lead Analyst",
+                full_name="SecOps Lead Analyst (Legacy)",
                 hashed_password=get_password_hash("sentinel_secops_2026!"),
                 role="admin",
                 is_active=True,

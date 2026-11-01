@@ -416,19 +416,19 @@ export const CopilotSideDrawer: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-[11px]">
             <button
               onClick={() => handleSend("Summarize current threat posture")}
-              className="px-2 py-0.5 rounded-md bg-[#F0F1EA] hover:bg-[#E2E4DC] text-[#5C645B] hover:text-[#111417] whitespace-nowrap transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-md bg-white hover:bg-[#F0F1EA] text-[#111417] font-semibold border border-[#D5D9CE] hover:border-[#111417] whitespace-nowrap transition-colors cursor-pointer shadow-2xs"
             >
               Security Posture
             </button>
             <button
               onClick={() => handleSend("Explain brute force mitigation")}
-              className="px-2 py-0.5 rounded-md bg-[#F0F1EA] hover:bg-[#E2E4DC] text-[#5C645B] hover:text-[#111417] whitespace-nowrap transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-md bg-white hover:bg-[#F0F1EA] text-[#111417] font-semibold border border-[#D5D9CE] hover:border-[#111417] whitespace-nowrap transition-colors cursor-pointer shadow-2xs"
             >
               Defense Strategy
             </button>
             <button
               onClick={() => handleSend("Check response playbooks")}
-              className="px-2 py-0.5 rounded-md bg-[#F0F1EA] hover:bg-[#E2E4DC] text-[#5C645B] hover:text-[#111417] whitespace-nowrap transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-md bg-white hover:bg-[#F0F1EA] text-[#111417] font-semibold border border-[#D5D9CE] hover:border-[#111417] whitespace-nowrap transition-colors cursor-pointer shadow-2xs"
             >
               SOAR Status
             </button>
