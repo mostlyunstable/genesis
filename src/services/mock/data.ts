@@ -331,7 +331,7 @@ export const INITIAL_INCIDENTS: Incident[] = [
       }
     ],
     aiSummary: {
-      executiveSummary: 'CRITICAL ALERT: Genysis Bot correlated 35 high-frequency SSH password rejections followed within 4.0 seconds by an accepted authentication on host bastion-01 from external IP 198.51.100.42. Account "deploy" possesses sudoer privileges. Immediate host session termination and IP isolation recommended.',
+      executiveSummary: 'CRITICAL ALERT: Sentinel AI correlated 35 high-frequency SSH password rejections followed within 4.0 seconds by an accepted authentication on host bastion-01 from external IP 198.51.100.42. Account "deploy" possesses sudoer privileges. Immediate host session termination and IP isolation recommended.',
       evidenceChain: [
         'EVT-2026-SSH-001 to EVT-2026-SSH-035: Rapid failed attempts against multiple administrative accounts from 198.51.100.42.',
         'EVT-2026-SSH-036: Successful password authentication accepted for user "deploy" from identical source IP port 41236.',

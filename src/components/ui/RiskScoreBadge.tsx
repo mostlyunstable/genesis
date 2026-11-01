@@ -11,17 +11,17 @@ export const RiskScoreBadge: React.FC<RiskScoreBadgeProps> = ({
   size = 'md',
   showLabel = true
 }) => {
-  let colorStyle = 'text-[#10B981] bg-[#10B981]/15 border-[#10B981]/30';
+  let colorStyle = 'text-[#547D70] bg-[#EDF3F1] border-[#DCE8E5]';
   let level = 'LOW';
 
   if (score >= 80) {
-    colorStyle = 'text-[#EF4444] bg-[#EF4444]/15 border-[#EF4444]/30';
+    colorStyle = 'text-[#B94C43] bg-[#F9ECEB] border-[#F2D5D3]';
     level = 'CRITICAL';
   } else if (score >= 60) {
-    colorStyle = 'text-[#FF5722] bg-[#FF5722]/15 border-[#FF5722]/30';
+    colorStyle = 'text-[#C47A45] bg-[#FAF2EC] border-[#F4E2D5]';
     level = 'HIGH';
   } else if (score >= 40) {
-    colorStyle = 'text-[#38BDF8] bg-[#0066FF]/15 border-[#0066FF]/30';
+    colorStyle = 'text-[#B28A42] bg-[#FAF5EB] border-[#F4ECD5]';
     level = 'MEDIUM';
   }
 
@@ -34,7 +34,7 @@ export const RiskScoreBadge: React.FC<RiskScoreBadgeProps> = ({
   return (
     <div className={`inline-flex items-center gap-1.5 rounded-full border font-mono ${colorStyle} ${sizeClasses[size]}`}>
       <span className="font-bold">{score}</span>
-      <span className="text-[10px] opacity-60">/100</span>
+      <span className="text-[10px] opacity-70">/100</span>
       {showLabel && (
         <span className="text-[10px] uppercase font-bold pl-1 border-l border-current/20">
           {level}

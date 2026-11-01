@@ -79,58 +79,60 @@ export const MitreMatrixPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-16">
-      {/* Header */}
-      <section className="bg-[#FFFEFA] dark:bg-[#1B3532] border border-[#D9D9CE] dark:border-[#294640] rounded p-5 shadow-forensic-sm transition-colors">
-        <div className="space-y-1">
+    <div className="space-y-8 max-w-7xl mx-auto font-sans pb-16">
+      
+      {/* Editorial Header */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#26796C] dark:text-[#C6D36C] flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#54765C]" />
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C] flex items-center gap-1.5">
               <Grid className="w-3.5 h-3.5" />
               MITRE ATT&amp;CK FOR ENTERPRISE MATRIX
             </span>
-            <span className="text-[#BCBCAC] dark:text-[#294640]">•</span>
-            <span className="text-[10px] font-mono text-[#69746D] dark:text-[#A3B1AB]">
-              CORRELATED ADVERSARY TACTICS
+            <span className="text-[#CFD4C9]">•</span>
+            <span className="text-[10px] font-mono text-[#73796F]">
+              MAPPED THREAT TACTICS &amp; TECHNIQUES
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#192622] dark:text-[#F2F0E8] tracking-tight">
-            MITRE ATT&amp;CK Threat Matrix
+          <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
+            Adversary Tactic Matrix
           </h1>
-          <p className="text-xs text-[#69746D] dark:text-[#A3B1AB]">
-            Active techniques correlated across incoming telemetry streams, identified brute-force indicators, and active incidents.
+          <p className="text-sm text-[#73796F] font-sans max-w-2xl leading-relaxed">
+            Active adversarial techniques correlated across telemetry streams, heuristic velocity models, and active incidents.
           </p>
         </div>
       </section>
 
       {/* MITRE Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start">
         {MITRE_MATRIX.map((col) => (
           <div 
             key={col.tacticId}
-            className="bg-[#FFFEFA] dark:bg-[#1B3532] border border-[#D9D9CE] dark:border-[#294640] rounded p-3 shadow-forensic-sm space-y-2 text-xs font-mono"
+            className="bg-white border border-[#E3E5DC] rounded-3xl p-4 shadow-origin-sm space-y-3 text-xs font-mono"
           >
-            <div className="border-b border-[#D9D9CE] dark:border-[#294640] pb-2">
-              <span className="text-[9px] text-[#69746D] dark:text-[#A3B1AB] uppercase block">{col.tacticId}</span>
-              <span className="text-xs font-bold text-[#192622] dark:text-white block font-sans">{col.tactic}</span>
+            <div className="border-b border-[#E3E5DC] pb-3">
+              <span className="text-[10px] text-[#54765C] uppercase font-bold block">{col.tacticId}</span>
+              <span className="text-sm font-bold text-[#20251F] block font-sans mt-0.5">{col.tactic}</span>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {col.techniques.map((t) => (
                 <div
                   key={t.id}
-                  className={`p-2 rounded border text-[11px] ${
+                  className={`p-3 rounded-2xl border transition-all text-[11px] ${
                     t.active
-                      ? 'bg-[#E87950]/10 border-[#E87950]/40 text-[#192622] dark:text-white'
-                      : 'bg-[#F2F0E8] dark:bg-[#142C29] border-[#D9D9CE] dark:border-[#294640] text-[#69746D] dark:text-[#A3B1AB] opacity-70'
+                      ? 'bg-[#EAF0E6] border-[#CFDCC9] text-[#20251F] shadow-sm'
+                      : 'bg-[#FAFAF7] border-[#E3E5DC] text-[#969B91] opacity-75'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#E87950]">{t.id}</span>
+                    <span className="font-bold text-[#54765C]">{t.id}</span>
                     {t.active && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#E87950] animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-[#54765C] animate-pulse" />
                     )}
                   </div>
-                  <div className="text-[10px] mt-0.5 leading-tight font-sans font-medium">{t.name}</div>
+                  <div className="text-[11px] mt-1 leading-snug font-sans font-medium text-[#20251F]">{t.name}</div>
                 </div>
               ))}
             </div>

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { Button } from '@/components/ui/Button';
-import { Input, Select } from '@/components/ui/Input';
 
 export const AuditTrailPage: React.FC = () => {
   const { auditRecords, addNotification } = useSecurityStore();
@@ -64,47 +63,61 @@ export const AuditTrailPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto font-sans">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E2638]">
-        <div>
-          <div className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#3B82F6] uppercase mb-1">
-            IMMUTABLE VERIFICATION LEDGER
+    <div className="space-y-8 max-w-6xl mx-auto font-sans pb-16">
+      
+      {/* Editorial Header */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#54765C] uppercase">
+                IMMUTABLE VERIFICATION LEDGER
+              </span>
+              <span className="text-[#CFD4C9]">•</span>
+              <span className="text-[10px] font-mono text-[#73796F]">
+                CRYPTOGRAPHIC SIGNATURES
+              </span>
+            </div>
+            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
+              Audit Trail
+            </h1>
+            <p className="text-sm text-[#73796F] font-sans max-w-2xl leading-relaxed">
+              Cryptographically verified ledger of detections, policy evaluations, and countermeasure executions.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
-            Audit Trail
-          </h2>
-          <p className="text-sm text-[#94A3B8] font-sans mt-0.5">
-            Cryptographically timestamped record of detections, policy evaluations, and countermeasure executions.
-          </p>
-        </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          icon={<Download className="w-3.5 h-3.5" />}
-          onClick={handleExportJson}
-        >
-          Export Ledger (JSON)
-        </Button>
-      </div>
+          <Button
+            variant="outline"
+            size="md"
+            icon={<Download className="w-3.5 h-3.5" />}
+            onClick={handleExportJson}
+          >
+            Export Ledger (JSON)
+          </Button>
+        </div>
+      </section>
 
       {/* Filter Toolbar */}
-      <div className="bg-[#0E131F] border border-[#1E2638] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 font-sans text-xs">
+      <div className="bg-white border border-[#E3E5DC] rounded-3xl p-4 sm:p-5 shadow-origin-sm flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs">
         <div className="w-full sm:w-80">
-          <Input
-            icon={<Search className="w-3.5 h-3.5" />}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search action, actor, target or audit ID..."
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search action, actor, target or audit ID..."
+              className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 pl-10 text-xs font-mono text-[#20251F] placeholder-[#969B91] focus:outline-none focus:border-[#54765C]"
+            />
+            <Search className="w-4 h-4 text-[#969B91] absolute left-3.5 top-3 pointer-events-none" />
+          </div>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Select
+          <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full sm:w-56"
+            className="w-full sm:w-56 bg-[#F0F1EB] border border-[#E3E5DC] text-[#20251F] px-4 py-2.5 rounded-full text-xs font-mono focus:outline-none focus:border-[#54765C]"
           >
             <option value="all">All Audit Categories</option>
             <option value="DETECTION">Detections</option>
@@ -112,14 +125,14 @@ export const AuditTrailPage: React.FC = () => {
             <option value="POLICY_DECISION">Policy Decisions</option>
             <option value="RESPONSE_EXECUTION">Response Executions</option>
             <option value="CONFIG_CHANGE">Configuration Changes</option>
-          </Select>
+          </select>
         </div>
       </div>
 
       {/* Audit Record Stream */}
-      <div className="bg-[#0E131F] border border-[#1E2638] rounded-2xl shadow-sm overflow-hidden divide-y divide-[#1E2638]">
+      <div className="bg-white border border-[#E3E5DC] rounded-3xl shadow-origin-sm overflow-hidden divide-y divide-[#E3E5DC]">
         {filteredRecords.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#94A3B8] font-mono">
+          <div className="p-12 text-center text-xs text-[#969B91] font-mono">
             No audit records match filter criteria.
           </div>
         ) : (
@@ -130,44 +143,44 @@ export const AuditTrailPage: React.FC = () => {
               <div
                 key={rec.id}
                 onClick={() => setExpandedId(isExpanded ? null : rec.id)}
-                className="hover:bg-[#121722] transition-colors cursor-pointer"
+                className="hover:bg-[#F0F1EB] transition-colors cursor-pointer"
               >
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
                   <div className="flex items-center gap-3 font-mono">
-                    <span className="text-[#3B82F6] font-semibold text-[11px] whitespace-nowrap">
+                    <span className="text-[#54765C] font-bold text-[11px] whitespace-nowrap">
                       {new Date(rec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141C2B] text-[#94A3B8] border border-[#1E2638]">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F0F1EB] text-[#73796F] border border-[#E3E5DC]">
                       {rec.category}
                     </span>
-                    <span className="font-bold text-white font-sans">{rec.action}</span>
+                    <span className="font-bold text-[#20251F] font-sans text-sm">{rec.action}</span>
                   </div>
 
                   <div className="flex items-center gap-4 text-xs font-mono justify-between sm:justify-end">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#64748B]">actor:</span>
-                      <span className="text-white font-semibold">{rec.actor}</span>
-                      <span className="text-[#64748B]">target:</span>
-                      <span className="text-[#F97316] font-semibold">{rec.target}</span>
+                      <span className="text-[#969B91]">actor:</span>
+                      <span className="text-[#20251F] font-semibold">{rec.actor}</span>
+                      <span className="text-[#969B91]">target:</span>
+                      <span className="text-[#54765C] font-semibold">{rec.target}</span>
                     </div>
 
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      rec.result === 'SUCCESS' ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30' :
-                      rec.result === 'WARNING' ? 'bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30' :
-                      'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30'
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      rec.result === 'SUCCESS' ? 'bg-[#EDF3EF] text-[#64856C] border border-[#DBE7DF]' :
+                      rec.result === 'WARNING' ? 'bg-[#FAF5EB] text-[#B28A42] border border-[#F4ECD5]' :
+                      'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]'
                     }`}>
                       {rec.result}
                     </span>
 
-                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-white" /> : <ChevronDown className="w-3.5 h-3.5 text-[#64748B]" />}
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-[#20251F]" /> : <ChevronDown className="w-4 h-4 text-[#969B91]" />}
                   </div>
                 </div>
 
                 {/* Expandable JSON Payload Drawer */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 pt-2 bg-[#090C12] border-t border-[#1E2638] text-xs font-mono space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-1">
-                      <span className="text-[#3B82F6] font-bold tracking-wider text-[11px]">
+                  <div className="px-6 pb-6 pt-2 bg-[#FAFAF7] border-t border-[#E3E5DC] text-xs font-mono space-y-3">
+                    <div className="flex items-center justify-between text-xs text-[#73796F] pt-2">
+                      <span className="text-[#54765C] font-bold tracking-wider text-[11px]">
                         AUDIT ATTRIBUTE SIGNATURE [{rec.id}]
                       </span>
                       <button
@@ -175,14 +188,14 @@ export const AuditTrailPage: React.FC = () => {
                           e.stopPropagation();
                           handleCopyPayload(rec.details, rec.id);
                         }}
-                        className="text-[#F97316] hover:underline flex items-center gap-1.5 cursor-pointer font-bold text-xs"
+                        className="text-[#54765C] hover:underline flex items-center gap-1.5 cursor-pointer font-bold text-xs"
                       >
-                        {copiedId === rec.id ? <Check className="w-3 h-3 text-[#10B981]" /> : <Copy className="w-3 h-3 text-[#64748B]" />}
+                        {copiedId === rec.id ? <Check className="w-3.5 h-3.5 text-[#64856C]" /> : <Copy className="w-3.5 h-3.5 text-[#969B91]" />}
                         Copy Record JSON
                       </button>
                     </div>
 
-                    <pre className="p-4 bg-[#07090E] rounded-xl border border-[#1E2638] text-slate-200 text-xs leading-relaxed overflow-x-auto">
+                    <pre className="p-4 bg-white rounded-2xl border border-[#E3E5DC] text-[#20251F] text-xs leading-relaxed overflow-x-auto shadow-inner">
                       {JSON.stringify(rec.details, null, 2)}
                     </pre>
                   </div>

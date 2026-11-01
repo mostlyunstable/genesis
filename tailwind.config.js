@@ -8,45 +8,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Forensic Intelligence Core Palette
-        canvas: 'var(--canvas)',
-        surface: {
-          DEFAULT: 'var(--surface)',
-          muted: 'var(--surface-muted)',
-          elevated: 'var(--surface-elevated)'
+        sentinel: {
+          bg: '#F7F7F2',
+          surface: '#FFFFFF',
+          'surface-secondary': '#F0F1EB',
+          'surface-elevated': '#FAFAF7',
+          'surface-sunken': '#F0F1EB',
+          text: '#20251F',
+          'text-secondary': '#73796F',
+          'text-muted': '#969B91',
+          accent: '#54765C',
+          'accent-hover': '#436049',
+          'accent-secondary': '#A1B69A',
+          'accent-subtle': '#EAF0E6',
+          border: '#E3E5DC',
+          'border-strong': '#CFD4C9',
+          focus: '#91A78B',
+          critical: '#B94C43',
+          high: '#C47A45',
+          medium: '#B28A42',
+          low: '#547D70',
+          resolved: '#64856C',
         },
-        ink: {
-          primary: 'var(--primary-ink)',
-          secondary: 'var(--secondary-ink)'
-        },
-        forest: {
-          deep: '#142C29',
-          elevated: '#203A35',
-          subtle: '#294640'
-        },
-        signal: {
-          teal: '#26796C',
-          orange: '#E87950',
-          lime: '#C6D36C'
-        },
-        semantic: {
-          critical: 'var(--semantic-critical)',
-          high: 'var(--semantic-high)',
-          medium: 'var(--semantic-medium)',
-          low: 'var(--semantic-low)',
-          info: 'var(--semantic-info)',
-          resolved: 'var(--semantic-resolved)'
+        origin: {
+          bg: 'var(--color-bg)',
+          surface: 'var(--color-surface)',
+          'surface-elevated': 'var(--color-surface-elevated)',
+          'surface-sunken': 'var(--color-surface-sunken)',
+          text: 'var(--color-text)',
+          'text-muted': 'var(--color-text-muted)',
+          divider: 'var(--color-divider)',
+          accent: 'var(--color-accent)',
+          'accent-hover': 'var(--color-accent-hover)',
+          critical: 'var(--color-status-critical)',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'IBM Plex Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+        display: ['Caprasimo', 'serif'],
+        heading: ['Caprasimo', 'serif'],
+        sans: ['Figtree', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+      },
+      borderRadius: {
+        'xl': '14px',
+        '2xl': '20px',
+        '3xl': '24px',
+        'full': '9999px',
       },
       boxShadow: {
-        'forensic-sm': '0 1px 2px rgba(25, 38, 34, 0.05)',
-        'forensic-md': '0 4px 12px rgba(25, 38, 34, 0.08)',
-        'forensic-lg': '0 12px 32px rgba(25, 38, 34, 0.12)',
-        'theatre-md': '0 4px 20px rgba(11, 25, 23, 0.4)'
+        'origin-sm': '0 1px 3px rgba(32, 37, 31, 0.04), 0 1px 2px rgba(32, 37, 31, 0.02)',
+        'origin-md': '0 4px 14px rgba(32, 37, 31, 0.06)',
+        'origin-lg': '0 12px 32px rgba(32, 37, 31, 0.08)',
       }
     },
   },

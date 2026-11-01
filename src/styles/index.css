@@ -3,37 +3,53 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Strict Charcoal & Obsidian Monochromatic Palette */
-    --canvas-base: #08090D;
-    --canvas-shell: #0C0E14;
-    --surface-main: #10131B;
-    --surface-elevated: #161B26;
-    --surface-sunken: #07080B;
+  :root, .light {
+    /* SENTINEL AI Light-First Design System Foundation */
+    --color-bg: #F7F7F2;
+    --color-surface: #FFFFFF;
+    --color-surface-secondary: #F0F1EB;
+    --color-surface-elevated: #FAFAF7;
+    --color-surface-sunken: #F0F1EB;
     
-    /* Hairline Precise Borders */
-    --border-subtle: #1C2230;
-    --border-strong: #2A3347;
-    --border-active: #3B82F6;
-
-    /* Typographic Hierarchy */
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
-    --text-muted: #64748B;
-    --text-disabled: #475569;
-
-    /* Signal Colors (Strictly Functional) */
-    --signal-critical: #EF4444;
-    --signal-action: #F97316;
-    --signal-telemetry: #38BDF8;
-    --signal-verified: #10B981;
-    --signal-warning: #F59E0B;
+    --color-text: #20251F;
+    --color-text-secondary: #73796F;
+    --color-text-muted: #969B91;
+    
+    --color-accent: #54765C;
+    --color-accent-hover: #436049;
+    --color-accent-secondary: #A1B69A;
+    --color-accent-subtle: #EAF0E6;
+    
+    --color-border: #E3E5DC;
+    --color-border-strong: #CFD4C9;
+    --color-divider: #E3E5DC;
+    --color-focus: #91A78B;
+    
+    /* Semantic Status Colors */
+    --color-status-critical: #B94C43;
+    --color-status-critical-bg: #F9ECEB;
+    --color-status-high: #C47A45;
+    --color-status-high-bg: #FAF2EC;
+    --color-status-medium: #B28A42;
+    --color-status-medium-bg: #FAF5EB;
+    --color-status-low: #547D70;
+    --color-status-low-bg: #EDF3F1;
+    --color-status-resolved: #64856C;
+    --color-status-resolved-bg: #EDF3EF;
+    
+    --shadow-sm: 0 1px 3px rgba(32, 37, 31, 0.04), 0 1px 2px rgba(32, 37, 31, 0.02);
+    --shadow-md: 0 4px 14px rgba(32, 37, 31, 0.06);
+    --shadow-lg: 0 12px 32px rgba(32, 37, 31, 0.08);
+    
+    --font-heading: 'Caprasimo', Georgia, serif;
+    --font-body: 'Figtree', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   }
 
   body {
-    background-color: var(--canvas-base);
-    color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -41,40 +57,31 @@
   }
 }
 
-/* High-Density Precision Scrollbars */
+/* Custom Clean Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #08090D;
+  background: var(--color-bg);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #1C2230;
-  border-radius: 4px;
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #2A3347;
+/* Typography Helpers */
+.font-display {
+  font-family: var(--font-heading);
+  letter-spacing: -0.015em;
+  font-weight: 400;
 }
 
 /* Focus States */
 *:focus-visible {
-  outline: 1px solid #3B82F6;
-  outline-offset: 1px;
-}
-
-/* Monospace Telemetry & Codes */
-code, pre, .font-mono {
-  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-/* Operational Data Table Cells */
-.table-cell-dense {
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  padding-left: 0.875rem;
-  padding-right: 0.875rem;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }

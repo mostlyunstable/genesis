@@ -10,13 +10,13 @@ export const AppLayout: React.FC = () => {
   const { notifications, dismissNotification } = useSecurityStore();
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-[#F8FAFC] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F7F7F2] text-[#20251F] flex flex-col font-sans transition-colors duration-200">
       {/* Top Demo Disclosure Banner */}
       <DemoModeBanner />
 
       {/* Main Layout Shell */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Clean dark cyber navigation */}
+        {/* Clean Light-First Navigation Sidebar */}
         <Sidebar />
 
         {/* Content Area */}
@@ -34,21 +34,21 @@ export const AppLayout: React.FC = () => {
         {notifications.slice(0, 3).map((item) => (
           <div
             key={item.id}
-            className="pointer-events-auto bg-[#0F1523] border border-[#1E293B] text-xs p-3.5 rounded-xl shadow-cyber-md flex items-start gap-3 animate-in slide-in-from-bottom-2 duration-150"
+            className="pointer-events-auto bg-white border border-[#E3E5DC] text-xs p-4 rounded-2xl shadow-origin-lg flex items-start gap-3.5 animate-in slide-in-from-bottom-2 duration-150"
           >
             <div className="shrink-0 mt-0.5">
-              {item.type === 'error' && <AlertCircle className="w-4 h-4 text-[#EF4444]" />}
-              {item.type === 'success' && <CheckCircle className="w-4 h-4 text-[#10B981]" />}
-              {item.type === 'warning' && <AlertCircle className="w-4 h-4 text-[#F59E0B]" />}
-              {item.type === 'info' && <Info className="w-4 h-4 text-[#38BDF8]" />}
+              {item.type === 'error' && <AlertCircle className="w-4 h-4 text-[#B94C43]" />}
+              {item.type === 'success' && <CheckCircle className="w-4 h-4 text-[#64856C]" />}
+              {item.type === 'warning' && <AlertCircle className="w-4 h-4 text-[#C47A45]" />}
+              {item.type === 'info' && <Info className="w-4 h-4 text-[#54765C]" />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-white">{item.title}</div>
-              <div className="text-[11px] text-[#94A3B8] mt-0.5 font-sans leading-tight">{item.message}</div>
+              <div className="font-semibold text-[#20251F]">{item.title}</div>
+              <div className="text-[11px] text-[#73796F] mt-0.5 font-sans leading-tight">{item.message}</div>
             </div>
             <button
               onClick={() => dismissNotification(item.id)}
-              className="text-[#64748B] hover:text-white shrink-0 p-0.5 cursor-pointer"
+              className="text-[#969B91] hover:text-[#20251F] shrink-0 p-0.5 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>

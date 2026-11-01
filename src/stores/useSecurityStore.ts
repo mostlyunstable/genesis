@@ -44,6 +44,7 @@ interface SecurityState {
   thresholds: DetectionThresholdConfig;
   
   // UI & Global Controls
+  environment: 'theatre' | 'workspace';
   autonomousResponseGlobalEnabled: boolean;
   selectedIncidentId: string;
   selectedDetectionId: string | null;
@@ -53,6 +54,8 @@ interface SecurityState {
   globalSearchQuery: string;
 
   // Actions
+  setEnvironment: (env: 'theatre' | 'workspace') => void;
+  toggleEnvironment: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   setGlobalSearchQuery: (query: string) => void;
@@ -96,12 +99,31 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   thresholds: INITIAL_THRESHOLDS,
   
   autonomousResponseGlobalEnabled: true,
+  environment: 'workspace',
   selectedIncidentId: 'INC-2026-0042',
   selectedDetectionId: null,
   selectedEventId: null,
   notifications: [],
   sidebarCollapsed: false,
   globalSearchQuery: '',
+
+  setEnvironment: (env) => {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.classList.remove('dark', 'env-theatre');
+      root.classList.add('light');
+    }
+    set({ environment: env });
+  },
+
+  toggleEnvironment: () => {
+    // Light-first application: keep environment cleanly aligned
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.classList.remove('dark', 'env-theatre');
+      root.classList.add('light');
+    }
+  },
 
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),

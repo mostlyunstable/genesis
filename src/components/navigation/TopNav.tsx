@@ -7,23 +7,24 @@ import {
   X,
   Radio,
   Cpu,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, { title: string; section: string }> = {
-  '/': { title: 'Autonomous Cyber Bot Cockpit', section: 'OPERATIONAL COMMAND' },
-  '/command': { title: 'Command Center', section: 'OPERATIONAL COMMAND' },
-  '/threats': { title: 'Threat Intelligence', section: 'OPERATIONAL COMMAND' },
-  '/events': { title: 'Security Events Stream', section: 'OPERATIONAL COMMAND' },
-  '/activity': { title: 'Security Events Stream', section: 'OPERATIONAL COMMAND' },
-  '/detections': { title: 'Detection Engine', section: 'OPERATIONAL COMMAND' },
+  '/': { title: 'Intelligence Briefing', section: 'INTELLIGENCE' },
+  '/command': { title: 'Operational Command', section: 'COMMAND' },
+  '/threats': { title: 'Threat Intelligence', section: 'INTELLIGENCE' },
+  '/events': { title: 'Security Events Stream', section: 'INTELLIGENCE' },
+  '/activity': { title: 'Security Events Stream', section: 'INTELLIGENCE' },
+  '/detections': { title: 'Detection Engine', section: 'OPERATIONS' },
   '/incidents': { title: 'Incident Command', section: 'INTELLIGENCE' },
-  '/investigator': { title: 'AI Investigator', section: 'INVESTIGATION' },
-  '/investigations': { title: 'AI Investigator', section: 'INVESTIGATION' },
-  '/assets': { title: 'Infrastructure Assets & Topology', section: 'INTELLIGENCE' },
-  '/mitre': { title: 'MITRE ATT&CK Matrix', section: 'INTELLIGENCE' },
+  '/investigator': { title: 'AI Investigator Workspace', section: 'INVESTIGATION' },
+  '/investigations': { title: 'AI Investigator Workspace', section: 'INVESTIGATION' },
+  '/assets': { title: 'Infrastructure Assets & Topology', section: 'KNOWLEDGE' },
+  '/mitre': { title: 'MITRE ATT&CK Matrix', section: 'KNOWLEDGE' },
   '/response': { title: 'Response Operations', section: 'DEFENSE' },
   '/audit': { title: 'Cryptographic Audit Trail', section: 'GOVERNANCE' },
   '/settings': { title: 'System Configuration', section: 'SYSTEM' },
@@ -34,28 +35,41 @@ export const TopNav: React.FC = () => {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const { notifications, dismissNotification, autonomousResponseGlobalEnabled, incidents, logSources } = useSecurityStore();
+  const { 
+    notifications, 
+    dismissNotification, 
+    autonomousResponseGlobalEnabled, 
+    incidents, 
+    toggleSidebar
+  } = useSecurityStore();
 
   const activeIncidents = incidents.filter(i => i.status === 'active');
   const systemState = !autonomousResponseGlobalEnabled 
-    ? { label: 'DEFENSE HALTED', color: 'text-[#EF4444] bg-[#EF4444]/15 border-[#EF4444]/30' }
+    ? { label: 'DEFENSE HALTED', color: 'text-[#B94C43] bg-[#F9ECEB] border-[#F2D5D3]' }
     : activeIncidents.length > 0 
-    ? { label: 'DEFENSE ARMED • THREAT DETECTED', color: 'text-[#F97316] bg-[#F97316]/15 border-[#F97316]/30' }
-    : { label: 'DEFENSE ARMED • NORMAL POSTURE', color: 'text-[#10B981] bg-[#10B981]/15 border-[#10B981]/30' };
+    ? { label: 'THREAT DETECTED', color: 'text-[#C47A45] bg-[#FAF2EC] border-[#F4E2D5]' }
+    : { label: 'ARMED • SECURE', color: 'text-[#54765C] bg-[#EAF0E6] border-[#CFDCC9]' };
 
   const routeInfo = routeTitleMap[location.pathname] || {
-    title: 'GENYSIS',
-    section: 'OPERATIONS'
+    title: 'SENTINEL',
+    section: 'INTELLIGENCE'
   };
 
   return (
     <>
-      <header className="h-16 bg-[#0A0D14] border-b border-[#1C2230] px-6 flex items-center justify-between sticky top-0 z-20 select-none">
-        {/* Breadcrumb & Screen Title */}
+      <header className="h-16 bg-white border-b border-[#E3E5DC] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
+        {/* Mobile menu toggle & Breadcrumb & Screen Title */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-[#64748B] font-semibold font-mono tracking-wider uppercase text-[10px]">{routeInfo.section}</span>
-          <ChevronRight className="w-3.5 h-3.5 text-[#334155]" />
-          <h1 className="text-sm font-bold text-white tracking-tight font-sans">
+          <button
+            onClick={toggleSidebar}
+            className="md:hidden p-1.5 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors mr-1 cursor-pointer"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+          <span className="text-[#969B91] font-semibold font-mono tracking-wider uppercase text-[10px] hidden sm:inline">{routeInfo.section}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-[#CFD4C9] hidden sm:inline" />
+          <h1 className="text-sm font-bold text-[#20251F] tracking-tight font-sans">
             {routeInfo.title}
           </h1>
         </div>
@@ -64,13 +78,13 @@ export const TopNav: React.FC = () => {
         <div className="flex-1 max-w-md mx-6 hidden md:block">
           <button
             onClick={() => setSearchOpen(true)}
-            className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-lg bg-[#0E121A] border border-[#1C2230] hover:border-[#3B82F6]/60 text-xs text-[#94A3B8] transition-all cursor-pointer group shadow-sm"
+            className="w-full flex items-center justify-between px-4 py-1.5 rounded-full bg-[#F0F1EB] border border-[#E3E5DC] hover:border-[#54765C]/60 text-xs text-[#73796F] transition-all cursor-pointer group shadow-sm"
           >
             <div className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-[#64748B] group-hover:text-[#38BDF8] transition-colors" />
-              <span className="text-xs">Search IPs, identities, detections, MITRE codes, or logs...</span>
+              <Search className="w-3.5 h-3.5 text-[#969B91] group-hover:text-[#54765C] transition-colors" />
+              <span className="text-xs">Search IPs, identities, detections, MITRE codes...</span>
             </div>
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-[#161B26] text-[#94A3B8] rounded border border-[#1C2230]">
+            <kbd className="px-2 py-0.5 text-[10px] font-mono bg-white text-[#73796F] rounded-full border border-[#E3E5DC]">
               Ctrl+K
             </kbd>
           </button>
@@ -79,7 +93,7 @@ export const TopNav: React.FC = () => {
         {/* Right Action Tools & Telemetry HUD */}
         <div className="flex items-center gap-3">
           {/* Autonomous Engine Operational Pill */}
-          <div className={`hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-md text-[10px] font-mono font-bold border tracking-wide uppercase ${systemState.color}`}>
+          <div className={`hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono font-bold border tracking-wide uppercase ${systemState.color}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
             <Cpu className="w-3 h-3 text-current" />
             <span>{systemState.label}</span>
@@ -89,7 +103,7 @@ export const TopNav: React.FC = () => {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search telemetry and indicators"
-            className="md:hidden p-2 rounded-lg text-[#94A3B8] hover:text-white hover:bg-[#161B26]"
+            className="md:hidden p-2 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB]"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -99,44 +113,44 @@ export const TopNav: React.FC = () => {
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               aria-label="View notifications"
-              className="relative p-2 rounded-lg text-[#94A3B8] hover:text-white hover:bg-[#161B26] transition-colors cursor-pointer"
+              className="relative p-2 rounded-full text-[#73796F] hover:text-[#20251F] hover:bg-[#F0F1EB] transition-colors cursor-pointer"
             >
               <Bell className="w-4 h-4" />
               {notifications.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#F97316] ring-2 ring-[#0A0D14]" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#54765C]" />
               )}
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-84 bg-[#0E121A] border border-[#1C2230] rounded-xl shadow-2xl z-50 overflow-hidden text-xs">
-                <div className="p-3 border-b border-[#1C2230] flex items-center justify-between">
-                  <span className="font-bold text-white uppercase text-[10px] font-mono tracking-wider flex items-center gap-2">
-                    <Radio className="w-3.5 h-3.5 text-[#3B82F6]" />
+              <div className="absolute right-0 mt-2 w-84 bg-white border border-[#E3E5DC] rounded-2xl shadow-origin-lg z-50 overflow-hidden text-xs">
+                <div className="p-3.5 border-b border-[#E3E5DC] flex items-center justify-between bg-[#FAFAF7]">
+                  <span className="font-bold text-[#20251F] uppercase text-[10px] font-mono tracking-wider flex items-center gap-2">
+                    <Radio className="w-3.5 h-3.5 text-[#54765C]" />
                     Security Signals ({notifications.length})
                   </span>
                   <button
                     onClick={() => setNotificationsOpen(false)}
-                    className="text-[#64748B] hover:text-white cursor-pointer"
+                    className="text-[#969B91] hover:text-[#20251F] cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="max-h-64 overflow-y-auto divide-y divide-[#1C2230]">
+                <div className="max-h-64 overflow-y-auto divide-y divide-[#E3E5DC]">
                   {notifications.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-[#64748B]">
+                    <div className="py-6 text-center text-xs text-[#969B91]">
                       No active operational notifications.
                     </div>
                   ) : (
                     notifications.map((n) => (
-                      <div key={n.id} className="p-3 hover:bg-[#161B26] transition-colors flex items-start justify-between gap-2">
+                      <div key={n.id} className="p-3 hover:bg-[#F0F1EB] transition-colors flex items-start justify-between gap-2">
                         <div>
-                          <div className="font-semibold text-white font-sans">{n.title}</div>
-                          <div className="text-[11px] text-[#94A3B8] mt-0.5 font-sans">{n.message}</div>
+                          <div className="font-semibold text-[#20251F] font-sans">{n.title}</div>
+                          <div className="text-[11px] text-[#73796F] mt-0.5 font-sans leading-tight">{n.message}</div>
                         </div>
                         <button
                           onClick={() => dismissNotification(n.id)}
-                          className="text-[#64748B] hover:text-white p-1 cursor-pointer"
+                          className="text-[#969B91] hover:text-[#20251F] p-1 cursor-pointer"
                         >
                           <X className="w-3 h-3" />
                         </button>

@@ -36,39 +36,40 @@ export const ThreatsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-16">
+    <div className="space-y-8 max-w-7xl mx-auto font-sans pb-16">
       
       {/* ─────────────────────────────────────────────────────────────
           1. HEADER & GLOBAL ADVERSARY SEARCH BAR
           ───────────────────────────────────────────────────────────── */}
-      <section className="bg-[#10131B] border border-[#1C2230] rounded-xl p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#38BDF8]">
+              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#54765C]">
                 ADVERSARY INTELLIGENCE DATABASE
               </span>
-              <span className="text-[#64748B]">•</span>
-              <span className="text-[10px] font-mono text-[#94A3B8]">OSINT &amp; INTERNAL CORRELATION</span>
+              <span className="text-[#CFD4C9]">•</span>
+              <span className="text-[10px] font-mono text-[#73796F]">REPUTATION &amp; CORRELATION</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              Threat Intelligence
+            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
+              Threat Landscape
             </h1>
-            <p className="text-xs text-[#94A3B8]">
-              Active adversary indicators, IOC reputation scores, autonomous behavioral profiling, and MITRE mapping.
+            <p className="text-sm text-[#73796F] max-w-2xl leading-relaxed">
+              Global threat actor profiles, IOC reputation scores, autonomous behavioral profiling, and ATT&amp;CK technique mapping.
             </p>
           </div>
 
-          <div className="w-full md:w-80">
+          <div className="w-full md:w-84">
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter by IP, ASN, country, or classification..."
-                className="w-full bg-[#07080B] border border-[#1C2230] focus:border-[#38BDF8] rounded-lg px-3.5 py-2 pl-9 text-xs text-white placeholder-[#64748B] font-mono focus:outline-none transition-colors"
+                className="w-full bg-[#F0F1EB] border border-[#E3E5DC] focus:border-[#54765C] rounded-full px-4 py-2.5 pl-10 text-xs text-[#20251F] placeholder-[#969B91] font-mono focus:outline-none transition-colors shadow-inner"
               />
-              <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-2.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#969B91] absolute left-3.5 top-3 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -76,50 +77,47 @@ export const ThreatsPage: React.FC = () => {
 
       {/* ─────────────────────────────────────────────────────────────
           2. TWO-COLUMN MASTER-DETAIL INTELLIGENCE DOSSIER
-          Left (5 cols): Adversary Indicator List with Reputation Badges
-          Right (7 cols): Full Deep Forensic Indicator Profile
           ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Indicator List */}
+        {/* Left Column (5 cols): Adversary Indicators Queue */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#64748B] px-1">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91] px-1">
             Tracked Adversary IPs ({filteredIndicators.length})
           </div>
 
-          <div className="space-y-2">
-            {filteredIndicators.map((item) => {
-              const isSelected = item.ip === selectedIndicator?.ip;
-              const isHighRisk = item.reputationScore >= 80;
+          <div className="space-y-3">
+            {filteredIndicators.map((indicator) => {
+              const isSelected = indicator.ip === selectedIndicator?.ip;
 
               return (
                 <div
-                  key={item.ip}
-                  onClick={() => setSelectedIp(item.ip)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  key={indicator.ip}
+                  onClick={() => setSelectedIp(indicator.ip)}
+                  className={`p-5 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#161B26] border-[#38BDF8] ring-1 ring-[#38BDF8]/20 shadow-sm'
-                      : 'bg-[#10131B] border-[#1C2230] hover:border-[#2A3347]'
+                      ? 'bg-white border-[#54765C] shadow-origin-sm ring-1 ring-[#54765C]/30'
+                      : 'bg-white border-[#E3E5DC] hover:border-[#CFD4C9] hover:bg-[#FAFAF7]'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="font-bold text-white text-sm">{item.ip}</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      isHighRisk 
-                        ? 'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30' 
-                        : 'bg-[#F97316]/15 text-[#F97316] border border-[#F97316]/30'
+                    <span className="font-bold text-[#20251F] text-sm">{indicator.ip}</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      indicator.reputationScore >= 80 ? 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]' :
+                      indicator.reputationScore >= 50 ? 'bg-[#FAF2EC] text-[#C47A45] border border-[#F4E2D5]' :
+                      'bg-[#EDF3EF] text-[#64856C] border border-[#DBE7DF]'
                     }`}>
-                      REP: {item.reputationScore}/100
+                      REP: {indicator.reputationScore}/100
                     </span>
                   </div>
 
-                  <div className="text-xs text-slate-300 font-sans mt-1">
-                    {item.threatClassification}
-                  </div>
+                  <p className="text-xs text-[#73796F] font-sans mt-2 line-clamp-1">
+                    {indicator.threatClassification}
+                  </p>
 
-                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-[#1C2230] text-[11px] font-mono text-[#64748B]">
-                    <span>{item.country} ({item.countryCode})</span>
-                    <span>{item.asn}</span>
+                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E3E5DC] text-[11px] font-mono text-[#969B91]">
+                    <span>{indicator.country}</span>
+                    <span>{indicator.asn}</span>
                   </div>
                 </div>
               );
@@ -127,128 +125,114 @@ export const ThreatsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Deep Forensic Dossier */}
+        {/* Right Column (7 cols): Selected Threat Dossier */}
         <div className="lg:col-span-7">
           {selectedIndicator ? (
-            <div className="bg-[#10131B] border border-[#1C2230] rounded-xl overflow-hidden shadow-sm space-y-6">
+            <div className="bg-white border border-[#E3E5DC] rounded-3xl overflow-hidden shadow-origin-sm space-y-6">
               
-              {/* Profile Header */}
-              <div className="p-5 border-b border-[#1C2230] bg-[#0C0E14] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Dossier Header */}
+              <div className="p-6 border-b border-[#E3E5DC] bg-[#FAFAF7] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-[#64748B] uppercase">
-                    <Globe className="w-3.5 h-3.5 text-[#38BDF8]" />
+                  <div className="flex items-center gap-2 text-xs font-mono text-[#73796F]">
+                    <Globe className="w-3.5 h-3.5 text-[#54765C]" />
                     <span>{selectedIndicator.country} • {selectedIndicator.asn}</span>
                   </div>
-                  <h2 className="text-xl font-bold font-mono text-white mt-1">
+                  <h2 className="font-display text-2xl text-[#20251F] mt-1 font-mono">
                     {selectedIndicator.ip}
                   </h2>
                 </div>
 
-                <div className="flex items-center gap-3 font-mono text-xs">
-                  <div className="px-3 py-1 rounded bg-[#07080B] border border-[#1C2230]">
-                    <span className="text-[#64748B]">Confidence: </span>
-                    <span className="text-[#38BDF8] font-bold">{selectedIndicator.confidence}%</span>
+                <div className="flex items-center gap-2 font-mono text-xs shrink-0">
+                  <div className="px-3.5 py-1.5 rounded-full bg-white border border-[#E3E5DC] text-center">
+                    <div className="text-[9px] text-[#969B91] uppercase">Confidence</div>
+                    <div className="font-bold text-[#54765C]">{selectedIndicator.confidence}%</div>
                   </div>
-                  <div className="px-3 py-1 rounded bg-[#07080B] border border-[#1C2230]">
-                    <span className="text-[#64748B]">Reputation: </span>
-                    <span className="text-[#EF4444] font-bold">{selectedIndicator.reputationScore}/100</span>
+                  <div className="px-3.5 py-1.5 rounded-full bg-white border border-[#E3E5DC] text-center">
+                    <div className="text-[9px] text-[#969B91] uppercase">Reputation</div>
+                    <div className="font-bold text-[#B94C43]">{selectedIndicator.reputationScore}/100</div>
                   </div>
                 </div>
               </div>
 
-              {/* Forensic Details */}
-              <div className="p-5 space-y-6">
+              {/* Dossier Body */}
+              <div className="p-6 sm:p-8 space-y-6">
                 
-                {/* Threat Classification & Activity Narrative */}
+                {/* Threat Profile Narrative */}
                 <div className="space-y-1.5">
-                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
+                  <div className="text-[10px] font-mono uppercase text-[#969B91] font-bold tracking-wider">
                     THREAT PROFILE &amp; HEURISTIC CLASSIFICATION
                   </div>
-                  <p className="text-sm text-slate-200 leading-relaxed font-sans">
-                    Observed conducting automated credential brute force against perimeter SSH bastions. Activity exhibits dictionary rotation across standard administrative accounts. Associated with RFC 5737 benchmark evaluation range.
+                  <p className="text-base text-[#20251F] leading-relaxed font-sans">
+                    {selectedIndicator.threatClassification}. Observed conducting automated credential brute force against perimeter SSH bastions. Activity exhibits dictionary rotation across standard administrative accounts. Associated with RFC 5737 benchmark evaluation range.
                   </p>
                 </div>
 
-                {/* Key Metadata Table */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#1C2230] font-mono text-xs">
-                  <div>
-                    <span className="text-[10px] text-[#64748B] uppercase block">First Seen Telemetry:</span>
-                    <span className="text-white font-semibold block mt-0.5">{selectedIndicator.firstSeen.replace('T', ' ').replace('Z', ' UTC')}</span>
+                {/* Behavioral Metadata Strip */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#E3E5DC] font-mono text-xs">
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[10px] text-[#969B91] uppercase block">First Seen Telemetry</span>
+                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
+                      {selectedIndicator.firstSeen.replace('T', ' ').replace('Z', ' UTC')}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-[#64748B] uppercase block">Last Seen Telemetry:</span>
-                    <span className="text-white font-semibold block mt-0.5">{selectedIndicator.lastSeen.replace('T', ' ').replace('Z', ' UTC')}</span>
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[10px] text-[#969B91] uppercase block">Last Seen Telemetry</span>
+                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
+                      {selectedIndicator.lastSeen.replace('T', ' ').replace('Z', ' UTC')}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-[#64748B] uppercase block">Data Feed Source:</span>
-                    <span className="text-[#38BDF8] block mt-0.5">{selectedIndicator.simulatedDataSource}</span>
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[10px] text-[#969B91] uppercase block">Data Feed Source</span>
+                    <span className="text-[#54765C] font-bold text-xs mt-1 block">
+                      {selectedIndicator.simulatedDataSource}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-[#64748B] uppercase block">Geographic Origin:</span>
-                    <span className="text-white block mt-0.5">{selectedIndicator.country} ({selectedIndicator.countryCode})</span>
-                  </div>
-                </div>
-
-                {/* MITRE ATT&CK Techniques */}
-                <div className="pt-4 border-t border-[#1C2230] space-y-2">
-                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
-                    OBSERVED MITRE ATT&amp;CK TACTICS
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedIndicator.mitreTechniques.map((tech) => (
-                      <span 
-                        key={tech} 
-                        className="px-2.5 py-1 rounded bg-[#07080B] border border-[#1C2230] text-[#38BDF8] text-xs font-mono"
-                      >
-                        {tech}
-                      </span>
-                    ))}
+                  <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                    <span className="text-[10px] text-[#969B91] uppercase block">Geographic Origin</span>
+                    <span className="text-[#20251F] font-bold text-xs mt-1 block">
+                      {selectedIndicator.country}
+                    </span>
                   </div>
                 </div>
 
-                {/* Intelligence Tags */}
-                <div className="pt-4 border-t border-[#1C2230] space-y-2">
-                  <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
-                    BEHAVIORAL TAGS
+                {/* Associated Incidents & Targeted Assets */}
+                <div className="pt-4 border-t border-[#E3E5DC] space-y-3">
+                  <div className="text-[10px] font-mono uppercase text-[#969B91] font-bold tracking-wider">
+                    CORRELATED ENTERPRISE INCIDENTS ({selectedIndicator.associatedIncidents.length})
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedIndicator.tags.map((tag) => (
-                      <span 
-                        key={tag} 
-                        className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#161B26] text-slate-300 border border-[#1C2230]"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Associated Incidents */}
-                {selectedIndicator.associatedIncidents.length > 0 && (
-                  <div className="pt-4 border-t border-[#1C2230] space-y-2">
-                    <div className="text-[10px] font-mono uppercase text-[#64748B] font-bold tracking-wider">
-                      LINKED CORRELATED INCIDENTS
-                    </div>
-                    <div className="space-y-2 font-mono text-xs">
-                      {selectedIndicator.associatedIncidents.map((incId) => (
-                        <div 
-                          key={incId} 
-                          className="p-3 rounded-lg bg-[#07080B] border border-[#1C2230] flex items-center justify-between"
+                  <div className="space-y-2">
+                    {selectedIndicator.associatedIncidents.map((incId) => {
+                      const incident = incidents.find(i => i.id === incId);
+
+                      return (
+                        <div
+                          key={incId}
+                          onClick={() => setSelectedIncidentId(incId)}
+                          className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC] hover:border-[#54765C] transition-colors cursor-pointer flex items-center justify-between"
                         >
-                          <span className="text-[#38BDF8] font-bold">{incId}</span>
-                          <span className="text-slate-300">SSH Brute Force with Valid User Compromise</span>
+                          <div>
+                            <div className="flex items-center gap-2 font-mono text-xs">
+                              <span className="font-bold text-[#54765C]">{incId}</span>
+                              <span className="text-[#73796F] font-sans font-medium">{incident?.title || 'Active Correlated Threat'}</span>
+                            </div>
+                            <div className="text-[11px] text-[#969B91] mt-0.5 font-mono">
+                              Risk Score: {incident?.riskScore || 90}/100 • Target: {incident?.targetAccounts.join(', ') || 'bastion-01'}
+                            </div>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-[#969B91]" />
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
 
               </div>
 
             </div>
           ) : (
-            <div className="p-8 text-center bg-[#10131B] border border-[#1C2230] rounded-xl text-xs text-[#94A3B8] font-mono">
-              Select an adversary indicator on the left to inspect threat intelligence.
+            <div className="p-8 text-center bg-white border border-[#E3E5DC] rounded-3xl text-xs text-[#969B91] font-mono">
+              Select an indicator on the left to inspect intelligence dossier.
             </div>
           )}
         </div>

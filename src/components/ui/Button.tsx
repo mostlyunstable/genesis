@@ -17,22 +17,22 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#3B82F6] disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.99] cursor-pointer font-sans';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#91A78B] disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.98] cursor-pointer font-sans';
 
   const variants = {
-    primary: 'bg-[#3B82F6] hover:bg-[#2563EB] text-white border border-[#60A5FA]/30 shadow-sm font-semibold',
-    action: 'bg-[#F97316] hover:bg-[#EA580C] text-white border border-[#FB923C]/30 shadow-sm font-semibold',
-    secondary: 'bg-[#10131B] hover:bg-[#161B26] text-slate-200 hover:text-white border border-[#1C2230] hover:border-[#2A3347] shadow-sm',
-    danger: 'bg-[#EF4444]/15 hover:bg-[#EF4444]/25 text-[#EF4444] border border-[#EF4444]/30 font-semibold',
-    outline: 'bg-transparent hover:bg-[#10131B] text-[#94A3B8] hover:text-white border border-[#1C2230]',
-    ghost: 'bg-transparent hover:bg-[#10131B] text-[#94A3B8] hover:text-white border border-transparent'
+    primary: 'bg-[#54765C] hover:bg-[#436049] text-white border border-transparent shadow-sm font-semibold',
+    action: 'bg-[#54765C] hover:bg-[#436049] text-white border border-transparent shadow-sm font-semibold',
+    secondary: 'bg-white hover:bg-[#F0F1EB] text-[#20251F] border border-[#E3E5DC] shadow-sm font-medium',
+    danger: 'bg-[#F9ECEB] hover:bg-[#F2D5D3] text-[#B94C43] border border-[#F2D5D3] font-semibold',
+    outline: 'bg-transparent hover:bg-[#F0F1EB] text-[#20251F] border border-[#E3E5DC] font-medium',
+    ghost: 'bg-transparent hover:bg-[#F0F1EB] text-[#73796F] hover:text-[#20251F] border border-transparent'
   };
 
   const sizes = {
-    xs: 'text-[11px] px-2 py-1 gap-1 font-mono',
-    sm: 'text-xs px-3 py-1.5 gap-1.5',
-    md: 'text-xs px-3.5 py-2 gap-2 font-medium',
-    lg: 'text-sm px-4 py-2.5 gap-2.5 font-semibold'
+    xs: 'text-[11px] px-3 py-1 gap-1.5 font-mono',
+    sm: 'text-xs px-3.5 py-1.5 gap-2 font-medium',
+    md: 'text-sm px-4 py-2 gap-2 font-medium',
+    lg: 'text-sm px-5 py-2.5 gap-2.5 font-semibold'
   };
 
   return (

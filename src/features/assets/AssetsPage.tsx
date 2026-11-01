@@ -9,10 +9,11 @@ import {
   ExternalLink,
   Cpu,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Network
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
-import { SeverityBadge } from '@/components/ui/Badge';
+import { SeverityBadge, Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
 interface AssetRecord {
@@ -115,27 +116,28 @@ export const AssetsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-16">
+    <div className="space-y-8 max-w-7xl mx-auto font-sans pb-16">
       
-      {/* Header */}
-      <section className="bg-[#FFFEFA] dark:bg-[#1B3532] border border-[#D9D9CE] dark:border-[#294640] rounded p-5 shadow-forensic-sm transition-colors">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
+      {/* Editorial Header */}
+      <section className="bg-white border border-[#E3E5DC] rounded-3xl p-6 sm:p-8 shadow-origin-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#26796C] dark:text-[#C6D36C] flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5" />
+              <span className="w-2 h-2 rounded-full bg-[#54765C]" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#54765C] flex items-center gap-1.5">
+                <Network className="w-3.5 h-3.5" />
                 ASSET INVENTORY &amp; TOPOLOGY
               </span>
-              <span className="text-[#BCBCAC] dark:text-[#294640]">•</span>
-              <span className="text-[10px] font-mono text-[#69746D] dark:text-[#A3B1AB]">
-                CORRELATED BLAST RADIUS ANALYSIS
+              <span className="text-[#CFD4C9]">•</span>
+              <span className="text-[10px] font-mono text-[#73796F]">
+                BLAST RADIUS &amp; LATERAL ROUTING
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#192622] dark:text-[#F2F0E8] tracking-tight">
+            <h1 className="font-display text-3xl sm:text-4xl text-[#20251F] tracking-tight">
               Enterprise Asset Registry
             </h1>
-            <p className="text-xs text-[#69746D] dark:text-[#A3B1AB]">
-              Infrastructure inventory, lateral route exposure, privileged identity bindings, and posture risk index.
+            <p className="text-sm text-[#73796F] font-sans max-w-2xl leading-relaxed">
+              Infrastructure topology, lateral routing exposure, privileged identity bindings, and forensic risk evaluation.
             </p>
           </div>
 
@@ -145,95 +147,103 @@ export const AssetsPage: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search host, IP address, role or zone..."
-                className="w-full bg-[#F2F0E8] dark:bg-[#142C29] border border-[#D9D9CE] dark:border-[#294640] rounded px-3 py-1.5 pl-8 text-xs font-mono text-[#192622] dark:text-white placeholder-[#69746D] focus:outline-none focus:border-[#26796C]"
+                placeholder="Search host, IP address, role..."
+                className="w-full bg-[#F0F1EB] border border-[#E3E5DC] rounded-full px-4 py-2.5 pl-10 text-xs font-mono text-[#20251F] placeholder-[#969B91] focus:outline-none focus:border-[#54765C] transition-all shadow-inner"
               />
-              <Search className="w-3.5 h-3.5 text-[#69746D] absolute left-2.5 top-2 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#969B91] absolute left-3.5 top-3 pointer-events-none" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Two-Column Master Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Column: Asset Cards */}
-        <div className="lg:col-span-5 space-y-2">
-          {filteredAssets.map((asset) => {
-            const isSelected = asset.id === selectedAsset.id;
+        <div className="lg:col-span-5 space-y-3">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#969B91] px-1">
+            Registered Assets ({filteredAssets.length})
+          </div>
 
-            return (
-              <div
-                key={asset.id}
-                onClick={() => setSelectedAssetId(asset.id)}
-                className={`p-3.5 rounded border transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-[#FFFEFA] dark:bg-[#203A35] border-[#26796C] dark:border-[#C6D36C] shadow-forensic-sm ring-1 ring-[#26796C]/20'
-                    : 'bg-[#FFFEFA] dark:bg-[#1B3532] border-[#D9D9CE] dark:border-[#294640] hover:border-[#BCBCAC]'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="font-bold text-[#192622] dark:text-white text-sm">{asset.name}</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                    asset.status === 'COMPROMISED' ? 'bg-[#D94F45]/15 text-[#D94F45]' :
-                    asset.status === 'ELEVATED_RISK' ? 'bg-[#E87950]/15 text-[#E87950]' :
-                    'bg-[#648B70]/15 text-[#648B70]'
-                  }`}>
-                    {asset.status}
-                  </span>
-                </div>
+          <div className="space-y-3">
+            {filteredAssets.map((asset) => {
+              const isSelected = asset.id === selectedAsset.id;
 
-                <div className="text-xs text-[#69746D] dark:text-[#A3B1AB] font-sans mt-1">
-                  {asset.role}
-                </div>
+              return (
+                <div
+                  key={asset.id}
+                  onClick={() => setSelectedAssetId(asset.id)}
+                  className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-white border-[#54765C] shadow-origin-sm ring-1 ring-[#54765C]/30'
+                      : 'bg-white border-[#E3E5DC] hover:border-[#CFD4C9] hover:bg-[#FAFAF7]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="font-bold text-[#20251F] text-sm">{asset.name}</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      asset.status === 'COMPROMISED' ? 'bg-[#F9ECEB] text-[#B94C43] border border-[#F2D5D3]' :
+                      asset.status === 'ELEVATED_RISK' ? 'bg-[#FAF2EC] text-[#C47A45] border border-[#F4E2D5]' :
+                      'bg-[#EDF3EF] text-[#64856C] border border-[#DBE7DF]'
+                    }`}>
+                      {asset.status}
+                    </span>
+                  </div>
 
-                <div className="flex items-center justify-between pt-2 mt-2 border-t border-[#D9D9CE] dark:border-[#294640] text-[10px] font-mono text-[#69746D] dark:text-[#A3B1AB]">
-                  <span>{asset.ip}</span>
-                  <span>Risk Score: <strong className={asset.riskScore > 75 ? 'text-[#D94F45]' : 'text-[#26796C]'}>{asset.riskScore}</strong></span>
+                  <div className="text-xs text-[#73796F] font-sans mt-2">
+                    {asset.role}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E3E5DC] text-[11px] font-mono text-[#969B91]">
+                    <span>{asset.ip}</span>
+                    <span>Risk Score: <strong className={asset.riskScore > 75 ? 'text-[#B94C43]' : 'text-[#54765C]'}>{asset.riskScore}/100</strong></span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Right Column: Asset Deep Dossier */}
         <div className="lg:col-span-7">
-          <div className="bg-[#FFFEFA] dark:bg-[#1B3532] border border-[#D9D9CE] dark:border-[#294640] rounded shadow-forensic-sm p-5 space-y-5">
-            <div className="border-b border-[#D9D9CE] dark:border-[#294640] pb-3 flex items-center justify-between">
+          <div className="bg-white border border-[#E3E5DC] rounded-3xl shadow-origin-sm p-6 sm:p-8 space-y-6">
+            <div className="border-b border-[#E3E5DC] pb-4 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono text-[#69746D] dark:text-[#A3B1AB] uppercase">{selectedAsset.zone}</span>
-                <h2 className="text-lg font-bold text-[#192622] dark:text-white font-mono mt-0.5">{selectedAsset.name} ({selectedAsset.ip})</h2>
+                <span className="text-[10px] font-mono text-[#969B91] uppercase tracking-wider">{selectedAsset.zone}</span>
+                <h2 className="font-display text-2xl text-[#20251F] mt-1">
+                  {selectedAsset.name} <span className="font-mono text-base font-normal text-[#73796F]">({selectedAsset.ip})</span>
+                </h2>
               </div>
-              <div className="px-3 py-1 rounded bg-[#F2F0E8] dark:bg-[#142C29] text-xs font-mono font-bold text-[#D94F45]">
-                Risk: {selectedAsset.riskScore}/100
+              <div className="px-3.5 py-1.5 rounded-full bg-[#FAFAF7] border border-[#E3E5DC] text-xs font-mono font-bold text-[#B94C43]">
+                Risk Index: {selectedAsset.riskScore}/100
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-              <div>
-                <span className="text-[10px] text-[#69746D] dark:text-[#A3B1AB] uppercase block">Operating System</span>
-                <span className="text-[#192622] dark:text-white block mt-0.5">{selectedAsset.os}</span>
+              <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                <span className="text-[10px] text-[#969B91] uppercase block">Operating System</span>
+                <span className="text-[#20251F] font-bold block mt-1">{selectedAsset.os}</span>
               </div>
-              <div>
-                <span className="text-[10px] text-[#69746D] dark:text-[#A3B1AB] uppercase block">Open Ingress Ports</span>
-                <span className="text-[#192622] dark:text-white block mt-0.5">{selectedAsset.openPorts.join(', ')}</span>
+              <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                <span className="text-[10px] text-[#969B91] uppercase block">Open Ingress Ports</span>
+                <span className="text-[#20251F] font-bold block mt-1">{selectedAsset.openPorts.join(', ')}</span>
               </div>
-              <div>
-                <span className="text-[10px] text-[#69746D] dark:text-[#A3B1AB] uppercase block">Connected VPC Subnets</span>
-                <span className="text-[#E87950] font-bold block mt-0.5">{selectedAsset.connectedSubnets} Subnets at Risk</span>
+              <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                <span className="text-[10px] text-[#969B91] uppercase block">Connected VPC Subnets</span>
+                <span className="text-[#C47A45] font-bold block mt-1">{selectedAsset.connectedSubnets} Subnets Reachable</span>
               </div>
-              <div>
-                <span className="text-[10px] text-[#69746D] dark:text-[#A3B1AB] uppercase block">Active Local Identities</span>
-                <span className="text-[#192622] dark:text-white block mt-0.5">{selectedAsset.activeIdentities.join(', ')}</span>
+              <div className="p-4 rounded-2xl bg-[#FAFAF7] border border-[#E3E5DC]">
+                <span className="text-[10px] text-[#969B91] uppercase block">Active Local Identities</span>
+                <span className="text-[#20251F] font-bold block mt-1">{selectedAsset.activeIdentities.join(', ')}</span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#D9D9CE] dark:border-[#294640] space-y-1">
-              <span className="text-[10px] font-mono uppercase text-[#69746D] dark:text-[#A3B1AB] font-bold">
+            <div className="pt-4 border-t border-[#E3E5DC] space-y-2">
+              <span className="text-[10px] font-mono uppercase text-[#969B91] font-bold tracking-wider">
                 FORENSIC POSTURE EVALUATION
               </span>
-              <p className="text-xs text-[#192622] dark:text-slate-200 font-sans leading-relaxed">
-                Host bastion-01 acts as primary DMZ bastion gateway. Credential compromise on user "deploy" poses immediate lateral traversal risk into 14 peered VPC subnets. Host session PID 12436 requires immediate automated quarantine.
+              <p className="text-sm text-[#20251F] font-sans leading-relaxed">
+                Host <strong className="font-mono text-[#54765C]">{selectedAsset.name}</strong> operates as a primary ingress gateway. Interactive session credentials identified on account <strong className="font-mono text-[#20251F]">deploy</strong> pose an immediate lateral propagation risk across {selectedAsset.connectedSubnets} peered subnets. Deterministic isolation playbook recommended.
               </p>
             </div>
           </div>

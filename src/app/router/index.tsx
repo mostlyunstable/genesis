@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/AppLayout';
-import { IntelligenceWorkspacePage } from '@/features/workspace/IntelligenceWorkspacePage';
+import { OverviewPage } from '@/features/overview/OverviewPage';
 import { CommandCenterPage } from '@/features/command-center/CommandCenterPage';
 import { ThreatsPage } from '@/features/threats/ThreatsPage';
 import { SecurityEventsPage } from '@/features/events/SecurityEventsPage';
@@ -20,15 +20,15 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppLayout />,
     children: [
-      // 1. Autonomous Cyber Bot Cockpit (Primary View)
+      // 1. Autonomous Security Intelligence Briefing (Primary Overview)
       {
         index: true,
-        element: <IntelligenceWorkspacePage />
+        element: <OverviewPage />
       },
       // Command Center View
       {
         path: 'command',
-        element: <CommandCenterPage />
+        element: <OverviewPage />
       },
       // 2. Threat Intelligence
       {
@@ -93,10 +93,6 @@ export const router = createBrowserRouter([
       {
         path: 'activity',
         element: <Navigate to="/events" replace />
-      },
-      {
-        path: 'investigations',
-        element: <Navigate to="/investigator" replace />
       },
       {
         path: 'analyst',
