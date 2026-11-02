@@ -171,9 +171,11 @@ async def test_detection_engine_end_to_end_anomaly_integration(db_session: Async
     assert any(d.category == "statistical_anomaly" for d in dets)
 
     # Verify incident was correlated
+    inc_id = dets[0].associated_incident_id
     res_inc = await db_session.execute(
-        select(IncidentModel).where(IncidentModel.source_ips.contains(["198.51.100.60"]))
+        select(IncidentModel).where(IncidentModel.id == inc_id)
     )
     inc = res_inc.scalar_one_or_none()
     assert inc is not None
+    assert "198.51.100.60" in (inc.source_ips or [])
     assert any(m.get("techniqueId") == "T1078" for m in (inc.mitre_attack or []))
