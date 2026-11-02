@@ -2,7 +2,7 @@ import re
 import json
 import hashlib
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from backend.app.schemas.event import RawLogItem
 from backend.app.models.event import SecurityEventModel
 
@@ -29,8 +29,61 @@ RFC5424_PATTERN = re.compile(
     r"^<(?P<pri>\d+)>(?P<version>\d+)\s+(?P<timestamp>\S+)\s+(?P<hostname>\S+)\s+(?P<app>\S+)\s+(?P<pid>\S+)\s+(?P<msgid>\S+)\s+(?P<sd>\[.*?\]|-)\s+(?P<msg>.*)$"
 )
 
+# Known vulnerability signatures for automated banner extraction (Stage B & F)
+KNOWN_VULNERABILITY_PATTERNS = [
+    {
+        "pattern": re.compile(r"OpenSSH[_\s](8\.[5-9]|9\.[0-7])p\d*", re.IGNORECASE),
+        "service": "openssh",
+        "cve_id": "CVE-2024-6387",
+        "title": "regreSSHion: Remote Code Execution in OpenSSH sshd",
+        "severity": "CRITICAL",
+        "cvss": 8.1
+    },
+    {
+        "pattern": re.compile(r"OpenSSH[_\s](?:[1-6]\.|7\.[0-6])p?\d*", re.IGNORECASE),
+        "service": "openssh",
+        "cve_id": "CVE-2018-15473",
+        "title": "OpenSSH User Enumeration Vulnerability",
+        "severity": "MEDIUM",
+        "cvss": 5.3
+    },
+    {
+        "pattern": re.compile(r"Apache\/2\.4\.(49|50)", re.IGNORECASE),
+        "service": "apache_httpd",
+        "cve_id": "CVE-2021-41773",
+        "title": "Apache HTTP Server Path Traversal & Remote Code Execution",
+        "severity": "CRITICAL",
+        "cvss": 9.8
+    },
+    {
+        "pattern": re.compile(r"sudo[\s\/]1\.(?:[0-7]\.|8\.[0-9]|8\.3[0-1])", re.IGNORECASE),
+        "service": "sudo",
+        "cve_id": "CVE-2021-3156",
+        "title": "Baron Samedit: Heap-based Buffer Overflow in Sudo",
+        "severity": "HIGH",
+        "cvss": 7.8
+    }
+]
+
 
 class NormalizerService:
+    @staticmethod
+    def extract_vulnerabilities(text: str) -> List[Dict[str, Any]]:
+        """Scans raw log text for service banners and matches against known CVE signatures."""
+        detected = []
+        for vuln in KNOWN_VULNERABILITY_PATTERNS:
+            match = vuln["pattern"].search(text)
+            if match:
+                detected.append({
+                    "cve_id": vuln["cve_id"],
+                    "service": vuln["service"],
+                    "matched_version": match.group(0),
+                    "title": vuln["title"],
+                    "severity": vuln["severity"],
+                    "cvss": vuln["cvss"]
+                })
+        return detected
+
     @staticmethod
     def compute_fingerprint(source: str, timestamp: datetime, source_ip: str, username: str, raw_event: str) -> str:
         """
@@ -258,6 +311,12 @@ class NormalizerService:
 
         fingerprint = cls.compute_fingerprint(source, ts, source_ip, username, raw)
         event_id = f"EVT-2026-{fingerprint[:12].upper()}"
+
+        detected_cves = cls.extract_vulnerabilities(raw)
+        if detected_cves:
+            parsed_fields["detectedCves"] = detected_cves
+            if "serviceBanner" not in parsed_fields:
+                parsed_fields["serviceBanner"] = detected_cves[0]["matched_version"]
 
         return SecurityEventModel(
             id=event_id,
