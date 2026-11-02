@@ -36,8 +36,13 @@ ALLOWED_ACTION_TYPES = {
 class PolicyEngine:
     @staticmethod
     def is_target_protected(target: str) -> bool:
+        if not target or not target.strip():
+            return False
         # Extract IP if target contains port or text
-        ip_str = target.split()[0].split(":")[0]
+        parts = target.strip().split()
+        if not parts:
+            return False
+        ip_str = parts[0].split(":")[0]
         try:
             target_ip = ipaddress.ip_address(ip_str)
             for net in PROTECTED_NETWORKS:

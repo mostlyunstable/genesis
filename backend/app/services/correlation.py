@@ -132,10 +132,10 @@ class CorrelationEngine:
                     multiplier = float(target_asset.get("tier_multiplier", 1.0))
 
         if matching_incident:
-            # Append detection & event IDs
-            det_ids = list(set(matching_incident.detection_ids + [detection.id]))
-            evt_ids = list(set(matching_incident.event_ids + detection.supporting_event_ids))
-            accs = list(set(matching_incident.target_accounts + detection.target_accounts))
+            # Append detection & event IDs safely guarding None
+            det_ids = list(set((matching_incident.detection_ids or []) + ([detection.id] if detection.id else [])))
+            evt_ids = list(set((matching_incident.event_ids or []) + (detection.supporting_event_ids or [])))
+            accs = list(set((matching_incident.target_accounts or []) + (detection.target_accounts or [])))
 
             if has_breach:
                 matching_incident.severity = "critical"

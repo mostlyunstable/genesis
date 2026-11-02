@@ -368,6 +368,8 @@ class ReportGenerationService:
         """
         fmt = export_format.lower().strip()
         safe_id = report.id.replace(" ", "_")
+        created_iso = report.created_at.isoformat() if hasattr(report.created_at, "isoformat") else str(report.created_at)
+        created_fmt = report.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') if hasattr(report.created_at, "strftime") else str(report.created_at)
 
         # 1. MARKDOWN
         if fmt in ["md", "markdown"]:
@@ -389,7 +391,7 @@ class ReportGenerationService:
                 "findings": report.findings,
                 "recommendations": report.recommendations,
                 "recordHash": report.record_hash,
-                "createdAt": report.created_at.isoformat(),
+                "createdAt": created_iso,
                 "generatedBy": report.generated_by,
                 "isSimulated": report.is_simulated
             }
@@ -404,7 +406,7 @@ class ReportGenerationService:
             output = io.StringIO()
             writer = csv.writer(output)
             writer.writerow(["Report ID", "Title", "Type", "Classification", "Generated At", "Author", "Record Hash"])
-            writer.writerow([report.id, report.title, report.report_type, report.classification, report.created_at.isoformat(), report.generated_by, report.record_hash])
+            writer.writerow([report.id, report.title, report.report_type, report.classification, created_iso, report.generated_by, report.record_hash])
             writer.writerow([])
             writer.writerow(["Key Forensic Findings"])
             for k, v in (report.findings or {}).items():
@@ -445,7 +447,7 @@ class ReportGenerationService:
 <div class="header">
   <span class="badge">{report.classification}</span>
   <h1>{report.title}</h1>
-  <p><strong>Report ID:</strong> <code>{report.id}</code> &nbsp;|&nbsp; <strong>Date:</strong> {report.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')} &nbsp;|&nbsp; <strong>Author:</strong> {report.generated_by}</p>
+  <p><strong>Report ID:</strong> <code>{report.id}</code> &nbsp;|&nbsp; <strong>Date:</strong> {created_fmt} &nbsp;|&nbsp; <strong>Author:</strong> {report.generated_by}</p>
 </div>
 <h2>1. Executive Summary</h2>
 <p>{report.summary}</p>

@@ -26,15 +26,18 @@ class LogWatcherService:
     def __init__(
         self,
         incoming_dir: str = "data/incoming",
-        processed_dir: str = "data/processed"
+        processed_dir: str = "data/processed",
+        quarantine_dir: str = "data/quarantine"
     ):
         self.incoming_dir = incoming_dir
         self.processed_dir = processed_dir
+        self.quarantine_dir = quarantine_dir
         self._ensure_directories()
 
     def _ensure_directories(self):
         os.makedirs(self.incoming_dir, exist_ok=True)
         os.makedirs(self.processed_dir, exist_ok=True)
+        os.makedirs(self.quarantine_dir, exist_ok=True)
 
     async def scan_and_ingest(self, db: AsyncSession) -> Dict[str, Any]:
         """
@@ -92,6 +95,14 @@ class LogWatcherService:
                                 raw_lines.append(s)
             except Exception as e:
                 logger.error(f"Failed to read file {filename}: {e}")
+                ts_suffix = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                quarantine_name = f"corrupt_{ts_suffix}_{filename}"
+                quarantine_path = os.path.join(self.quarantine_dir, quarantine_name)
+                try:
+                    shutil.move(file_path, quarantine_path)
+                    logger.warning(f"Quarantined corrupt file to {quarantine_path}")
+                except Exception as q_err:
+                    logger.error(f"Could not quarantine file {filename}: {q_err}")
                 continue
 
             file_events = 0

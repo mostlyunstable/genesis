@@ -104,14 +104,15 @@ class AutoInvestigatorService:
                 containment_detail = f"Containment skipped: Source IP {source_ip} is in protected exclusion network."
 
         # 4. Inject Autonomous Briefing into Copilot Conversation
-        # Find latest active conversation or create dedicated autonomous investigation thread
-        stmt_conv = select(ConversationModel).order_by(desc(ConversationModel.updated_at)).limit(1)
+        # Target dedicated incident conversation to avoid hijacking analyst chat threads
+        conv_id = f"conv-auto-{incident.id.lower()}"
+        stmt_conv = select(ConversationModel).where(ConversationModel.id == conv_id)
         res_conv = await db.execute(stmt_conv)
         conv = res_conv.scalar_one_or_none()
 
         if not conv:
             conv = ConversationModel(
-                id=f"conv-{uuid.uuid4().hex[:8]}",
+                id=conv_id,
                 title=f"🚨 Autonomous Investigation: {incident.title[:40]}",
                 context_metadata={"autonomous": True, "incident_id": incident.id}
             )

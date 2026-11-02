@@ -241,6 +241,26 @@ class SearchVectorKnowledgeInput(BaseModel):
 # Cybersecurity Tool Registry Implementation
 # -----------------------------------------------------------------------------
 
+def validate_safe_dataset_path(file_path: Optional[str], default_path: str) -> Tuple[bool, str]:
+    """
+    Guards against Path Traversal (CWE-22) in cybersecurity dataset analysis tools.
+    Ensures target file resides strictly within authorized workspace data/ directories.
+    """
+    raw_path = (file_path or default_path).strip()
+    abs_target = os.path.realpath(os.path.abspath(raw_path))
+
+    project_root = os.path.realpath(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+    allowed_data_dir = os.path.realpath(os.path.join(project_root, "data"))
+
+    if not abs_target.startswith(allowed_data_dir) or ".." in raw_path:
+        return False, f"SECURITY_ERROR: Access denied. Path '{raw_path}' is outside authorized data sandbox."
+
+    if not os.path.exists(abs_target):
+        return False, f"DATASET_NOT_FOUND: Dataset file does not exist at '{raw_path}'."
+
+    return True, abs_target
+
+
 class CybersecurityToolRegistry:
     """
     Controlled Cybersecurity Tool Registry for SENTINEL AI Copilot.
@@ -942,9 +962,9 @@ class CybersecurityToolRegistry:
         Parses and evaluates network flow records (CIC-IDS2017 format).
         Detects volumetric DDoS, asymmetric DoS Slowloris, PortScans, and brute force flows.
         """
-        target_path = params.file_path or "data/cic_ids2017/cic_ids2017_sample.csv"
-        if not os.path.exists(target_path):
-            return {"status": "ERROR", "message": f"Network dataset not found at path: {target_path}"}
+        is_safe, target_path = validate_safe_dataset_path(params.file_path, "data/cic_ids2017/cic_ids2017_sample.csv")
+        if not is_safe:
+            return {"status": "ERROR", "message": target_path}
 
         flows = []
         with open(target_path, mode="r", encoding="utf-8") as f:
@@ -1016,9 +1036,9 @@ class CybersecurityToolRegistry:
         Parses and evaluates email security records and malicious URLs.
         Checks SPF/DKIM verification results, urgency keywords, brand impersonation, and IP-in-URL lures.
         """
-        target_path = params.file_path or "data/phishing/phishing_emails_sample.csv"
-        if not os.path.exists(target_path):
-            return {"status": "ERROR", "message": f"Phishing dataset not found at path: {target_path}"}
+        is_safe, target_path = validate_safe_dataset_path(params.file_path, "data/phishing/phishing_emails_sample.csv")
+        if not is_safe:
+            return {"status": "ERROR", "message": target_path}
 
         records = []
         with open(target_path, mode="r", encoding="utf-8") as f:
@@ -1095,11 +1115,13 @@ class CybersecurityToolRegistry:
         Parses enterprise multi-source telemetry and Red Team compromise ground truth (LANL cyber1).
         Maps lateral movement hops, compromised Active Directory user credentials, and jump hosts.
         """
-        auth_path = params.auth_file_path or "data/lanl/auth_sample.csv"
-        redteam_path = params.redteam_file_path or "data/lanl/redteam_sample.csv"
+        is_safe_auth, auth_path = validate_safe_dataset_path(params.auth_file_path, "data/lanl/auth_sample.csv")
+        if not is_safe_auth:
+            return {"status": "ERROR", "message": auth_path}
 
-        if not os.path.exists(auth_path) or not os.path.exists(redteam_path):
-            return {"status": "ERROR", "message": f"LANL dataset files not found at {auth_path} or {redteam_path}"}
+        is_safe_rt, redteam_path = validate_safe_dataset_path(params.redteam_file_path, "data/lanl/redteam_sample.csv")
+        if not is_safe_rt:
+            return {"status": "ERROR", "message": redteam_path}
 
         auth_events = []
         with open(auth_path, mode="r", encoding="utf-8") as f:
@@ -1168,14 +1190,15 @@ class CybersecurityToolRegistry:
         """
         stype = params.system_type.lower()
         if stype == "hdfs":
-            target_path = params.file_path or "data/loghub/HDFS/HDFS_2k.log"
+            default_path = "data/loghub/HDFS/HDFS_2k.log"
         elif stype == "linux":
-            target_path = params.file_path or "data/loghub/Linux/Linux_2k.log"
+            default_path = "data/loghub/Linux/Linux_2k.log"
         else:
-            target_path = params.file_path or "data/loghub/OpenSSH/OpenSSH_2k.log"
+            default_path = "data/loghub/OpenSSH/OpenSSH_2k.log"
 
-        if not os.path.exists(target_path):
-            return {"status": "ERROR", "message": f"Log dataset not found at path: {target_path}"}
+        is_safe, target_path = validate_safe_dataset_path(params.file_path, default_path)
+        if not is_safe:
+            return {"status": "ERROR", "message": target_path}
 
         lines = []
         with open(target_path, mode="r", encoding="utf-8", errors="ignore") as f:
@@ -1340,9 +1363,9 @@ class CybersecurityToolRegistry:
         """
         Parses web server/WAF access logs to detect SQL Injection, XSS, Path Traversal, and Cloud SSRF.
         """
-        log_path = params.file_path or "data/web_attacks/web_attacks_sample.log"
-        if not os.path.exists(log_path):
-            return {"status": "ERROR", "message": f"Web attack log file not found at {log_path}"}
+        is_safe, log_path = validate_safe_dataset_path(params.file_path, "data/web_attacks/web_attacks_sample.log")
+        if not is_safe:
+            return {"status": "ERROR", "message": log_path}
 
         lines = []
         with open(log_path, mode="r", encoding="utf-8", errors="ignore") as f:
@@ -1446,9 +1469,9 @@ class CybersecurityToolRegistry:
         """
         Evaluates DNS query logs, calculating Shannon entropy and identifying DNS tunneling / exfiltration.
         """
-        dns_path = params.file_path or "data/dns/dns_queries_sample.csv"
-        if not os.path.exists(dns_path):
-            return {"status": "ERROR", "message": f"DNS dataset file not found at {dns_path}"}
+        is_safe, dns_path = validate_safe_dataset_path(params.file_path, "data/dns/dns_queries_sample.csv")
+        if not is_safe:
+            return {"status": "ERROR", "message": dns_path}
 
         records = []
         with open(dns_path, mode="r", encoding="utf-8") as f:
@@ -1499,9 +1522,9 @@ class CybersecurityToolRegistry:
         """
         Audits Active Directory Kerberos security events to identify Kerberoasting and AS-REP Roasting.
         """
-        kerb_path = params.file_path or "data/kerberos/kerberos_tickets_sample.csv"
-        if not os.path.exists(kerb_path):
-            return {"status": "ERROR", "message": f"Kerberos ticket dataset not found at {kerb_path}"}
+        is_safe, kerb_path = validate_safe_dataset_path(params.file_path, "data/kerberos/kerberos_tickets_sample.csv")
+        if not is_safe:
+            return {"status": "ERROR", "message": kerb_path}
 
         records = []
         with open(kerb_path, mode="r", encoding="utf-8") as f:
@@ -1640,9 +1663,9 @@ class CybersecurityToolRegistry:
         Detects failed password velocity, targeted accounts, legitimate logins,
         and generates mitigation playbooks.
         """
-        target_path = params.file_path or "data/soc_labs/zacariah_bruteforce/auth.log"
-        if not os.path.exists(target_path):
-            return {"status": "ERROR", "message": f"SOC lab auth.log not found at: {target_path}"}
+        is_safe, target_path = validate_safe_dataset_path(params.file_path, "data/soc_labs/zacariah_bruteforce/auth.log")
+        if not is_safe:
+            return {"status": "ERROR", "message": target_path}
 
         failed_by_ip = defaultdict(int)
         failed_targets_by_ip = defaultdict(list)

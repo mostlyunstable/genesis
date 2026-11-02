@@ -94,7 +94,7 @@ class StatisticalAnomalyEngine:
             ts = ts.replace(tzinfo=timezone.utc)
 
         user = (event.username or "unknown").strip().lower()
-        ip = event.source_ip.strip()
+        ip = (event.source_ip or "0.0.0.0").strip()
         hour_fraction = ts.hour + (ts.minute / 60.0)
 
         anomaly_detected = False
@@ -168,7 +168,7 @@ class StatisticalAnomalyEngine:
             description="; ".join(anomaly_reasons),
             severity=severity,
             source_ip=ip,
-            target_accounts=[event.username],
+            target_accounts=[event.username] if event.username else [user],
             event_count=1,
             timestamp=ts,
             confidence=confidence,

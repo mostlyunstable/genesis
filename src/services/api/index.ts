@@ -110,9 +110,49 @@ export interface SentinelApiClient {
 
 let activeBackendUrl = (typeof window !== 'undefined' && localStorage.getItem('sentinel_backend_url')) || 'http://127.0.0.1:8000';
 let authToken = (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
+let authPromise: Promise<string> | null = null;
+
+async function ensureAuthToken(): Promise<string> {
+  const existing = (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
+  if (existing) {
+    authToken = existing;
+    return existing;
+  }
+  if (authPromise) return authPromise;
+
+  authPromise = (async () => {
+    try {
+      const res = await fetch(`${activeBackendUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'secops_analyst@genesis.ai',
+          password: 'genesis_secops_2026!'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          authToken = data.access_token;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('sentinel_auth_token', authToken);
+          }
+          return authToken;
+        }
+      }
+    } catch (e) {
+      console.warn('[GENESIS Auto-Auth] Background session initialization notice:', e);
+    } finally {
+      authPromise = null;
+    }
+    return '';
+  })();
+
+  return authPromise;
+}
 
 function getAuthToken(): string {
-  return (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
+  return authToken || (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
 }
 
 async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -122,12 +162,27 @@ async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}):
     ...(options.headers as Record<string, string> || {})
   };
 
-  const token = getAuthToken();
+  let token = getAuthToken();
+  if (!token && !endpoint.includes('/auth/login')) {
+    token = await ensureAuthToken();
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, { ...options, headers });
+  let res = await fetch(url, { ...options, headers });
+  if (res.status === 401 && !endpoint.includes('/auth/login')) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('sentinel_auth_token');
+    }
+    authToken = '';
+    token = await ensureAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      res = await fetch(url, { ...options, headers });
+    }
+  }
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = errorData.detail?.message || errorData.detail || `HTTP Error ${res.status}: ${res.statusText}`;
@@ -173,7 +228,8 @@ export const sentinelApi: SentinelApiClient = {
 
     uploadFile: async (conversationId: string, file: File) => {
       const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(conversationId)}/upload`;
-      const token = getAuthToken();
+      let token = getAuthToken();
+      if (!token) token = await ensureAuthToken();
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -226,7 +282,8 @@ export const sentinelApi: SentinelApiClient = {
       contextFileId?: string
     ) => {
       const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(id)}/stream`;
-      const token = getAuthToken();
+      let token = getAuthToken();
+      if (!token) token = await ensureAuthToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };

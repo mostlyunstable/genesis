@@ -79,13 +79,16 @@ class DetectionEngine:
         self._purge_stale(ts, max_window)
 
         # Record event in window
-        self._ip_windows[event.source_ip].append(
-            SlidingWindowItem(event.id, ts, event.username, event.outcome, event.destination_ip)
+        safe_source_ip = event.source_ip or "0.0.0.0"
+        safe_username = event.username or "unknown"
+
+        self._ip_windows[safe_source_ip].append(
+            SlidingWindowItem(event.id, ts, safe_username, event.outcome, event.destination_ip)
         )
         if event.outcome == "failure":
-            self._user_windows[event.username].append((event.id, ts, event.source_ip))
+            self._user_windows[safe_username].append((event.id, ts, safe_source_ip))
 
-        ip_history = self._ip_windows[event.source_ip]
+        ip_history = self._ip_windows[safe_source_ip]
         created_or_updated: List[DetectionModel] = []
 
         # -------------------------------------------------------------
@@ -103,17 +106,17 @@ class DetectionEngine:
                     detection_id=f"DET-SUCCESS-BREACH-{event.id}",
                     name=f"Suspicious Successful Authentication After {len(prior_fails)} Failures",
                     category="suspicious_auth",
-                    description=f"Successful login for user '{event.username}' from IP {event.source_ip} preceded by {len(prior_fails)} failed attempts in window.",
+                    description=f"Successful login for user '{safe_username}' from IP {safe_source_ip} preceded by {len(prior_fails)} failed attempts in window.",
                     severity="critical",
-                    source_ip=event.source_ip,
-                    target_accounts=list(set([f.username for f in prior_fails] + [event.username])),
+                    source_ip=safe_source_ip,
+                    target_accounts=list(set([f.username for f in prior_fails] + [safe_username])),
                     event_count=len(prior_fails) + 1,
                     timestamp=ts,
                     confidence=95.0,
                     risk_score=94.0,
                     triggering_conditions=[
                         f"Prior failures ({len(prior_fails)}) >= 3 in {thresholds['ssh_window']}s window",
-                        f"Accepted authentication for user '{event.username}'"
+                        f"Accepted authentication for user '{safe_username}'"
                     ],
                     supporting_event_ids=[f.event_id for f in prior_fails] + [event.id],
                     rule_id="RULE-AUTH-SUCCESS-AFTER-FAIL",
@@ -133,14 +136,15 @@ class DetectionEngine:
                 if item.outcome == "failure" and item.timestamp >= ssh_cutoff
             ]
             if len(recent_fails) >= thresholds["ssh_failed_threshold"]:
+                ip_clean = safe_source_ip.replace('.', '-')
                 det = await self._record_detection(
                     db=db,
-                    detection_id=f"DET-SSH-BF-{event.source_ip.replace('.', '-')}",
+                    detection_id=f"DET-SSH-BF-{ip_clean}",
                     name="High-Velocity SSH Brute-Force Sequence",
                     category="ssh_brute_force",
-                    description=f"{len(recent_fails)} failed SSH logons originating from {event.source_ip} within {thresholds['ssh_window']}s window.",
+                    description=f"{len(recent_fails)} failed SSH logons originating from {safe_source_ip} within {thresholds['ssh_window']}s window.",
                     severity="critical" if len(recent_fails) >= 20 else "warning",
-                    source_ip=event.source_ip,
+                    source_ip=safe_source_ip,
                     target_accounts=list(set([f.username for f in recent_fails])),
                     event_count=len(recent_fails),
                     timestamp=ts,
@@ -166,14 +170,15 @@ class DetectionEngine:
         unique_users_targeted = set(item.username for item in recent_ip_events if item.username != "unknown")
 
         if len(unique_users_targeted) >= thresholds["spray_user_threshold"]:
+            ip_clean = safe_source_ip.replace('.', '-')
             det = await self._record_detection(
                 db=db,
-                detection_id=f"DET-SPRAY-{event.source_ip.replace('.', '-')}",
+                detection_id=f"DET-SPRAY-{ip_clean}",
                 name="Distributed Password Spraying Campaign",
                 category="password_spraying",
-                description=f"Source IP {event.source_ip} probed {len(unique_users_targeted)} unique usernames within {thresholds['spray_window']}s window.",
+                description=f"Source IP {safe_source_ip} probed {len(unique_users_targeted)} unique usernames within {thresholds['spray_window']}s window.",
                 severity="critical" if len(unique_users_targeted) >= 15 else "warning",
-                source_ip=event.source_ip,
+                source_ip=safe_source_ip,
                 target_accounts=list(unique_users_targeted),
                 event_count=len(recent_ip_events),
                 timestamp=ts,
@@ -234,14 +239,15 @@ class DetectionEngine:
             recent_fails = [item for item in ip_history if item.outcome == "failure" and item.timestamp >= window_cutoff]
             distinct_dest_ips = set(item.destination_ip for item in recent_fails)
             if len(distinct_dest_ips) >= 2 and len(recent_fails) >= 4:
+                ip_clean = safe_source_ip.replace('.', '-')
                 det = await self._record_detection(
                     db=db,
-                    detection_id=f"DET-CROSS-ASSET-{event.source_ip.replace('.', '-')}",
-                    name=f"Multi-Asset Authentication Probing from {event.source_ip}",
+                    detection_id=f"DET-CROSS-ASSET-{ip_clean}",
+                    name=f"Multi-Asset Authentication Probing from {safe_source_ip}",
                     category="lateral_probing",
-                    description=f"Source IP {event.source_ip} attempted failed logins across {len(distinct_dest_ips)} distinct internal infrastructure targets.",
+                    description=f"Source IP {safe_source_ip} attempted failed logins across {len(distinct_dest_ips)} distinct internal infrastructure targets.",
                     severity="high",
-                    source_ip=event.source_ip,
+                    source_ip=safe_source_ip,
                     target_accounts=list(set(item.username for item in recent_fails)),
                     event_count=len(recent_fails),
                     timestamp=ts,
@@ -262,22 +268,24 @@ class DetectionEngine:
         # -------------------------------------------------------------
         # HEURISTIC 6: Privileged Account Targeting (High-Value Identity)
         # -------------------------------------------------------------
-        if event.outcome == "failure" and event.username.lower() in ["root", "admin", "administrator", "domain_admin", "svc_backup"]:
+        u_lower = (event.username or "").lower()
+        if event.outcome == "failure" and u_lower in ["root", "admin", "administrator", "domain_admin", "svc_backup"]:
             window_cutoff = ts - timedelta(seconds=thresholds["ssh_window"])
             priv_fails = [
                 item for item in ip_history
-                if item.username.lower() == event.username.lower() and item.outcome == "failure" and item.timestamp >= window_cutoff
+                if (item.username or "").lower() == u_lower and item.outcome == "failure" and item.timestamp >= window_cutoff
             ]
             if len(priv_fails) >= 5:
+                ip_clean = safe_source_ip.replace('.', '-')
                 det = await self._record_detection(
                     db=db,
-                    detection_id=f"DET-PRIV-{event.username.lower()}-{event.source_ip.replace('.', '-')}",
-                    name=f"Focused Privileged Account Brute Force on '{event.username}'",
+                    detection_id=f"DET-PRIV-{u_lower}-{ip_clean}",
+                    name=f"Focused Privileged Account Brute Force on '{safe_username}'",
                     category="privilege_targeting",
-                    description=f"{len(priv_fails)} failed attempts directed specifically at privileged account '{event.username}' from {event.source_ip}.",
+                    description=f"{len(priv_fails)} failed attempts directed specifically at privileged account '{safe_username}' from {safe_source_ip}.",
                     severity="critical" if len(priv_fails) >= 10 else "high",
-                    source_ip=event.source_ip,
-                    target_accounts=[event.username],
+                    source_ip=safe_source_ip,
+                    target_accounts=[safe_username],
                     event_count=len(priv_fails),
                     timestamp=ts,
                     confidence=92.0,
