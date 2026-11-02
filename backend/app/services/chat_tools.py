@@ -18,6 +18,7 @@ from backend.app.models.threat_intel import ThreatIntelModel
 from backend.app.models.source import LogSourceModel
 from backend.app.models.audit import AuditRecordModel
 from backend.app.models.chat import UploadedFileModel
+from backend.app.models.asset import AssetModel
 from backend.app.schemas.event import RawLogItem
 from backend.app.services.ingest import NormalizerService
 from backend.app.services.threat_intel import knowledge_retriever, threat_intel_service
@@ -220,6 +221,20 @@ class CorrelateKillChainInput(BaseModel):
 class AnalyzeSocBruteforceLabInput(BaseModel):
     file_path: Optional[str] = "data/soc_labs/zacariah_bruteforce/auth.log"
     threshold: int = 3
+
+
+class GetAssetDetailsInput(BaseModel):
+    ip_or_hostname: str
+
+
+class ListMonitoredAssetsInput(BaseModel):
+    tier: Optional[int] = None
+
+
+class SearchVectorKnowledgeInput(BaseModel):
+    query: str
+    top_k: int = Field(4, ge=1, le=10)
+    source_filter: Optional[str] = None
 
 
 # -----------------------------------------------------------------------------
@@ -1690,6 +1705,129 @@ class CybersecurityToolRegistry:
                 }
                 for ip, count in failed_by_ip.items()
                 if count >= params.threshold
+            ]
+        }
+
+    @staticmethod
+    async def get_asset_details(params: GetAssetDetailsInput, db: AsyncSession) -> Dict[str, Any]:
+        """
+        Retrieves infrastructure asset criticality tier, hardware/OS profile, running services,
+        and known CVE vulnerabilities for Business Impact Analysis (BIA Stage F).
+        """
+        from backend.app.services.asset import asset_service
+        asset = await asset_service.get_asset_by_ip(params.ip_or_hostname, db)
+        if not asset:
+            stmt = select(AssetModel).where(AssetModel.hostname.ilike(f"%{params.ip_or_hostname}%"))
+            res = await db.execute(stmt)
+            obj = res.scalar_one_or_none()
+            if obj:
+                asset = {
+                    "id": obj.id,
+                    "hostname": obj.hostname,
+                    "ip_address": obj.ip_address,
+                    "asset_tier": obj.asset_tier,
+                    "tier_multiplier": asset_service.get_tier_multiplier(obj.asset_tier),
+                    "asset_type": obj.asset_type,
+                    "os_family": obj.os_family,
+                    "os_version": obj.os_version,
+                    "running_services": obj.running_services or [],
+                    "cve_vulnerabilities": obj.cve_vulnerabilities or [],
+                    "business_unit": obj.business_unit,
+                    "owner": obj.owner,
+                    "is_active": obj.is_active
+                }
+
+        if not asset:
+            return {
+                "status": "NOT_FOUND",
+                "target": params.ip_or_hostname,
+                "message": f"Asset '{params.ip_or_hostname}' not found in asset inventory. Default multiplier 1.0 applies."
+            }
+
+        tier_names = {
+            1: "Tier 1: Mission Critical (Domain Controller / Primary DB)",
+            2: "Tier 2: Production Business Service",
+            3: "Tier 3: Non-Critical / Workstation / Sandbox"
+        }
+
+        return {
+            "status": "SUCCESS",
+            "asset_id": asset["id"],
+            "hostname": asset["hostname"],
+            "ip_address": asset["ip_address"],
+            "asset_tier": asset["asset_tier"],
+            "tier_description": tier_names.get(asset["asset_tier"], "Standard Asset"),
+            "criticality_multiplier": asset.get("tier_multiplier", 1.0),
+            "os": f"{asset['os_family']} ({asset['os_version']})",
+            "running_services": asset.get("running_services", []),
+            "cve_vulnerabilities": asset.get("cve_vulnerabilities", []),
+            "business_unit": asset.get("business_unit"),
+            "owner": asset.get("owner"),
+            "evidence": [
+                {
+                    "type": "asset",
+                    "id": asset["id"],
+                    "title": f"Asset {asset['hostname']} ({asset['ip_address']}) - Tier {asset['asset_tier']}",
+                    "snippet": f"BIA Tier {asset['asset_tier']} ({asset.get('tier_multiplier', 1.0)}x multiplier). Vulnerabilities: {len(asset.get('cve_vulnerabilities', []))} CVEs."
+                }
+            ]
+        }
+
+    @staticmethod
+    async def list_monitored_assets(params: ListMonitoredAssetsInput, db: AsyncSession) -> Dict[str, Any]:
+        """Lists enterprise assets monitored by the platform with their criticality tiers."""
+        from backend.app.services.asset import asset_service, DEFAULT_SEED_ASSETS
+        await asset_service.ensure_seed_assets(db)
+
+        stmt = select(AssetModel)
+        if params.tier:
+            stmt = stmt.where(AssetModel.asset_tier == params.tier)
+        res = await db.execute(stmt)
+        assets = res.scalars().all()
+
+        items = []
+        for a in assets:
+            items.append({
+                "id": a.id,
+                "hostname": a.hostname,
+                "ip_address": a.ip_address,
+                "asset_tier": a.asset_tier,
+                "tier_multiplier": asset_service.get_tier_multiplier(a.asset_tier),
+                "asset_type": a.asset_type,
+                "cve_count": len(a.cve_vulnerabilities or [])
+            })
+
+        return {
+            "status": "SUCCESS",
+            "total_assets": len(items),
+            "assets": items
+        }
+
+    @staticmethod
+    async def search_vector_knowledge(params: SearchVectorKnowledgeInput, db: AsyncSession) -> Dict[str, Any]:
+        """
+        Executes Dense Vector Similarity RAG Search over MITRE ATT&CK techniques,
+        Sigma detection rules, and defensive containment playbooks.
+        """
+        from backend.app.services.vector_rag import vector_rag
+        results = vector_rag.search(
+            query=params.query,
+            top_k=params.top_k,
+            source_filter=params.source_filter
+        )
+        return {
+            "status": "SUCCESS",
+            "query": params.query,
+            "total_matches": len(results),
+            "matches": results,
+            "evidence": [
+                {
+                    "type": r.get("source", "knowledge"),
+                    "id": r.get("id"),
+                    "title": r.get("title"),
+                    "snippet": f"Similarity: {r.get('similarity_score')}. {r.get('guidelines', r.get('logic', ''))[:120]}"
+                }
+                for r in results
             ]
         }
 

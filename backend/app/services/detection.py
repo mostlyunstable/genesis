@@ -30,6 +30,8 @@ class DetectionEngine:
         """Reset in-memory sliding windows (for test isolation)."""
         self._ip_windows.clear()
         self._user_windows.clear()
+        from backend.app.services.anomaly import statistical_anomaly_engine
+        statistical_anomaly_engine.reset()
 
     def _purge_stale(self, now: datetime, window_seconds: int):
         cutoff = now - timedelta(seconds=window_seconds)
@@ -291,6 +293,14 @@ class DetectionEngine:
                 )
                 if det:
                     created_or_updated.append(det)
+
+        # -------------------------------------------------------------
+        # HEURISTIC 7: Statistical 3-Sigma Behavioral Anomaly Engine
+        # -------------------------------------------------------------
+        from backend.app.services.anomaly import statistical_anomaly_engine
+        stat_det = await statistical_anomaly_engine.evaluate_event(event, db)
+        if stat_det:
+            created_or_updated.append(stat_det)
 
         # Trigger automatic incident correlation if any detections were found
         if created_or_updated:

@@ -44,6 +44,12 @@ MITRE_MAPPING = {
         "techniqueId": "T1078.002",
         "techniqueName": "Valid Accounts: Domain Accounts",
         "referenceUrl": "https://attack.mitre.org/techniques/T1078/002/"
+    },
+    "statistical_anomaly": {
+        "tactic": "Defense Evasion & Initial Access",
+        "techniqueId": "T1078",
+        "techniqueName": "Valid Accounts: Behavioral Anomaly",
+        "referenceUrl": "https://attack.mitre.org/techniques/T1078/"
     }
 }
 
@@ -54,16 +60,18 @@ class CorrelationEngine:
         category: str,
         event_count: int,
         target_accounts: List[str],
-        has_successful_breach: bool
+        has_successful_breach: bool,
+        asset_tier_multiplier: float = 1.0
     ) -> tuple[int, int]:
         """
-        Deterministic Risk and Confidence calculation.
+        Deterministic Risk and Confidence calculation with Stage F Asset BIA Criticality.
         Returns: (risk_score, confidence_score) in 0-100.
         """
         base_risk = {
             "suspicious_auth": 88,
             "privilege_targeting": 80,
             "lateral_probing": 75,
+            "statistical_anomaly": 72,
             "ssh_brute_force": 70,
             "password_spraying": 65,
             "distributed_brute_force": 60
@@ -80,7 +88,8 @@ class CorrelationEngine:
         # Volume factor
         volume_penalty = min(10, event_count // 5)
 
-        total_risk = min(100, base_risk + privilege_penalty + breach_penalty + volume_penalty)
+        subtotal = base_risk + privilege_penalty + breach_penalty + volume_penalty
+        total_risk = min(100, int(subtotal * asset_tier_multiplier))
 
         # Confidence: higher with more events and distinct conditions
         confidence = min(100, 75 + min(25, event_count // 2))
@@ -108,6 +117,20 @@ class CorrelationEngine:
         mitre_item = MITRE_MAPPING.get(detection.category, MITRE_MAPPING["ssh_brute_force"])
         has_breach = detection.category == "suspicious_auth"
 
+        # Resolve affected asset and BIA tier multiplier from supporting events
+        target_asset = None
+        multiplier = 1.0
+        if detection.supporting_event_ids:
+            from backend.app.models.event import SecurityEventModel
+            from backend.app.services.asset import asset_service
+            stmt = select(SecurityEventModel.destination_ip).where(SecurityEventModel.id.in_(detection.supporting_event_ids)).limit(1)
+            dest_res = await db.execute(stmt)
+            dest_ip = dest_res.scalar_one_or_none()
+            if dest_ip:
+                target_asset = await asset_service.get_asset_by_ip(dest_ip, db)
+                if target_asset:
+                    multiplier = float(target_asset.get("tier_multiplier", 1.0))
+
         if matching_incident:
             # Append detection & event IDs
             det_ids = list(set(matching_incident.detection_ids + [detection.id]))
@@ -122,7 +145,8 @@ class CorrelationEngine:
                 detection.category,
                 len(evt_ids),
                 accs,
-                has_breach or "breach" in matching_incident.title.lower()
+                has_breach or "breach" in matching_incident.title.lower(),
+                multiplier
             )
 
             matching_incident.detection_ids = det_ids
@@ -132,6 +156,19 @@ class CorrelationEngine:
             matching_incident.risk_score = max(matching_incident.risk_score, risk)
             matching_incident.confidence_score = max(matching_incident.confidence_score, conf)
             matching_incident.updated_at = ts
+
+            if target_asset and isinstance(matching_incident.ai_summary, dict) and "affectedAsset" not in matching_incident.ai_summary:
+                updated_summary = dict(matching_incident.ai_summary)
+                updated_summary["affectedAsset"] = {
+                    "id": target_asset["id"],
+                    "hostname": target_asset["hostname"],
+                    "ipAddress": target_asset["ip_address"],
+                    "assetTier": target_asset["asset_tier"],
+                    "tierMultiplier": multiplier,
+                    "services": target_asset.get("running_services", []),
+                    "vulnerabilities": target_asset.get("cve_vulnerabilities", [])
+                }
+                matching_incident.ai_summary = updated_summary
 
             # Append new MITRE techniques if not already represented
             existing_techs = {m.get("techniqueId") for m in (matching_incident.mitre_attack or [])}
@@ -152,7 +189,8 @@ class CorrelationEngine:
                 detection.category,
                 detection.event_count,
                 detection.target_accounts,
-                has_breach
+                has_breach,
+                multiplier
             )
 
             title = (
@@ -175,6 +213,21 @@ class CorrelationEngine:
                 ],
                 "confidenceExplanation": f"High mathematical confidence ({conf}%) based on {detection.event_count} deterministic telemetry events in sliding window."
             }
+
+            if target_asset:
+                ai_summary["affectedAsset"] = {
+                    "id": target_asset["id"],
+                    "hostname": target_asset["hostname"],
+                    "ipAddress": target_asset["ip_address"],
+                    "assetTier": target_asset["asset_tier"],
+                    "tierMultiplier": multiplier,
+                    "services": target_asset.get("running_services", []),
+                    "vulnerabilities": target_asset.get("cve_vulnerabilities", [])
+                }
+                cves = target_asset.get("cve_vulnerabilities", [])
+                if cves:
+                    cve_str = ", ".join([c["cve_id"] for c in cves])
+                    ai_summary["rootCauseAnalysis"] += f" Target host {target_asset['hostname']} has known vulnerability context: {cve_str}."
 
             timeline_events = [
                 {

@@ -10,6 +10,7 @@ from backend.app.models.audit import AuditRecordModel
 from backend.app.models.settings import SettingsModel
 from backend.app.models.chat import ConversationModel, ChatMessageModel, UploadedFileModel
 from backend.app.models.report import ReportModel
+from backend.app.models.asset import AssetModel
 
 __all__ = [
     "Base",
@@ -27,4 +28,5 @@ __all__ = [
     "ChatMessageModel",
     "UploadedFileModel",
     "ReportModel",
+    "AssetModel",
 ]

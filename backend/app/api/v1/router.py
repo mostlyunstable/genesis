@@ -13,6 +13,7 @@ from backend.app.api.v1.stream import router as stream_router
 from backend.app.api.v1.analytics import router as analytics_router
 from backend.app.api.v1.chat import router as chat_router
 from backend.app.api.v1.reports import router as reports_router
+from backend.app.api.v1.assets import router as assets_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -29,3 +30,4 @@ api_router.include_router(stream_router)
 api_router.include_router(analytics_router)
 api_router.include_router(chat_router)
 api_router.include_router(reports_router)
+api_router.include_router(assets_router)

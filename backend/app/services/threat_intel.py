@@ -310,6 +310,16 @@ class SecurityKnowledgeRetriever:
                     "verification": pb["verification_steps"]
                 })
 
+        # 4. Dense Vector Semantic RAG Retrieval
+        try:
+            from backend.app.services.vector_rag import vector_rag
+            vector_matches = vector_rag.search(query, top_k=max_results)
+            for vm in vector_matches:
+                if not any(r.get("id") == vm.get("id") for r in results):
+                    results.append(vm)
+        except Exception:
+            pass
+
         # Default fallback if query is generic
         if not results:
             results.append({
