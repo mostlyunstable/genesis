@@ -835,13 +835,33 @@ class CybersecurityToolRegistry:
 
     @staticmethod
     async def generate_investigation_report(params: GenerateInvestigationReportInput, db: AsyncSession) -> Dict[str, Any]:
+        from backend.app.services.report import report_service
+        report = await report_service.generate_report(
+            target_id=params.target_id,
+            target_type=params.target_type,
+            report_type="INCIDENT_DOSSIER" if params.target_type == "incident" else "INVESTIGATION_SUMMARY",
+            actor="secops_analyst@genesis.ai",
+            db=db
+        )
         return {
             "status": "SUCCESS",
+            "reportId": report.id,
             "targetId": params.target_id,
             "targetType": params.target_type,
-            "reportTitle": f"Executive Security Forensic Dossier: {params.target_id}",
-            "generatedAt": datetime.now(timezone.utc).isoformat(),
-            "classification": "CONFIDENTIAL // SECOPS USE ONLY"
+            "reportTitle": report.title,
+            "generatedAt": report.created_at.isoformat(),
+            "classification": report.classification,
+            "recordHash": report.record_hash,
+            "summarySnippet": report.summary[:200] + "...",
+            "downloadUrl": f"/api/v1/reports/{report.id}/download?format=markdown",
+            "evidence": [
+                {
+                    "type": "report",
+                    "id": report.id,
+                    "title": report.title,
+                    "snippet": f"Signed dossier (SHA-256: {report.record_hash[:12]}...)"
+                }
+            ]
         }
 
     @staticmethod

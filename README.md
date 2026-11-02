@@ -1,6 +1,6 @@
 # GENESIS AI — Autonomous Cybersecurity Intelligence Platform & SOC Copilot
 
-[![Tests Passing](https://img.shields.io/badge/Backend%20Tests-164%2F164%20Passing-success?style=flat-square&logo=pytest)](file:///Users/mayankkumar/genysis/backend/tests)
+[![Tests Passing](https://img.shields.io/badge/Backend%20Tests-170%2F170%20Passing-success?style=flat-square&logo=pytest)](file:///Users/mayankkumar/genysis/backend/tests)
 [![Python Version](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square&logo=python)](file:///Users/mayankkumar/genysis/backend)
 [![FastAPI](https://img.shields.io/badge/Framework-FastAPI%20%7C%20SSE%20Streaming-009688?style=flat-square&logo=fastapi)](file:///Users/mayankkumar/genysis/backend/app)
 [![React Version](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite%206%20%7C%20TS-61DAFB?style=flat-square&logo=react)](file:///Users/mayankkumar/genysis/src)
