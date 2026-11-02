@@ -102,9 +102,10 @@ async def list_conversations(
 ):
     """List persistent conversations for current user, ordered by most recently updated."""
     user_id = current_user.id if hasattr(current_user, "id") else None
+    user_role = getattr(current_user, "role", "")
     stmt = select(ConversationModel).options(selectinload(ConversationModel.messages))
 
-    if user_id:
+    if user_id and user_role != "admin":
         stmt = stmt.where(or_(ConversationModel.user_id == user_id, ConversationModel.user_id.is_(None)))
 
     if query:
@@ -156,7 +157,8 @@ async def get_conversation(
         )
 
     user_id = current_user.id if hasattr(current_user, "id") else None
-    if user_id and conv.user_id and conv.user_id != user_id:
+    user_role = getattr(current_user, "role", "")
+    if user_id and conv.user_id and conv.user_id != user_id and user_role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"code": "FORBIDDEN", "message": "You do not have permission to view this conversation."}
