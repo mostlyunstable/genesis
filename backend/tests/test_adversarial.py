@@ -166,3 +166,13 @@ async def test_adversarial_double_rollback(client: AsyncClient, adversarial_setu
     roll2 = await client.post(f"/api/v1/response/actions/{action_id}/rollback", headers=adversarial_setup["admin_headers"])
     assert roll2.status_code == 400
     assert "cannot be rolled back or is already reverted" in roll2.json()["detail"]["message"]
+
+
+def test_dataset_sandbox_rejects_sibling_with_data_prefix():
+    from pathlib import Path
+    from backend.app.services import chat_tools
+
+    root = Path(chat_tools.__file__).resolve().parents[3]
+    allowed, message = chat_tools.validate_safe_dataset_path(str(root / "data-private" / "logs"), "")
+    assert not allowed
+    assert "SECURITY_ERROR" in message

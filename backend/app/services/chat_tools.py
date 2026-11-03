@@ -252,7 +252,7 @@ def validate_safe_dataset_path(file_path: Optional[str], default_path: str) -> T
     project_root = os.path.realpath(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
     allowed_data_dir = os.path.realpath(os.path.join(project_root, "data"))
 
-    if not abs_target.startswith(allowed_data_dir) or ".." in raw_path:
+    if os.path.commonpath([allowed_data_dir, abs_target]) != allowed_data_dir or ".." in raw_path:
         return False, f"SECURITY_ERROR: Access denied. Path '{raw_path}' is outside authorized data sandbox."
 
     if not os.path.exists(abs_target):

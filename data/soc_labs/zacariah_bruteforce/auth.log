@@ -1,0 +1,6 @@
+Mar 19 10:01:23 kali sshd[1234]: Failed password for invalid user admin from 192.168.1.10 port 22
+Mar 19 10:01:25 kali sshd[1235]: Failed password for root from 192.168.1.10 port 22
+Mar 19 10:01:27 kali sshd[1236]: Failed password for admin from 192.168.1.10 port 22
+Mar 19 10:01:29 kali sshd[1237]: Failed password for test from 192.168.1.10 port 22
+Mar 19 10:01:31 kali sshd[1238]: Failed password for user from 192.168.1.10 port 22
+Mar 19 10:02:10 kali sshd[1240]: Accepted password for zacariah from 192.168.1.5 port 22
