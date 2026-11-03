@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useModalFocus } from '@/hooks/useModalFocus';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Compass,
@@ -38,6 +39,8 @@ export const Sidebar: React.FC = () => {
     { name: 'Settings', path: '/settings', id: 'settings', icon: Settings }
   ];
 
+  const sidebarRef = useRef<HTMLElement>(null);
+  useModalFocus(mobileSidebarOpen, sidebarRef, () => setMobileSidebarOpen(false));
   return (
     <>
       {/* Mobile Backdrop when open on small screens */}
@@ -48,7 +51,7 @@ export const Sidebar: React.FC = () => {
         />
       )}
 
-      <aside
+      <aside ref={sidebarRef} role={mobileSidebarOpen ? "dialog" : undefined} aria-modal={mobileSidebarOpen || undefined} aria-label="Main navigation"
         className={`bg-white border-r border-[#E2E4DC] flex flex-col shrink-0 min-h-0 h-full transition-all duration-200 z-50 select-none ${
           mobileSidebarOpen
             ? 'fixed inset-y-0 left-0 w-[240px] shadow-origin-lg flex md:relative md:shadow-none'

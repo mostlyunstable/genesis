@@ -56,12 +56,13 @@ class ChatCopilotService:
         user_id: Optional[str] = None,
         context_incident_id: Optional[str] = None,
         context_asset_id: Optional[str] = None,
-        context_file_id: Optional[str] = None
+        context_file_id: Optional[str] = None,
+        retry_message_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         from backend.app.services.local_chat import stream_local_chat
 
         async for event in stream_local_chat(
-            conversation, user_message_text, db, context_file_id, context_incident_id
+            conversation, user_message_text, db, context_file_id, context_incident_id, retry_message_id
         ):
             yield event
 

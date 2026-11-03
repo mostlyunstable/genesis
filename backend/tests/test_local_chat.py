@@ -56,7 +56,10 @@ async def test_model_outage_emits_error_instead_of_saved_response(db_session, mo
     chunks = [chunk async for chunk in service.process_message_stream(conv, "Hello", db_session)]
     assert any("event: error" in c for c in chunks)
     assert not any("event: token" in c for c in chunks)
-    assert not list(await db_session.scalars(select(ChatMessageModel).where(ChatMessageModel.role == "assistant")))
+    failed = list(await db_session.scalars(select(ChatMessageModel).where(ChatMessageModel.role == "assistant")))
+    assert len(failed) == 1
+    assert failed[0].thought_process == "failed"
+    assert "Generation failed" in failed[0].content
 
 
 @pytest.mark.asyncio

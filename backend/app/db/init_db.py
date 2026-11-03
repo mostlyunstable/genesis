@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.core.config import settings
-from backend.app.core.security import get_password_hash
+from backend.app.core.security import get_password_hash, verify_password
 from backend.app.db.base import Base
 from backend.app.db.session import engine, async_session_factory
 from backend.app.models.user import User
@@ -19,32 +19,43 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with async_session_factory() as session:
-        # 1. Seed Default Analyst User
-        res_user = await session.execute(select(User).where(User.username == "secops_analyst@genesis.ai"))
-        if not res_user.scalar_one_or_none():
-            genesis_user = User(
-                id="USR-000",
-                username="secops_analyst@genesis.ai",
-                full_name="SecOps Lead Analyst",
-                hashed_password=get_password_hash("genesis_secops_2026!"),
-                role="admin",
-                is_active=True,
-                created_at=datetime.now(timezone.utc)
-            )
-            session.add(genesis_user)
+        # Demo credentials must never grant access in production.
+        if settings.DEMO_MODE:
+            # 1. Seed Default Analyst User
+            res_user = await session.execute(select(User).where(User.username == "secops_analyst@genesis.ai"))
+            if not res_user.scalar_one_or_none():
+                genesis_user = User(
+                    id="USR-000",
+                    username="secops_analyst@genesis.ai",
+                    full_name="SecOps Lead Analyst",
+                    hashed_password=get_password_hash("genesis_secops_2026!"),
+                    role="admin",
+                    is_active=True,
+                    created_at=datetime.now(timezone.utc)
+                )
+                session.add(genesis_user)
 
-        res_user_compat = await session.execute(select(User).where(User.username == "secops_analyst@sentinel.ai"))
-        if not res_user_compat.scalar_one_or_none():
-            admin_user = User(
-                id="USR-001",
-                username="secops_analyst@sentinel.ai",
-                full_name="SecOps Lead Analyst (Legacy)",
-                hashed_password=get_password_hash("sentinel_secops_2026!"),
-                role="admin",
-                is_active=True,
-                created_at=datetime.now(timezone.utc)
-            )
-            session.add(admin_user)
+            res_user_compat = await session.execute(select(User).where(User.username == "secops_analyst@sentinel.ai"))
+            if not res_user_compat.scalar_one_or_none():
+                admin_user = User(
+                    id="USR-001",
+                    username="secops_analyst@sentinel.ai",
+                    full_name="SecOps Lead Analyst (Legacy)",
+                    hashed_password=get_password_hash("sentinel_secops_2026!"),
+                    role="admin",
+                    is_active=True,
+                    created_at=datetime.now(timezone.utc)
+                )
+                session.add(admin_user)
+
+        else:
+            for username, password in (
+                ("secops_analyst@genesis.ai", "genesis_secops_2026!"),
+                ("secops_analyst@sentinel.ai", "sentinel_secops_2026!"),
+            ):
+                user = await session.scalar(select(User).where(User.username == username))
+                if user and verify_password(password, user.hashed_password):
+                    user.is_active = False
 
         # 2. Seed Default Platform Settings
         res_settings = await session.execute(select(SettingsModel).where(SettingsModel.id == 1))

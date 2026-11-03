@@ -22,6 +22,8 @@ import { useChatStore } from '@/stores/useChatStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { InvestigationStepsIndicator } from './InvestigationStepsIndicator';
 import { LocalModelStatus } from './LocalModelStatus';
+import { useModalFocus } from '@/hooks/useModalFocus';
+import { useChatScroll } from '@/hooks/useChatScroll';
 import { ActionProposalCard } from './ActionProposalCard';
 
 export const CopilotSideDrawer: React.FC = () => {
@@ -50,16 +52,11 @@ export const CopilotSideDrawer: React.FC = () => {
 
   const [inputMessage, setInputMessage] = useState('');
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll when messages change or streaming
-  useEffect(() => {
-    if (isSideDrawerOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
-    }
-  }, [messages, streamingContent, isStreaming, isSideDrawerOpen]);
+  const scroll = useChatScroll(activeConversationId, [messages, streamingContent, currentStep, isStreaming, isSideDrawerOpen]);
 
   // Focus input when opened
   useEffect(() => {
@@ -117,6 +114,8 @@ export const CopilotSideDrawer: React.FC = () => {
     setTimeout(() => setCopiedMessageId(null), 1500);
   };
 
+  const drawerRef = useRef<HTMLElement>(null);
+  useModalFocus(isSideDrawerOpen, drawerRef, () => setSideDrawerOpen(false));
   if (!isSideDrawerOpen) return null;
 
   return (
@@ -129,7 +128,9 @@ export const CopilotSideDrawer: React.FC = () => {
       />
 
       {/* Slide-over Side Drawer Panel */}
-      <aside 
+      <aside
+        ref={drawerRef}
+        aria-modal="true"
         className="fixed inset-y-0 right-0 w-full sm:w-[480px] lg:w-[520px] z-50 bg-white border-l border-[#E2E4DC] shadow-2xl flex flex-col font-sans animate-in slide-in-from-right duration-250 select-none"
         role="dialog"
         aria-label="Genesis Copilot Assistant"
@@ -180,7 +181,7 @@ export const CopilotSideDrawer: React.FC = () => {
         </header>
 
         {/* Scrollable Message Thread */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-[#F8F8F5]">
+        <div ref={scroll.containerRef} onScroll={scroll.onScroll} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-[#F8F8F5]">
           {messages.length === 0 && !isStreaming ? (
             /* Minimal Understated Initial Greeting */
             <div className="py-8 text-center space-y-4">
@@ -298,7 +299,7 @@ export const CopilotSideDrawer: React.FC = () => {
                         </button>
                         <span>•</span>
                         <button
-                          onClick={retryLastMessage}
+                          onClick={() => retryLastMessage(msg.id)}
                           className="flex items-center gap-1 hover:text-[#111417] transition-colors cursor-pointer"
                         >
                           <RotateCcw className="w-3 h-3" />
@@ -336,9 +337,9 @@ export const CopilotSideDrawer: React.FC = () => {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
         </div>
 
+        {scroll.showJump && <button onClick={scroll.jump} className="min-h-11 border bg-white">Jump to latest reply</button>}
         {/* Bottom Input Composer */}
         <div className="p-3.5 border-t border-[#E2E4DC] bg-white shrink-0 space-y-2">
           {/* Active Attached File Pill */}

@@ -79,19 +79,44 @@ def analyze_inline_logs(text):
     }
 
 
-async def stream_local_chat(conversation, question, db, context_file_id=None, context_incident_id=None):
+async def stream_local_chat(conversation, question, db, context_file_id=None, context_incident_id=None, retry_message_id=None):
+    previous = await db.get(ChatMessageModel, retry_message_id) if retry_message_id else None
+    if retry_message_id and (not previous or previous.conversation_id != conversation.id or previous.role != "assistant"):
+        yield sse("error", {"message": "Reply not found."})
+        return
+    history_query = select(ChatMessageModel).where(ChatMessageModel.conversation_id == conversation.id)
+    if previous:
+        history_query = history_query.where(ChatMessageModel.created_at < previous.created_at)
     history = list((await db.scalars(
-        select(ChatMessageModel).where(ChatMessageModel.conversation_id == conversation.id)
-        .order_by(desc(ChatMessageModel.created_at)).limit(12)
+        history_query.order_by(desc(ChatMessageModel.created_at)).limit(12)
     )).all())
     history.reverse()
-    user_id = "msg_" + uuid4().hex
-    db.add(ChatMessageModel(id=user_id, conversation_id=conversation.id, role="user",
-                           content=question, created_at=datetime.now(timezone.utc)))
+    versions = []
+    if previous:
+        if not history or history[-1].role != "user":
+            yield sse("error", {"message": "The original question could not be found."})
+            return
+        question = history[-1].content
+        user_id = history.pop().id
+        message_id = previous.id
+        versions = [r for r in (previous.tool_calls or []) if r.get("tool") == "previous_response"]
+        versions.append({"tool": "previous_response", "content": previous.content,
+                         "generatedAt": previous.created_at.isoformat()})
+        assistant = previous
+        assistant.thought_process = "generating"
+    else:
+        user_id = "msg_" + uuid4().hex
+        message_id = "msg_" + uuid4().hex
+        db.add(ChatMessageModel(id=user_id, conversation_id=conversation.id, role="user",
+                               content=question, created_at=datetime.now(timezone.utc)))
+        assistant = ChatMessageModel(id=message_id, conversation_id=conversation.id, role="assistant",
+                                     content="", thought_process="generating", created_at=datetime.now(timezone.utc))
+        db.add(assistant)
     if conversation.title in ("New Security Investigation", "New Conversation"):
         conversation.title = question[:80]
     await db.commit()
-    yield sse("handshake", {"conversationId": conversation.id, "userMessageId": user_id})
+    yield sse("handshake", {"conversationId": conversation.id, "userMessageId": user_id,
+                           "assistantMessageId": message_id})
     yield sse("step", {"step": "synthesizing", "label": f"Thinking locally with {settings.OLLAMA_MODEL}"})
 
     records, evidence = [], []
@@ -171,15 +196,26 @@ async def stream_local_chat(conversation, question, db, context_file_id=None, co
             if not "".join(text_parts).strip():
                 raise ValueError("Empty model response")
     except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        if not previous:
+            assistant.content = "".join(text_parts) or "Generation failed. Retry this reply."
+            assistant.thought_process = "failed"
+            await db.commit()
+        else:
+            assistant.thought_process = None
+            await db.commit()
         yield sse("error", {"message": "The local model could not finish. Check that Ollama is running and the configured model is downloaded, then retry."})
         return
 
-    message_id = "msg_" + uuid4().hex
+    await db.refresh(assistant)
+    if assistant.thought_process == "interrupted":
+        return
     content = "".join(text_parts)
-    # Store generated output for conversation continuity, never as a response lookup.
-    db.add(ChatMessageModel(id=message_id, conversation_id=conversation.id, role="assistant",
-                           content=content, created_at=datetime.now(timezone.utc), tool_calls=records,
-                           evidence_references=evidence, suggested_actions=[], token_count=len(content.split())))
+    assistant.content = content
+    assistant.thought_process = None
+    assistant.tool_calls = versions + records
+    assistant.evidence_references = evidence
+    assistant.suggested_actions = []
+    assistant.token_count = len(content.split())
     conversation.updated_at = datetime.now(timezone.utc)
     await db.commit()
     if evidence:

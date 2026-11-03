@@ -27,6 +27,7 @@ import {
   Database,
   ArrowUpRight
 } from 'lucide-react';
+import { sentinelApi } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { useChatStore } from '@/stores/useChatStore';
 import { useSecurityStore } from '@/stores/useSecurityStore';
@@ -149,7 +150,33 @@ const SCENARIOS: ThreatScenario[] = [
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { setSideDrawerOpen, setPendingDrawerPrompt } = useChatStore();
-  const { playbooks, actions, auditRecords, autonomousResponseGlobalEnabled } = useSecurityStore();
+  const [summary, setSummary] = useState({
+    playbooks: 'Loading…', actions: 'Loading…', audit: 'Checking…', defense: 'Checking policy…'
+  });
+  const [refreshIndex, setRefreshIndex] = useState(0);
+  useEffect(() => {
+    let mounted = true;
+    const update = (values: Partial<typeof summary>) => {
+      if (mounted) setSummary(previous => ({ ...previous, ...values }));
+    };
+    Promise.allSettled([
+      sentinelApi.response.listPlaybooks().then(playbooks => {
+        useSecurityStore.setState({ playbooks });
+        update({ playbooks: String(playbooks.filter(p => p.enabled).length) + ' Active Playbooks' });
+      }).catch(() => update({ playbooks: 'Playbooks unavailable' })),
+      sentinelApi.response.listActions().then(actions => {
+        useSecurityStore.setState({ actions });
+        update({ actions: String(actions.length) + ' Persisted Actions' });
+      }).catch(() => update({ actions: 'Execution history unavailable' })),
+      sentinelApi.audit.verify().then(result => {
+        update({ audit: result.verified ? String(result.totalRecords) + ' Records Verified' : 'Verification failed' });
+      }).catch(() => update({ audit: 'Verification unavailable' })),
+      sentinelApi.settings.getThresholds().then(settings => {
+        update({ defense: settings.autonomousResponseEnabled ? 'Response policy enabled' : 'Response policy disabled' });
+      }).catch(() => update({ defense: 'Response policy unavailable' }))
+    ]);
+    return () => { mounted = false; };
+  }, [refreshIndex]);
 
   // ─── Micro-Interactions State ──────────────────────────────────────────────
   const [selectedScenarioId, setSelectedScenarioId] = useState<'ssh' | 'dns' | 'kerberos' | 'phishing'>('ssh');
@@ -287,25 +314,27 @@ export const LandingPage: React.FC = () => {
 
           <div className="p-4 rounded-xl bg-white border-2 border-[#E2E4DC] shadow-2xs space-y-1">
             <div className="text-[10px] uppercase text-[#889085] font-bold tracking-wider">SOAR Defense</div>
-            <div className="font-bold text-[#111417]">{playbooks.length} Active Playbooks</div>
+            <div className="font-bold text-[#111417]">{summary.playbooks}</div>
             <div className="text-[11px] font-semibold text-[#1E4BD8]">
-              {autonomousResponseGlobalEnabled ? 'Engine Armed' : 'Halted'}
+              {summary.defense}
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-white border-2 border-[#E2E4DC] shadow-2xs space-y-1">
             <div className="text-[10px] uppercase text-[#889085] font-bold tracking-wider">Audit Integrity</div>
             <div className="font-bold text-[#111417]">SHA-256 Merkle Chain</div>
-            <div className="text-[11px] font-semibold text-[#1E4BD8]">{auditRecords.length} Blocks Verified</div>
+            <div className="text-[11px] font-semibold text-[#1E4BD8]">{summary.audit}</div>
           </div>
 
           <div className="p-4 rounded-xl bg-white border-2 border-[#E2E4DC] shadow-2xs space-y-1">
             <div className="text-[10px] uppercase text-[#889085] font-bold tracking-wider">Execution History</div>
-            <div className="font-bold text-[#111417]">{actions.length} Persisted Actions</div>
+            <div className="font-bold text-[#111417]">{summary.actions}</div>
             <div className="text-[11px] font-semibold text-[#1E4BD8]">Deterministic SOAR</div>
           </div>
         </div>
       </section>
+
+      <button onClick={() => setRefreshIndex(value => value + 1)} className="min-h-11 px-4 border rounded-lg bg-white">Refresh overview</button>
 
       {/* ─────────────────────────────────────────────────────────────
           2. INTERACTIVE AUTONOMOUS DEFENSE LAB & LIVE LOG STREAMER

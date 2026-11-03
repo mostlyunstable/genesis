@@ -545,3 +545,34 @@ error so the user can retry. Chat does not substitute a canned answer.
 The earlier template-based chatbot evaluations require revision for generative
 answers. Focused regression checks for local generation live in
 `backend/tests/test_local_chat.py`.
+
+## Production deployment and account provisioning
+
+The production frontend uses the same-origin API through Nginx. Local Vite
+development and preview use a proxy to port 8000. Set VITE_API_BASE_URL only when
+an explicitly separate API origin is required.
+
+Docker Compose requires POSTGRES_PASSWORD, JWT_SECRET, and FORWARDER_API_KEY.
+Use independently generated random values, with at least 32 characters for the
+JWT secret and 24 for the forwarder key. Use a hex database password so it can
+also be used in the database URL. The .env.production.example file lists these
+variables. Keep actual secrets in a protected, untracked .env or secret store.
+
+Compose starts a private Ollama service, downloads OLLAMA_MODEL through a one-shot
+initialization service, then starts the backend. The first model download can
+take several minutes. Only the frontend port is published.
+
+After starting the stack, provision an administrator interactively:
+
+```sh
+docker compose run --rm backend python -m backend.app.create_admin
+```
+
+Production runs with DEMO_MODE=false. Demo accounts are not created, and existing
+accounts still using published demo passwords are disabled. Sign in with the
+provisioned account. Local development retains explicit demo mode.
+
+Retry regenerates the selected reply in place and retains its earlier content
+in the message's previous_response tool records. Stop saves partial generated
+content with a stopped marker. If the connection ends prematurely, chat reports
+the interruption and permits a retry.

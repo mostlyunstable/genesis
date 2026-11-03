@@ -38,3 +38,8 @@ scratch/
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+
+# Deployment secrets
+.env
+.env.*
+!.env.production.example

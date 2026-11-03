@@ -1,8 +1,9 @@
 import json
 import httpx
+from pydantic import BaseModel, Field
 from backend.app.core.config import settings
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select, desc, or_, func
@@ -317,6 +318,39 @@ async def upload_file_to_conversation(
         )
 
 
+class StopReplyRequest(BaseModel):
+    content: str = Field(default="", max_length=100000)
+    reason: Literal["stopped", "interrupted"] = "stopped"
+
+
+@router.post("/conversations/{conversation_id}/messages/{message_id}/stop")
+async def stop_reply(
+    conversation_id: str, message_id: str, payload: StopReplyRequest,
+    db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)
+):
+    conv = await db.get(ConversationModel, conversation_id)
+    if not conv or (conv.user_id and conv.user_id != current_user.id):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    message = await db.get(ChatMessageModel, message_id)
+    if not message or message.conversation_id != conversation_id or message.role != "assistant":
+        raise HTTPException(status_code=404, detail="Reply not found.")
+    if message.thought_process != "generating":
+        return {"status": "completed"}
+    if message.content:
+        message.tool_calls = (message.tool_calls or []) + [{
+            "tool": "previous_response", "content": message.content,
+            "generatedAt": message.created_at.isoformat()
+        }]
+    label = "Generation stopped" if payload.reason == "stopped" else "Connection interrupted"
+    message.content = payload.content + f"\n\n*({label})*"
+    message.thought_process = "interrupted"
+    message.evidence_references = []
+    message.suggested_actions = []
+    message.token_count = len(payload.content.split())
+    await db.commit()
+    return {"status": "stopped"}
+
+
 @router.get("/conversations/{conversation_id}/files", response_model=List[UploadedFileSummarySchema])
 async def list_conversation_files(
     conversation_id: str,
@@ -374,6 +408,11 @@ async def stream_conversation_message(
         user_id=user_id
     )
 
+    if payload.retryMessageId:
+        previous = await db.get(ChatMessageModel, payload.retryMessageId)
+        if not previous or previous.conversation_id != conv.id or previous.role != "assistant":
+            raise HTTPException(status_code=404, detail="Reply not found.")
+
     generator = chat_copilot_service.process_message_stream(
         conversation=conv,
         user_message_text=payload.message,
@@ -381,6 +420,7 @@ async def stream_conversation_message(
         user_id=user_id,
         context_incident_id=payload.contextIncidentId,
         context_asset_id=payload.contextAssetId,
+        retry_message_id=payload.retryMessageId,
         context_file_id=payload.contextFileId
     )
 
@@ -415,6 +455,11 @@ async def send_message_sync(
 
     # Consume stream into completed state
     last_msg_id = None
+    if payload.retryMessageId:
+        previous = await db.get(ChatMessageModel, payload.retryMessageId)
+        if not previous or previous.conversation_id != conv.id or previous.role != "assistant":
+            raise HTTPException(status_code=404, detail="Reply not found.")
+
     generator = chat_copilot_service.process_message_stream(
         conversation=conv,
         user_message_text=payload.message,
@@ -422,6 +467,7 @@ async def send_message_sync(
         user_id=user_id,
         context_incident_id=payload.contextIncidentId,
         context_asset_id=payload.contextAssetId,
+        retry_message_id=payload.retryMessageId,
         context_file_id=payload.contextFileId
     )
 

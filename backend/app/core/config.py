@@ -1,5 +1,6 @@
 import os
 from typing import List
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,6 +49,15 @@ class Settings(BaseSettings):
     # AI / LLM Configuration
     GEMINI_API_KEY: str | None = None
     AI_MODEL_NAME: str = "gemini-2.5-flash"
+
+    @model_validator(mode="after")
+    def require_production_secrets(self):
+        if not self.DEMO_MODE:
+            if len(self.JWT_SECRET) < 32 or self.JWT_SECRET.startswith("sentinel_"):
+                raise ValueError("Set a unique JWT_SECRET of at least 32 characters in production.")
+            if len(self.FORWARDER_API_KEY) < 24 or self.FORWARDER_API_KEY.startswith("sentinel_"):
+                raise ValueError("Set a unique FORWARDER_API_KEY of at least 24 characters in production.")
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

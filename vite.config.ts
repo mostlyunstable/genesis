@@ -21,7 +21,9 @@ export default defineConfig({
       },
     },
   },
+  preview: { proxy: { '/api': 'http://127.0.0.1:8000', '/health': 'http://127.0.0.1:8000' } },
   server: {
+    proxy: { '/api': 'http://127.0.0.1:8000', '/health': 'http://127.0.0.1:8000' },
     port: 5173,
     host: true,
   }

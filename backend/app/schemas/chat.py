@@ -101,6 +101,7 @@ class UpdateConversationRequest(BaseModel):
 
 class SendMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=64000)
+    retryMessageId: Optional[str] = None
     contextIncidentId: Optional[str] = None
     contextAssetId: Optional[str] = None
     contextFileId: Optional[str] = None

@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from backend.app.api.deps import require_production_session
 from backend.app.api.v1.auth import router as auth_router
 from backend.app.api.v1.events import router as events_router
 from backend.app.api.v1.detections import router as detections_router
@@ -16,7 +17,7 @@ from backend.app.api.v1.reports import router as reports_router
 from backend.app.api.v1.assets import router as assets_router
 from backend.app.api.v1.automation import router as automation_router
 
-api_router = APIRouter()
+api_router = APIRouter(dependencies=[Depends(require_production_session)])
 api_router.include_router(auth_router)
 api_router.include_router(events_router)
 api_router.include_router(detections_router)

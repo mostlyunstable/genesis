@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Header, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -93,3 +93,19 @@ async def verify_forwarder_auth(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail={"code": "UNAUTHORIZED_INGEST", "message": "Valid X-Sentinel-Forwarder-Key or Bearer token required"}
     )
+
+
+async def require_production_session(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    db: AsyncSession = Depends(get_db),
+):
+    # These endpoints have their own password or forwarder-key validation.
+    if request.url.path in (
+        settings.API_V1_STR + "/auth/login",
+        settings.API_V1_STR + "/ingest/batch",
+        settings.API_V1_STR + "/stream/broadcast",
+    ):
+        return
+    if not settings.DEMO_MODE:
+        await get_current_user(credentials=credentials, db=db)

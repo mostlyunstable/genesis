@@ -32,6 +32,7 @@ interface ChatState {
   searchQuery: string;
   error: string | null;
   abortController: AbortController | null;
+  streamingMessageId: string | null;
 
   // Actions
   loadConversations: (query?: string) => Promise<void>;
@@ -42,9 +43,9 @@ interface ChatState {
   uploadFile: (file: File) => Promise<UploadedFileSummary | null>;
   loadFiles: (convId?: string) => Promise<void>;
   setActiveFileId: (fileId: string | null) => void;
-  sendMessage: (text: string, contextIncidentId?: string, contextFileId?: string) => Promise<void>;
-  retryLastMessage: () => Promise<void>;
-  stopStreaming: () => void;
+  sendMessage: (text: string, contextIncidentId?: string, contextFileId?: string, retryMessageId?: string) => Promise<void>;
+  retryLastMessage: (messageId?: string) => Promise<void>;
+  stopStreaming: () => Promise<void>;
   confirmAction: (action: SuggestedAction, confirmed: boolean) => Promise<void>;
   setSelectedEvidence: (ev: EvidenceReference | null) => void;
   setEvidencePanelOpen: (open: boolean) => void;
@@ -76,6 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   searchQuery: '',
   error: null,
   abortController: null,
+  streamingMessageId: null,
 
   loadConversations: async (query?: string) => {
     try {
@@ -232,7 +234,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ activeFileId: fileId });
   },
 
-  sendMessage: async (text: string, contextIncidentId?: string, contextFileId?: string) => {
+  sendMessage: async (text: string, contextIncidentId?: string, contextFileId?: string, retryMessageId?: string) => {
+    if (get().isStreaming) return;
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -253,8 +256,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
 
     set(state => ({
-      messages: [...state.messages, tempUserMsg],
+      messages: retryMessageId ? state.messages : [...state.messages, tempUserMsg],
       isStreaming: true,
+      streamingMessageId: null,
       streamingContent: '',
       currentStep: { step: 'understanding', label: 'Initializing investigation...' },
       evidenceReferences: [],
@@ -272,6 +276,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         convId,
         trimmed,
         {
+          onHandshake: (data) => {
+            set(state => ({
+              streamingMessageId: data.assistantMessageId,
+              messages: state.messages.map(m => m.id === tempUserMsg.id ? { ...m, id: data.userMessageId } : m)
+            }));
+          },
           onStep: (step) => {
             set({ currentStep: step });
           },
@@ -292,6 +302,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             set({ streamingContent: accumulatedTokens });
           },
           onDone: (data) => {
+            window.dispatchEvent(new Event('genesis-model-refresh'));
             const assistantMsg: ChatMessage = {
               id: data.messageId,
               conversationId: convId!,
@@ -304,7 +315,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
             };
 
             set(state => ({
-              messages: [...state.messages, assistantMsg],
+              messages: state.messages.some(m => m.id === assistantMsg.id)
+                ? state.messages.map(m => m.id === assistantMsg.id ? assistantMsg : m)
+                : [...state.messages, assistantMsg],
               isStreaming: false,
               streamingContent: '',
               currentStep: null,
@@ -315,7 +328,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
             get().loadConversations();
             get().loadFiles(convId!);
           },
-          onError: (err) => {
+          onError: async (err) => {
+            const responseId = get().streamingMessageId;
+            if (responseId && accumulatedTokens) {
+              controller.abort();
+              try {
+                await sentinelApi.chat.stopReply(convId!, responseId, accumulatedTokens, 'interrupted');
+              } catch { /* Keep the original connection error visible. */ }
+            }
+            try {
+              const latest = await sentinelApi.chat.getConversation(convId!);
+              set({ messages: latest.messages });
+            } catch { /* The original error explains why recovery is unavailable. */ }
+            window.dispatchEvent(new Event('genesis-model-refresh'));
             set({
               isStreaming: false,
               error: err.message || 'Streaming failed',
@@ -327,7 +352,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         contextIncidentId,
         undefined,
         controller.signal,
-        targetFileId
+        targetFileId,
+        retryMessageId
       );
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -343,47 +369,34 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  retryLastMessage: async () => {
+  retryLastMessage: async (messageId?: string) => {
     const { messages, sendMessage } = get();
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-    if (lastUserMsg) {
-      // Remove last assistant message if any
-      set(state => ({
-        messages: state.messages.filter(m => m.id !== lastUserMsg.id && (!m.role || m.role !== 'assistant' || m.createdAt < lastUserMsg.createdAt))
-      }));
-      await sendMessage(lastUserMsg.content);
-    }
+    const target = messageId ? messages.find(m => m.id === messageId)
+      : [...messages].reverse().find(m => m.role === 'assistant');
+    if (!target) return;
+    const index = messages.indexOf(target);
+    const question = messages.slice(0, index).reverse().find(m => m.role === 'user');
+    if (question) await sendMessage(question.content, undefined, undefined, target.id);
   },
 
-  stopStreaming: () => {
-    const { abortController, streamingContent, activeConversationId, evidenceReferences, suggestedActions } = get();
-    if (abortController) {
-      abortController.abort();
-    }
-    if (streamingContent && activeConversationId) {
-      const partialMsg: ChatMessage = {
-        id: `aborted-${Date.now()}`,
-        conversationId: activeConversationId,
-        role: 'assistant',
-        content: streamingContent + ' *(Investigation stopped by analyst)*',
-        evidenceReferences,
-        suggestedActions,
-        createdAt: new Date().toISOString()
-      };
-      set(state => ({
-        messages: [...state.messages, partialMsg],
-        isStreaming: false,
-        streamingContent: '',
-        currentStep: null,
-        abortController: null
-      }));
-    } else {
-      set({
-        isStreaming: false,
-        streamingContent: '',
-        currentStep: null,
-        abortController: null
-      });
+  stopStreaming: async () => {
+    const { abortController, streamingContent, activeConversationId, streamingMessageId } = get();
+    abortController?.abort();
+    try {
+      if (activeConversationId) {
+        let responseId = streamingMessageId;
+        if (!responseId) {
+          const latest = await sentinelApi.chat.getConversation(activeConversationId);
+          responseId = [...latest.messages].reverse().find(m => m.role === 'assistant' && m.thoughtProcess === 'generating')?.id || null;
+        }
+        if (responseId) await sentinelApi.chat.stopReply(activeConversationId, responseId, streamingContent);
+        const conversation = await sentinelApi.chat.getConversation(activeConversationId);
+        set({ messages: conversation.messages });
+      }
+    } catch {
+      set({ error: 'The stopped reply could not be saved. Check your connection before leaving this chat.' });
+    } finally {
+      set({ isStreaming: false, streamingContent: '', currentStep: null, abortController: null, streamingMessageId: null });
     }
   },
 

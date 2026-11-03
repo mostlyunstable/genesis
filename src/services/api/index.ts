@@ -35,6 +35,7 @@ export interface SentinelApiClient {
       id: string,
       message: string,
       callbacks: {
+        onHandshake?: (data: { userMessageId: string; assistantMessageId: string }) => void;
         onStep?: (step: StreamInvestigationStep) => void;
         onEvidence?: (evidence: EvidenceReference[]) => void;
         onActions?: (actions: SuggestedAction[]) => void;
@@ -45,8 +46,10 @@ export interface SentinelApiClient {
       contextIncidentId?: string,
       contextAssetId?: string,
       abortSignal?: AbortSignal,
-      contextFileId?: string
+      contextFileId?: string,
+      retryMessageId?: string
     ) => Promise<void>;
+    stopReply: (id: string, messageId: string, content: string, reason?: string) => Promise<void>;
     confirmAction: (payload: {
       actionProposalId: string;
       confirmed: boolean;
@@ -109,47 +112,17 @@ export interface SentinelApiClient {
   };
 }
 
-let activeBackendUrl = (typeof window !== 'undefined' && localStorage.getItem('sentinel_backend_url')) || 'http://127.0.0.1:8000';
-let authToken = (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
-let authPromise: Promise<string> | null = null;
+let activeBackendUrl = localStorage.getItem('sentinel_backend_url') || import.meta.env.VITE_API_BASE_URL || '';
+let authToken = localStorage.getItem('sentinel_auth_token') || '';
 
-async function ensureAuthToken(): Promise<string> {
-  const existing = (typeof window !== 'undefined' && localStorage.getItem('sentinel_auth_token')) || '';
-  if (existing) {
-    authToken = existing;
-    return existing;
-  }
-  if (authPromise) return authPromise;
+export class ApiError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
 
-  authPromise = (async () => {
-    try {
-      const res = await fetch(`${activeBackendUrl}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'secops_analyst@genesis.ai',
-          password: 'genesis_secops_2026!'
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.access_token) {
-          authToken = data.access_token;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('sentinel_auth_token', authToken);
-          }
-          return authToken;
-        }
-      }
-    } catch (e) {
-      console.warn('[GENESIS Auto-Auth] Background session initialization notice:', e);
-    } finally {
-      authPromise = null;
-    }
-    return '';
-  })();
-
-  return authPromise;
+function clearSession() {
+  authToken = '';
+  localStorage.removeItem('sentinel_auth_token');
+  window.dispatchEvent(new Event('genesis-session-expired'));
 }
 
 function getAuthToken(): string {
@@ -163,31 +136,18 @@ async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}):
     ...(options.headers as Record<string, string> || {})
   };
 
-  let token = getAuthToken();
-  if (!token && !endpoint.includes('/auth/login')) {
-    token = await ensureAuthToken();
-  }
+  const token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let res = await fetch(url, { ...options, headers });
-  if (res.status === 401 && !endpoint.includes('/auth/login')) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('sentinel_auth_token');
-    }
-    authToken = '';
-    token = await ensureAuthToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      res = await fetch(url, { ...options, headers });
-    }
-  }
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401 && !endpoint.includes('/auth/login')) clearSession();
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = errorData.detail?.message || errorData.detail || `HTTP Error ${res.status}: ${res.statusText}`;
-    throw new Error(msg);
+    throw new ApiError(typeof msg === 'string' ? msg : JSON.stringify(msg), res.status);
   }
   return res.json();
 }
@@ -230,8 +190,8 @@ export const sentinelApi: SentinelApiClient = {
 
     uploadFile: async (conversationId: string, file: File) => {
       const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(conversationId)}/upload`;
-      let token = getAuthToken();
-      if (!token) token = await ensureAuthToken();
+      const token = getAuthToken();
+
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -244,10 +204,11 @@ export const sentinelApi: SentinelApiClient = {
         headers,
         body: formData
       });
+      if (res.status === 401) clearSession();
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ detail: res.statusText }));
         const msg = errorData.detail?.message || errorData.detail || `Upload failed with status ${res.status}`;
-        throw new Error(msg);
+        throw new ApiError(typeof msg === 'string' ? msg : JSON.stringify(msg), res.status);
       }
       return await res.json() as UploadedFileSummary;
     },
@@ -271,6 +232,7 @@ export const sentinelApi: SentinelApiClient = {
       id: string,
       message: string,
       callbacks: {
+        onHandshake?: (data: { userMessageId: string; assistantMessageId: string }) => void;
         onStep?: (step: StreamInvestigationStep) => void;
         onEvidence?: (evidence: EvidenceReference[]) => void;
         onActions?: (actions: SuggestedAction[]) => void;
@@ -281,11 +243,12 @@ export const sentinelApi: SentinelApiClient = {
       contextIncidentId?: string,
       contextAssetId?: string,
       abortSignal?: AbortSignal,
-      contextFileId?: string
+      contextFileId?: string,
+      retryMessageId?: string
     ) => {
       const url = `${activeBackendUrl}/api/v1/chat/conversations/${encodeURIComponent(id)}/stream`;
-      let token = getAuthToken();
-      if (!token) token = await ensureAuthToken();
+      const token = getAuthToken();
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -300,15 +263,17 @@ export const sentinelApi: SentinelApiClient = {
           message,
           contextIncidentId,
           contextAssetId,
-          contextFileId
+          contextFileId,
+          retryMessageId
         }),
         signal: abortSignal
       });
 
+      if (res.status === 401) clearSession();
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ detail: res.statusText }));
         const msg = errorData.detail?.message || errorData.detail || `Stream error ${res.status}`;
-        throw new Error(msg);
+        throw new ApiError(typeof msg === 'string' ? msg : JSON.stringify(msg), res.status);
       }
 
       if (!res.body) {
@@ -318,6 +283,7 @@ export const sentinelApi: SentinelApiClient = {
       const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
+      let completed = false;
 
       try {
         while (true) {
@@ -352,27 +318,36 @@ export const sentinelApi: SentinelApiClient = {
                 callbacks.onActions(data.actions || []);
               } else if (eventType === 'token' && callbacks.onToken) {
                 callbacks.onToken(data.delta || data.token || '');
+              } else if (eventType === 'handshake') {
+                callbacks.onHandshake?.(data);
               } else if (eventType === 'done' && callbacks.onDone) {
+                completed = true;
                 callbacks.onDone(data);
               } else if (eventType === 'error' && callbacks.onError) {
-                callbacks.onError(data);
+                completed = true;
+                await callbacks.onError(data);
               }
             } catch (e) {
               console.warn('Failed to parse SSE payload', dataStr, e);
             }
           }
         }
+        if (!completed) throw new Error('The connection ended before the reply finished. Please retry.');
       } catch (err: any) {
         if (err.name === 'AbortError') {
           return;
         }
         if (callbacks.onError) {
-          callbacks.onError(err);
+          await callbacks.onError(err);
         }
         throw err;
       }
     },
 
+    stopReply: (id, messageId, content, reason = 'stopped') => fetchFromBackend<void>(
+      `/chat/conversations/${encodeURIComponent(id)}/messages/${encodeURIComponent(messageId)}/stop`,
+      { method: 'POST', body: JSON.stringify({ content, reason }) }
+    ),
     confirmAction: async (payload: {
       actionProposalId: string;
       confirmed: boolean;
@@ -521,7 +496,7 @@ export const sentinelApi: SentinelApiClient = {
   },
 
   system: {
-    getBackendUrl: () => activeBackendUrl,
+    getBackendUrl: () => activeBackendUrl || window.location.origin,
     setBackendUrl: (url) => {
       activeBackendUrl = url.replace(/\/$/, '');
       if (typeof window !== 'undefined') {
@@ -541,4 +516,16 @@ export const sentinelApi: SentinelApiClient = {
       }
     }
   }
+};
+
+export const authApi = {
+  me: () => fetchFromBackend<{ username: string; fullName: string }>('/auth/me'),
+  login: async (username: string, password: string) => {
+    const result = await fetchFromBackend<{ access_token: string }>('/auth/login', {
+      method: 'POST', body: JSON.stringify({ username, password })
+    });
+    authToken = result.access_token;
+    localStorage.setItem('sentinel_auth_token', authToken);
+  },
+  logout: clearSession
 };

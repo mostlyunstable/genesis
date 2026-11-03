@@ -7,10 +7,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: sentinel
-      POSTGRES_PASSWORD: sentinel_db_secret_2026!
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       POSTGRES_DB: sentinel_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,8 +23,6 @@ services:
     image: redis:7-alpine
     container_name: sentinel-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -37,6 +33,32 @@ services:
     networks:
       - sentinel-net
 
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sentinel-net
+
+  model-init:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command: ['ollama pull "$$OLLAMA_MODEL"']
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3.5:4b}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - sentinel-net
+
   backend:
     build:
       context: .
@@ -44,16 +66,16 @@ services:
     container_name: sentinel-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_db_secret_2026!@db:5432/sentinel_db
+      - DATABASE_URL=postgresql+asyncpg://sentinel:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/sentinel_db
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - AI_MODEL_NAME=${AI_MODEL_NAME:-gemini-2.5-flash}
-      - JWT_SECRET=sentinel_prod_secret_key_8fbc23a19e840d2105c317a9
-      - FORWARDER_API_KEY=sentinel_fwd_live_9942a8b9e1
-      - DEMO_MODE=true
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.5:4b}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET}
+      - FORWARDER_API_KEY=${FORWARDER_API_KEY:?Set FORWARDER_API_KEY}
+      - DEMO_MODE=false
       - DRY_RUN_DEFAULT=true
-    ports:
-      - "8000:8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -61,6 +83,8 @@ services:
       retries: 5
       start_period: 10s
     depends_on:
+      model-init:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:
@@ -76,12 +100,18 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "backend.app.worker"]
     environment:
-      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_db_secret_2026!@db:5432/sentinel_db
+      - DATABASE_URL=postgresql+asyncpg://sentinel:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/sentinel_db
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - AI_MODEL_NAME=${AI_MODEL_NAME:-gemini-2.5-flash}
-      - DEMO_MODE=true
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.5:4b}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET}
+      - FORWARDER_API_KEY=${FORWARDER_API_KEY:?Set FORWARDER_API_KEY}
+      - DEMO_MODE=false
     depends_on:
+      model-init:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:
@@ -103,6 +133,7 @@ services:
       - sentinel-net
 
 volumes:
+  ollama_data:
   postgres_data:
   redis_data:
 

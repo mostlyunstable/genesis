@@ -31,6 +31,9 @@ import { useChatStore } from '@/stores/useChatStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { InvestigationStepsIndicator } from './InvestigationStepsIndicator';
 import { LocalModelStatus } from './LocalModelStatus';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useChatScroll } from '@/hooks/useChatScroll';
+import { useModalFocus } from '@/hooks/useModalFocus';
 import { ActionProposalCard } from './ActionProposalCard';
 
 export const SecurityCopilotPage: React.FC = () => {
@@ -82,7 +85,6 @@ export const SecurityCopilotPage: React.FC = () => {
     return false;
   });
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,9 +133,11 @@ export const SecurityCopilotPage: React.FC = () => {
     loadConversations();
   }, [loadConversations]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
-  }, [messages, streamingContent, currentStep, isStreaming]);
+  const historyRef = useRef<HTMLElement>(null);
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const mobileHistory = isHistoryOpen && isMobile;
+  useModalFocus(mobileHistory, historyRef, () => setIsHistoryOpen(false));
+  const scroll = useChatScroll(activeConversationId, [messages, streamingContent, currentStep, isStreaming]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -207,9 +211,13 @@ export const SecurityCopilotPage: React.FC = () => {
       {/* COLUMN 1: LEFT CONVERSATION HISTORY & NEW INVESTIGATION */}
       {/* ---------------------------------------------------- */}
       <aside
+        ref={historyRef}
+        role={mobileHistory ? "dialog" : undefined}
+        aria-modal={mobileHistory || undefined}
+        aria-label="Conversation history"
         className={`bg-white border-r border-[#E2E4DC] flex flex-col shrink-0 min-h-0 h-full transition-all duration-200 select-none ${
           isHistoryOpen
-            ? 'fixed md:relative inset-y-0 left-0 w-72 sm:w-80 z-30 shadow-origin-lg md:shadow-none'
+            ? 'fixed md:relative inset-y-0 left-0 w-[min(100vw,24rem)] md:w-80 z-30 shadow-origin-lg md:shadow-none'
             : 'hidden'
         }`}
       >
@@ -228,7 +236,7 @@ export const SecurityCopilotPage: React.FC = () => {
             </button>
             <button
               onClick={() => setIsHistoryOpen(false)}
-              className="md:hidden p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA] transition-colors cursor-pointer"
+              className="md:hidden min-h-11 min-w-11 p-1.5 rounded-lg text-[#5E656D] hover:text-[#111417] hover:bg-[#F0F1EA] transition-colors cursor-pointer"
               aria-label="Close conversation history"
             >
               <X className="w-4 h-4" />
@@ -358,7 +366,7 @@ export const SecurityCopilotPage: React.FC = () => {
         )}
 
         {/* Message Thread Scroll Area */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
+        <div ref={scroll.containerRef} onScroll={scroll.onScroll} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
           {messages.length === 0 && !isStreaming ? (
             /* Refined, Minimal Initial State with Genesis Logo */
             <div className="max-w-xl mx-auto py-12 sm:py-16 text-center space-y-6">
@@ -487,7 +495,7 @@ export const SecurityCopilotPage: React.FC = () => {
                           )}
                         </button>
                         <button
-                          onClick={retryLastMessage}
+                          onClick={() => retryLastMessage(msg.id)}
                           className="px-2.5 py-1 rounded-md bg-white hover:bg-[#F0F1EA] text-[#111417] font-semibold border border-[#D5D9CE] hover:border-[#111417] flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
                         >
                           <RotateCcw className="w-3.5 h-3.5 text-[#5C645B]" />
@@ -532,8 +540,9 @@ export const SecurityCopilotPage: React.FC = () => {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
         </div>
+
+        {scroll.showJump && <button onClick={scroll.jump} className="min-h-11 px-4 bg-white border rounded-lg self-center">Jump to latest reply</button>}
 
         {/* Input Composer Area */}
         <div className="p-4 border-t border-[#E2E4DC] bg-white shrink-0">
@@ -758,13 +767,13 @@ export const SecurityCopilotPage: React.FC = () => {
 
         {/* Hover Actions */}
         {!isEditing && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 updateConversation(c.id, { isPinned: !c.isPinned });
               }}
-              className={`p-1 rounded hover:bg-white text-[#889085] hover:text-[#1E4BD8] ${
+              className={`min-h-11 min-w-11 md:min-h-8 md:min-w-8 p-1 rounded focus-visible:ring-2 focus-visible:ring-blue-600 hover:bg-white text-[#889085] hover:text-[#1E4BD8] ${
                 c.isPinned ? 'text-[#1E4BD8]' : ''
               }`}
               title={c.isPinned ? 'Unpin' : 'Pin'}
@@ -776,7 +785,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 e.stopPropagation();
                 startEditingTitle(c.id, c.title);
               }}
-              className="p-1 rounded hover:bg-white text-[#889085] hover:text-[#111417]"
+              className="min-h-11 min-w-11 md:min-h-8 md:min-w-8 p-1 rounded focus-visible:ring-2 focus-visible:ring-blue-600 hover:bg-white text-[#889085] hover:text-[#111417]"
               title="Rename"
             >
               <Edit2 className="w-3 h-3" />
@@ -786,7 +795,7 @@ export const SecurityCopilotPage: React.FC = () => {
                 e.stopPropagation();
                 setDeleteConfirmId(c.id);
               }}
-              className="p-1 rounded hover:bg-white text-[#889085] hover:text-[#B94C43]"
+              className="min-h-11 min-w-11 md:min-h-8 md:min-w-8 p-1 rounded focus-visible:ring-2 focus-visible:ring-blue-600 hover:bg-white text-[#889085] hover:text-[#B94C43]"
               title="Delete"
             >
               <Trash2 className="w-3 h-3" />

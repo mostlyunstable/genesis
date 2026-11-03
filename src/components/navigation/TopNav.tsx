@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useSecurityStore } from '@/stores/useSecurityStore';
 import { useChatStore } from '@/stores/useChatStore';
+import { authApi } from '@/services/api';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
 const routeTitleMap: Record<string, string> = {
@@ -77,6 +78,7 @@ export const TopNav: React.FC = () => {
             <Search className="w-4 h-4" />
           </button>
 
+          <button onClick={authApi.logout} className="min-h-11 px-2 text-xs underline" aria-label="Sign out">Sign out</button>
           {/* Notifications Dropdown */}
           <div className="relative">
             <button
