@@ -527,3 +527,21 @@ backend/tests/test_phase3_redis.py ..                                    [100%]
 ## License
 
 This project is developed as an enterprise cybersecurity intelligence and autonomous defensive operations system. All proprietary rights reserved.
+
+## Local generative chatbot
+
+Chat uses Ollama with `qwen3.5:4b` and requires no cloud API key. Install Ollama,
+run `ollama pull qwen3.5:4b`, and keep Ollama running before starting the backend.
+
+Set `OLLAMA_MODEL` to change the model and `OLLAMA_BASE_URL` to change its address
+(default `http://127.0.0.1:11434`). The chat header checks whether the model is available.
+
+Each response is generated from the current message, recent conversation history,
+and relevant log evidence. The model can select bounded read-only investigation tools.
+Pasted SSH logs are analyzed independently of stored database telemetry. Uploading
+a log ingests it and starts a generated investigation. Provider failures produce an
+error so the user can retry. Chat does not substitute a canned answer.
+
+The earlier template-based chatbot evaluations require revision for generative
+answers. Focused regression checks for local generation live in
+`backend/tests/test_local_chat.py`.

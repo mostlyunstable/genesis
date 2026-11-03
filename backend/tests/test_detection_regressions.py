@@ -55,27 +55,6 @@ async def test_attack_recurs_after_alert_is_resolved(db_session):
 
 
 @pytest.mark.asyncio
-async def test_chat_investigation_calls_detector_and_generates_reply(db_session, monkeypatch):
-    from unittest.mock import AsyncMock
-    from backend.app.services.chat import ChatCopilotService
-    from backend.app.services import chat
-
-    await ingest(DetectionEngine(), db_session, 12)
-    service = ChatCopilotService()
-    conversation = await service.get_or_create_conversation(None, db_session)
-    generator = AsyncMock(return_value=("Twelve failed SSH authentications observed.", "gemini:test"))
-    monkeypatch.setattr(chat, "generate_chat_reply", generator)
-    chunks = [chunk async for chunk in service.process_message_stream(
-        conversation, "Detect brute force attacks from 198.51.100.40", db_session)]
-    assert any("Twelve failed SSH" in chunk for chunk in chunks)
-    records = generator.call_args.args[2]
-    finding = next(record["result"] for record in records if record["tool"] == "detect_brute_force_activity")
-    assert finding["totalFailures"] == 12
-    assert any(s["isBruteForce"] for s in finding["suspects"])
-    assert any("gemini:test" in chunk for chunk in chunks)
-
-
-@pytest.mark.asyncio
 async def test_brute_force_tool_excludes_failures_outside_dataset_window(db_session):
     from backend.app.services.chat_tools import tool_registry, DetectBruteForceActivityInput
 

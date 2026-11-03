@@ -30,6 +30,7 @@ import {
 import { useChatStore } from '@/stores/useChatStore';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { InvestigationStepsIndicator } from './InvestigationStepsIndicator';
+import { LocalModelStatus } from './LocalModelStatus';
 import { ActionProposalCard } from './ActionProposalCard';
 
 export const SecurityCopilotPage: React.FC = () => {
@@ -337,7 +338,7 @@ export const SecurityCopilotPage: React.FC = () => {
               </h2>
               <div className="flex items-center gap-1.5 text-[11px] text-[#5C645B]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1E4BD8]" />
-                <span>Ready</span>
+                <LocalModelStatus />
               </div>
             </div>
           </div>

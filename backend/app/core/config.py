@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     DISTRIBUTED_THRESHOLD_IPS: int = 3
     TEMPORARY_IP_BLOCK_DURATION_MINUTES: int = 30
 
+    OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "qwen3.5:4b"
+
     # AI / LLM Configuration
     GEMINI_API_KEY: str | None = None
     AI_MODEL_NAME: str = "gemini-2.5-flash"

@@ -1,4 +1,6 @@
 import json
+import httpx
+from backend.app.core.config import settings
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, UploadFile, File
@@ -62,6 +64,19 @@ def _to_file_schema(f: UploadedFileModel) -> UploadedFileSummarySchema:
         createdAt=f.created_at.isoformat() if hasattr(f.created_at, "isoformat") else str(f.created_at),
         userId=f.user_id
     )
+
+
+@router.get("/model")
+async def get_chat_model(current_user=Depends(get_current_user)):
+    available = False
+    try:
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(settings.OLLAMA_BASE_URL + "/api/tags")
+            response.raise_for_status()
+            available = any(m.get("name") == settings.OLLAMA_MODEL for m in response.json().get("models", []))
+    except (httpx.HTTPError, ValueError, TypeError):
+        pass
+    return {"provider": "Ollama", "model": settings.OLLAMA_MODEL, "available": available}
 
 
 @router.post("/conversations", response_model=ConversationSummarySchema)
@@ -286,76 +301,6 @@ async def upload_file_to_conversation(
             user_id=user_id
         )
 
-        # Automatically insert user upload message and assistant analysis summary into chat thread
-        import time
-        from backend.app.models.chat import ChatMessageModel
-
-        user_msg = ChatMessageModel(
-            id=f"msg_{int(time.time()*1000)%1000000:06d}_u",
-            conversation_id=conv.id,
-            role="user",
-            content=f"📎 Uploaded security log file `{file_record.filename}` ({file_record.file_size:,} bytes). Please analyze findings.",
-            created_at=datetime.now(timezone.utc)
-        )
-        db.add(user_msg)
-
-        fstats = file_record.analysis_summary or {}
-        u_ips = fstats.get("uniqueSourceIps", [])
-        u_users = fstats.get("uniqueAccounts", [])
-        dets_count = fstats.get("detectionsCount", 0)
-        inc_count = fstats.get("incidentsCreated", 0)
-
-        asst_text = (
-            f"### 📁 Autonomous Telemetry Analysis: `{file_record.filename}`\n\n"
-            f"Successfully processed cybersecurity log dataset (SHA-256: `{file_record.file_hash[:16]}...`).\n\n"
-            f"#### Ingestion & Normalization Metrics\n"
-            f"- **Format Detected**: `{file_record.format_detected.upper()}` (`{file_record.log_source}`)\n"
-            f"- **Total Records Analyzed**: `{fstats.get('totalRecords', 0)}`\n"
-            f"- **Parsed Security Events**: `{fstats.get('parsedRecords', 0)}`\n"
-            f"- **Failed / Dropped Records**: `{fstats.get('failedRecords', 0)}`\n\n"
-            f"#### Forensic Authentication Findings\n"
-            f"- **Failed Logon Attempts**: `{fstats.get('failureCount', 0)}`\n"
-            f"- **Successful Authentications**: `{fstats.get('successCount', 0)}`" + 
-            (f" (CRITICAL: Valid credentials acquired for user `{u_users[0] if u_users else 'account'}`!)" if fstats.get('successCount', 0) > 0 and fstats.get('failureCount', 0) >= 3 else "") + "\n"
-            f"- **Adversary Source IPs**: {', '.join([f'`{ip}`' for ip in u_ips]) if u_ips else 'None'}\n"
-            f"- **Targeted Accounts**: {', '.join([f'`{u}`' for u in u_users]) if u_users else 'None'}\n\n"
-            f"#### Triggered Threat Detections\n"
-            f"- **Detections Triggered**: `{dets_count}`\n"
-            f"- **Correlated Incidents Created**: `{inc_count}`\n"
-        )
-        if fstats.get("detectionNames"):
-            asst_text += "#### Detected Signatures\n" + "\n".join([f"- **{d}**" for d in fstats["detectionNames"]]) + "\n"
-
-        asst_text += (
-            f"\n#### Recommended Investigation Follow-ups:\n"
-            f"1. *'Investigate the suspicious IP {u_ips[0] if u_ips else 'found'}'*\n"
-            f"2. *'Which accounts were affected?'*\n"
-            f"3. *'Was there any successful login?'*\n"
-            f"4. *'Can you block the suspicious IP?'*\n"
-        )
-
-        asst_msg = ChatMessageModel(
-            id=f"msg_{int(time.time()*1000)%1000000:06d}_a",
-            conversation_id=conv.id,
-            role="assistant",
-            content=asst_text,
-            created_at=datetime.now(timezone.utc),
-            evidence_references=[
-                {"type": "threat_intel", "id": ip, "title": f"Adversary IP: {ip}", "snippet": "Observed in uploaded log dataset"} for ip in u_ips[:3]
-            ],
-            suggested_actions=[
-                {
-                    "id": f"ACT-PROP-{int(time.time()*1000)%10000:04d}",
-                    "actionName": "iptables drop",
-                    "target": u_ips[0],
-                    "playbookId": "PB-SSH-BRUTE-01",
-                    "description": f"Enforce perimeter boundary DROP on adversary IP {u_ips[0]} (30-min TTL).",
-                    "requiresConfirmation": True,
-                    "status": "pending"
-                }
-            ] if (u_ips and dets_count > 0) else []
-        )
-        db.add(asst_msg)
         conv.updated_at = datetime.now(timezone.utc)
         await db.commit()
 

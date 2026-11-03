@@ -21,6 +21,7 @@ import {
 
 export interface SentinelApiClient {
   chat: {
+    getModel: () => Promise<{ provider: string; model: string; available: boolean }>;
     listConversations: (params?: { query?: string; limit?: number; offset?: number }) => Promise<ConversationSummary[]>;
     getConversation: (id: string) => Promise<ConversationDetail>;
     createConversation: (title?: string, contextMetadata?: Record<string, any>) => Promise<ConversationSummary>;
@@ -193,6 +194,7 @@ async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}):
 
 export const sentinelApi: SentinelApiClient = {
   chat: {
+    getModel: () => fetchFromBackend<{ provider: string; model: string; available: boolean }>('/chat/model'),
     listConversations: async (params?: { query?: string; limit?: number; offset?: number }) => {
       const q = new URLSearchParams();
       if (params?.query) q.append('query', params.query);

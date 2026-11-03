@@ -205,6 +205,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       // Reload conversation messages and details immediately
       await get().selectConversation(convId);
+      await get().sendMessage(
+        'Analyze the uploaded log. Count failures and successes, identify suspicious patterns, and explain what the evidence supports.',
+        undefined,
+        record.id
+      );
       return record;
     } catch (err: any) {
       set({ isUploading: false, uploadError: err.message || 'File upload failed' });
