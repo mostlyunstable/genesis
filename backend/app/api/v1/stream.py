@@ -1,16 +1,16 @@
-import asyncio
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import StreamingResponse
 from typing import Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from backend.app.api.deps import verify_forwarder_auth
 from backend.app.services.stream import stream_broadcaster
 
 router = APIRouter(prefix="/stream", tags=["Real-Time Event Streaming"])
 
 
 class BroadcastEventRequest(BaseModel):
-    eventType: str
+    eventType: str = Field(pattern=r"^[^\r\n]+$")
     data: Dict[str, Any]
 
 
@@ -33,7 +33,7 @@ async def stream_security_events(request: Request):
     )
 
 
-@router.post("/broadcast")
+@router.post("/broadcast", dependencies=[Depends(verify_forwarder_auth)])
 async def broadcast_event(payload: BroadcastEventRequest):
     """Broadcast an event to all connected SSE clients (used by internal pipelines)."""
     await stream_broadcaster.broadcast(payload.eventType, payload.data)

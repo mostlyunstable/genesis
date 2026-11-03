@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,8 +23,8 @@ router = APIRouter(prefix="/automation", tags=["Autonomous SOC & Automation"])
 class SimulateBruteForceRequest(BaseModel):
     attacker_ip: str = "198.51.100.177"
     target_ip: str = "10.240.10.15"  # Production DB (Tier 1)
-    target_accounts: list[str] = ["root", "admin", "postgres", "deploy", "guest"]
-    failure_count: int = 12
+    target_accounts: list[str] = Field(default=["root", "admin", "postgres", "deploy", "guest"], min_length=1)
+    failure_count: int = Field(default=12, ge=1, le=100)
     service_banner: str = "OpenSSH 8.9p1 Ubuntu 3ubuntu0.6"
 
 

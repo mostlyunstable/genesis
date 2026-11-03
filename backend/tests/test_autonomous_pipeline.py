@@ -155,3 +155,10 @@ async def test_automation_api_endpoints(client: AsyncClient, auth_headers: dict)
     assert sim_data["incident_id"] is not None
     assert sim_data["autonomous_investigation"] is not None
     assert sim_data["autonomous_investigation"]["status"] == "COMPLETED"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("payload", [{"target_accounts": []}, {"failure_count": 0}, {"failure_count": 101}])
+async def test_simulator_rejects_invalid_workload(client, auth_headers, payload):
+    response = await client.post("/api/v1/automation/simulate-brute-force", headers=auth_headers, json=payload)
+    assert response.status_code == 422

@@ -3,7 +3,7 @@ import json
 import pytest
 from httpx import AsyncClient
 from backend.app.services.stream import stream_broadcaster
-from backend.app.main import app
+from backend.app.core.config import settings
 
 
 @pytest.mark.asyncio
@@ -55,6 +55,7 @@ async def test_stream_broadcast_api_endpoint(client: AsyncClient):
 
     res = await client.post(
         "/api/v1/stream/broadcast",
+        headers={"X-Sentinel-Forwarder-Key": settings.FORWARDER_API_KEY},
         json={"eventType": "incident_update", "data": {"incidentId": "INC-01", "status": "contained"}}
     )
     assert res.status_code == 200
@@ -73,3 +74,18 @@ def test_sse_endpoint_route_registered():
     from backend.app.api.v1.router import api_router
     prefixes = [r.original_router.prefix for r in api_router.routes if hasattr(r, "original_router")]
     assert "/stream" in prefixes
+
+@pytest.mark.asyncio
+async def test_broadcast_rejects_anonymous_publish(client):
+    response = await client.post("/api/v1/stream/broadcast", json={"eventType": "alert", "data": {}})
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_broadcast_rejects_injected_sse_fields(client, auth_headers):
+    response = await client.post(
+        "/api/v1/stream/broadcast",
+        headers=auth_headers,
+        json={"eventType": "alert\ndata: forged", "data": {}},
+    )
+    assert response.status_code == 422
