@@ -20,7 +20,7 @@ from backend.app.schemas.chat import (
     ConfirmActionRequest
 )
 from backend.app.services.chat import chat_copilot_service
-from backend.app.services.file_ingest import file_ingest_service
+from backend.app.services.file_ingest import file_ingest_service, MAX_FILE_SIZE
 from backend.app.services.response import response_service
 from backend.app.api.deps import get_current_user
 
@@ -268,7 +268,9 @@ async def upload_file_to_conversation(
         user_id=user_id
     )
 
-    content = await file.read()
+    content = await file.read(MAX_FILE_SIZE + 1)
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Uploaded log exceeds the 50 MB limit.")
     if not content:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

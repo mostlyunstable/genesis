@@ -1,7 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Set
 from collections import defaultdict
-from sqlalchemy import select
+from uuid import uuid4, uuid5, NAMESPACE_URL
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.config import settings
@@ -82,11 +83,33 @@ class DetectionEngine:
         safe_source_ip = event.source_ip or "0.0.0.0"
         safe_username = event.username or "unknown"
 
-        self._ip_windows[safe_source_ip].append(
-            SlidingWindowItem(event.id, ts, safe_username, event.outcome, event.destination_ip)
+        # Recover the relevant window from durable telemetry after restarts and
+        # across workers. Merge by event ID to avoid counting a flushed event twice.
+        rows = await db.scalars(select(SecurityEventModel).where(
+            SecurityEventModel.timestamp >= ts - timedelta(seconds=max_window),
+            SecurityEventModel.timestamp <= ts,
+            or_(SecurityEventModel.source_ip == safe_source_ip,
+                SecurityEventModel.username == safe_username),
+        ))
+        ip_items = {item.event_id: item for item in self._ip_windows[safe_source_ip]}
+        user_items = {item[0]: item for item in self._user_windows[safe_username]}
+        for previous in rows:
+            previous_ts = previous.timestamp
+            if previous_ts.tzinfo is None:
+                previous_ts = previous_ts.replace(tzinfo=timezone.utc)
+            if previous.source_ip == safe_source_ip:
+                ip_items[previous.id] = SlidingWindowItem(
+                    previous.id, previous_ts, previous.username, previous.outcome, previous.destination_ip
+                )
+            if previous.username == safe_username and previous.outcome == "failure":
+                user_items[previous.id] = (previous.id, previous_ts, previous.source_ip)
+        ip_items[event.id] = SlidingWindowItem(
+            event.id, ts, safe_username, event.outcome, event.destination_ip
         )
         if event.outcome == "failure":
-            self._user_windows[safe_username].append((event.id, ts, safe_source_ip))
+            user_items[event.id] = (event.id, ts, safe_source_ip)
+        self._ip_windows[safe_source_ip] = sorted(ip_items.values(), key=lambda item: item.timestamp)
+        self._user_windows[safe_username] = sorted(user_items.values(), key=lambda item: item[1])
 
         ip_history = self._ip_windows[safe_source_ip]
         created_or_updated: List[DetectionModel] = []
@@ -133,7 +156,7 @@ class DetectionEngine:
             ssh_cutoff = ts - timedelta(seconds=thresholds["ssh_window"])
             recent_fails = [
                 item for item in ip_history
-                if item.outcome == "failure" and item.timestamp >= ssh_cutoff
+                if item.outcome == "failure" and ssh_cutoff <= item.timestamp <= ts
             ]
             if len(recent_fails) >= thresholds["ssh_failed_threshold"]:
                 ip_clean = safe_source_ip.replace('.', '-')
@@ -166,7 +189,7 @@ class DetectionEngine:
         # HEURISTIC 3: Horizontal Password Spraying
         # -------------------------------------------------------------
         spray_cutoff = ts - timedelta(seconds=thresholds["spray_window"])
-        recent_ip_events = [item for item in ip_history if item.timestamp >= spray_cutoff]
+        recent_ip_events = [item for item in ip_history if item.outcome == "failure" and spray_cutoff <= item.timestamp <= ts]
         unique_users_targeted = set(item.username for item in recent_ip_events if item.username != "unknown")
 
         if len(unique_users_targeted) >= thresholds["spray_user_threshold"]:
@@ -199,10 +222,10 @@ class DetectionEngine:
         # -------------------------------------------------------------
         # HEURISTIC 4: Distributed Multi-IP Brute Force on Single Account
         # -------------------------------------------------------------
-        if event.outcome == "failure" and event.username not in ["unknown", "root", "admin"]:
-            user_history = self._user_windows[event.username]
+        if event.outcome == "failure" and safe_username != "unknown":
+            user_history = self._user_windows[safe_username]
             user_cutoff = ts - timedelta(seconds=thresholds["ssh_window"])
-            recent_user_fails = [item for item in user_history if item[1] >= user_cutoff]
+            recent_user_fails = [item for item in user_history if user_cutoff <= item[1] <= ts]
             distinct_ips = set(item[2] for item in recent_user_fails)
 
             if len(distinct_ips) >= thresholds["distrib_threshold_ips"]:
@@ -338,10 +361,11 @@ class DetectionEngine:
         rule_name: str,
         suggested_playbook_id: Optional[str]
     ) -> DetectionModel:
-        # Check if active detection already exists
+        # Stable recurrence prefix keeps one active alert per detection key.
+        recurrence_prefix = uuid5(NAMESPACE_URL, detection_id).hex + "-"
         res = await db.execute(
             select(DetectionModel).where(
-                DetectionModel.id == detection_id,
+                or_(DetectionModel.id == detection_id, DetectionModel.id.startswith(recurrence_prefix)),
                 DetectionModel.status.in_(["open", "investigating"])
             )
         )
@@ -349,6 +373,9 @@ class DetectionEngine:
 
         if existing:
             # Update existing detection with updated counts & latest events
+            existing.name = name
+            existing.description = description
+            existing.severity = severity
             existing.event_count = event_count
             existing.timestamp = timestamp
             existing.confidence = max(existing.confidence, confidence)
@@ -359,6 +386,9 @@ class DetectionEngine:
             await db.flush()
             return existing
         else:
+            # A resolved alert keeps its history and cannot reuse its primary key.
+            if await db.get(DetectionModel, detection_id) is not None:
+                detection_id = f"{recurrence_prefix}{uuid4().hex[:24]}"
             new_det = DetectionModel(
                 id=detection_id,
                 name=name,

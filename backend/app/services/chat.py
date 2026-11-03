@@ -21,7 +21,7 @@ from backend.app.services.threat_intel import knowledge_retriever, threat_intel_
 from backend.app.services.cyber_knowledge import cyber_knowledge_engine
 from backend.app.services.response import PolicyEngine, response_service
 from backend.app.services.audit import audit_service
-from backend.app.services.analyst import ai_analyst_service
+from backend.app.services.chat_generation import generate_chat_reply
 from backend.app.services.chat_tools import (
     tool_registry,
     AnalyzeUploadedFileInput,
@@ -460,6 +460,15 @@ class ChatCopilotService:
             auth_res = await self.tools.get_authentication_events(GetAuthenticationEventsInput(source_ip=target_ip, limit=20), db)
             tool_records.append({"tool": "get_authentication_events", "params": {"source_ip": target_ip}, "count": auth_res.get("count", 0)})
             evidence_refs.extend(auth_res.get("evidence", []))
+
+        brute_force_findings = None
+        if not is_concept and not is_zacariah_lab and any(
+            phrase in p for phrase in ("brute force", "brute-force", "password spraying")
+        ) and any(word in p for word in ("detect", "analyze", "check", "investigate", "find")):
+            brute_force_findings = await self.tools.detect_brute_force_activity(
+                DetectBruteForceActivityInput(target_ip=target_ip), db
+            )
+            tool_records.append({"tool": "detect_brute_force_activity", "result": brute_force_findings})
 
         # Tool 4: Threat Intelligence Lookup
         threat_intel_data = None
@@ -1301,7 +1310,20 @@ class ChatCopilotService:
                         f"I am ready to assist. You can ask technical cybersecurity questions, request log analysis, or upload captures."
                     )
 
+        if brute_force_findings is not None:
+            response_sections.append(
+                "Authentication failure analysis for the "
+                f"{brute_force_findings['timeWindowMinutes']}-minute window ending "
+                f"{brute_force_findings['windowEnd'] or 'with no recorded failures'} (dataset time).\n\n"
+                + json.dumps(brute_force_findings, indent=2)
+            )
+
         full_content = "\n\n".join(response_sections)
+
+        full_content, generation_provider = await generate_chat_reply(
+            user_message_text, full_content, tool_records
+        )
+        yield f"event: generation\ndata: {json.dumps({'provider': generation_provider})}\n\n"
 
         # Stream text chunks with realistic typing experience
         words = full_content.split(" ")
@@ -1332,7 +1354,7 @@ class ChatCopilotService:
         await db.commit()
 
         # Final Completion Event
-        yield f"event: done\ndata: {json.dumps({'messageId': asst_msg_id, 'conversationId': conversation.id, 'tokenCount': token_count})}\n\n"
+        yield f"event: done\ndata: {json.dumps({'messageId': asst_msg_id, 'conversationId': conversation.id, 'tokenCount': token_count, 'provider': generation_provider})}\n\n"
 
 
 chat_copilot_service = ChatCopilotService()

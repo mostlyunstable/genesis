@@ -46,6 +46,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_db_secret_2026!@db:5432/sentinel_db
       - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - AI_MODEL_NAME=${AI_MODEL_NAME:-gemini-2.5-flash}
       - JWT_SECRET=sentinel_prod_secret_key_8fbc23a19e840d2105c317a9
       - FORWARDER_API_KEY=sentinel_fwd_live_9942a8b9e1
       - DEMO_MODE=true
@@ -76,6 +78,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_db_secret_2026!@db:5432/sentinel_db
       - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - AI_MODEL_NAME=${AI_MODEL_NAME:-gemini-2.5-flash}
       - DEMO_MODE=true
     depends_on:
       db:

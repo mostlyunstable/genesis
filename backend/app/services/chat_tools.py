@@ -414,7 +414,14 @@ class CybersecurityToolRegistry:
         if params.target_user:
             stmt = stmt.where(SecurityEventModel.username == params.target_user.strip())
 
-        stmt = stmt.order_by(desc(SecurityEventModel.timestamp)).limit(50)
+        # Anchor to the selected dataset's latest event so archived uploads work too.
+        latest = await db.scalar(stmt.with_only_columns(func.max(SecurityEventModel.timestamp)))
+        if latest is not None:
+            stmt = stmt.where(
+                SecurityEventModel.timestamp >= latest - timedelta(minutes=params.time_window_minutes),
+                SecurityEventModel.timestamp <= latest,
+            )
+        stmt = stmt.order_by(desc(SecurityEventModel.timestamp))
         res = await db.execute(stmt)
         failures = res.scalars().all()
 
@@ -434,6 +441,8 @@ class CybersecurityToolRegistry:
         return {
             "status": "SUCCESS",
             "totalFailures": len(failures),
+            "windowEnd": latest.isoformat() if latest else None,
+            "timeWindowMinutes": params.time_window_minutes,
             "suspects": suspects,
             "topTargetedUsers": sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[:5],
             "recommendation": "Enforce firewall drop on IPs with >= 5 failures" if any(s["isBruteForce"] for s in suspects) else "Monitor traffic velocity"
