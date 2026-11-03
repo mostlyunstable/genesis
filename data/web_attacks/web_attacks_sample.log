@@ -1,0 +1,5 @@
+192.0.2.10 - - [01/Jan/2026:12:00:00 +0000] "GET /index.html HTTP/1.1" 200 128
+198.51.100.20 - - [01/Jan/2026:12:00:01 +0000] "GET /search?q=1%20UNION%20SELECT%201 HTTP/1.1" 403 0
+198.51.100.20 - - [01/Jan/2026:12:00:02 +0000] "GET /search?q=%3Cscript%3Ealert(1)%3C/script%3E HTTP/1.1" 403 0
+198.51.100.20 - - [01/Jan/2026:12:00:03 +0000] "GET /download?file=../../etc/passwd HTTP/1.1" 403 0
+198.51.100.20 - - [01/Jan/2026:12:00:04 +0000] "GET /preview?url=http://169.254.169.254/latest/meta-data/ HTTP/1.1" 403 0

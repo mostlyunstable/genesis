@@ -1065,6 +1065,9 @@ class ChatCopilotService:
             )
 
         # SCENARIO 0V: Structured Analysis: Web Attack & WAF Dataset
+        elif is_web_attack_dataset and web_attack_res and web_attack_res.get("status") == "ERROR":
+            response_sections.append(f"Web attack dataset analysis could not run. {web_attack_res['message']}")
+
         elif is_web_attack_dataset and web_attack_res:
             res = web_attack_res
             bd = res.get("attackBreakdown", {})
