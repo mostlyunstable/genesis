@@ -1,6 +1,6 @@
 import os
 from typing import List
-from pydantic import model_validator
+from pydantic import model_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -45,6 +45,8 @@ class Settings(BaseSettings):
 
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
     OLLAMA_MODEL: str = "qwen3.5:4b"
+    OLLAMA_TIMEOUT_SECONDS: int = Field(default=180, ge=30, le=900)
+    OLLAMA_KEEP_ALIVE: str = "5m"
 
     # AI / LLM Configuration
     GEMINI_API_KEY: str | None = None

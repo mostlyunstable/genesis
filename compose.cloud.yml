@@ -1,0 +1,38 @@
+# Overlay for a persistent backend VM behind HTTPS.
+services:
+  frontend:
+    profiles: ["local-ui"]
+
+  ollama:
+    environment:
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_MAX_QUEUE: "4"
+      OLLAMA_KEEP_ALIVE: "30m"
+
+  backend:
+    environment:
+      - OLLAMA_TIMEOUT_SECONDS=300
+      - OLLAMA_KEEP_ALIVE=30m
+
+  edge:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN to the backend hostname}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - sentinel-net
+
+volumes:
+  caddy_data:
+  caddy_config:

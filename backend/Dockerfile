@@ -19,7 +19,7 @@ COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY backend /app/backend
-RUN chown -R sentinel:sentinel /app
+RUN mkdir -p /app/backend/uploads && chown -R sentinel:sentinel /app
 
 USER sentinel
 

@@ -583,3 +583,5 @@ Vercel deployment settings and SPA routing are included in vercel.json.
 Follow [the Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) before deploying.
 A public HTTPS FastAPI backend origin is required in VITE_API_BASE_URL.
 The build validates this setting and stops early when it is missing or invalid.
+
+For a free-only cloud backend using the same model, see [the cloud setup guide](docs/FREE_CLOUD_BACKEND.md). A cloud account and available VM are required.

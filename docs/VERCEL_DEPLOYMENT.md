@@ -13,6 +13,8 @@ a visitor's localhost or a static HTML fallback.
 
 ## Backend
 
+For the free-only deployment path, follow [the cloud backend guide](FREE_CLOUD_BACKEND.md).
+
 1. Run the repository's Docker Compose stack on a persistent server behind HTTPS.
    The existing stack includes PostgreSQL, Redis, Ollama, and model initialization.
 2. Set POSTGRES_PASSWORD, JWT_SECRET, and FORWARDER_API_KEY using independently
