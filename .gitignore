@@ -43,3 +43,4 @@ backend/uploads/*
 .env
 .env.*
 !.env.production.example
+!.env.vercel.example

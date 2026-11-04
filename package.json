@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:vercel": "node scripts/validate-vercel-env.mjs && npm run build",
+    "test:frontend": "node --test tests/frontend-recovery.cjs tests/vercel-deployment.test.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -14,7 +16,7 @@
     "lucide-react": "^0.462.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
+    "react-router-dom": "^7.18.5",
     "recharts": "^2.13.3",
     "tailwind-merge": "^2.5.5",
     "zustand": "^5.0.1"
@@ -30,5 +32,8 @@
     "tailwindcss": "^3.4.16",
     "typescript": "^5.6.3",
     "vite": "^6.0.1"
+  },
+  "engines": {
+    "node": "26.x"
   }
 }

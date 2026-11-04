@@ -23,7 +23,7 @@ test('production API uses same-origin and does not silently sign in', async () =
   const calls = [];
   const { sentinelApi } = loadApi(async (url, options) => {
     calls.push({ url, options });
-    return new Response(JSON.stringify({ provider: 'Ollama', model: 'test', available: true }));
+    return new Response(JSON.stringify({ provider: 'Ollama', model: 'test', available: true }), { headers: { 'Content-Type': 'application/json' } });
   });
   await sentinelApi.chat.getModel();
   assert.equal(calls.length, 1);
@@ -59,4 +59,24 @@ test('expired sessions request sign-in', async () => {
   const { sentinelApi, events } = loadApi(async () => new Response(JSON.stringify({ detail: 'Expired' }), { status: 401 }));
   await assert.rejects(sentinelApi.chat.getModel(), /Expired/);
   assert.deepEqual(events, ['genesis-session-expired']);
+});
+
+
+test('HTML fallback is reported as backend misconfiguration', async () => {
+  const { sentinelApi } = loadApi(async () => new Response('<html>SPA fallback</html>', {
+    headers: { 'Content-Type': 'text/html' }
+  }));
+  await assert.rejects(sentinelApi.chat.getModel(), error => error.status === 502);
+});
+
+
+test('threshold updates use the backend PUT contract', async () => {
+  let request;
+  const { sentinelApi } = loadApi(async (url, options) => {
+    request = { url, method: options.method };
+    return new Response('{}', { headers: { 'Content-Type': 'application/json' } });
+  });
+  await sentinelApi.settings.updateThresholds({ sshFailedAttemptThreshold: 12 });
+  assert.equal(request.url, '/api/v1/settings/thresholds');
+  assert.equal(request.method, 'PUT');
 });

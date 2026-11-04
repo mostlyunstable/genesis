@@ -112,7 +112,7 @@ export interface SentinelApiClient {
   };
 }
 
-let activeBackendUrl = localStorage.getItem('sentinel_backend_url') || import.meta.env.VITE_API_BASE_URL || '';
+let activeBackendUrl = (import.meta.env.VITE_API_BASE_URL || localStorage.getItem('sentinel_backend_url') || '').trim().replace(/\/+$/, '');
 let authToken = localStorage.getItem('sentinel_auth_token') || '';
 
 export class ApiError extends Error {
@@ -148,6 +148,9 @@ async function fetchFromBackend<T>(endpoint: string, options: RequestInit = {}):
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
     const msg = errorData.detail?.message || errorData.detail || `HTTP Error ${res.status}: ${res.statusText}`;
     throw new ApiError(typeof msg === 'string' ? msg : JSON.stringify(msg), res.status);
+  }
+  if (!res.headers.get('content-type')?.includes('application/json')) {
+    throw new ApiError('The API address returned a web page instead of service data. Check the backend deployment configuration.', 502);
   }
   return res.json();
 }
@@ -489,7 +492,7 @@ export const sentinelApi: SentinelApiClient = {
     },
     updateThresholds: async (thresholds) => {
       return await fetchFromBackend<DetectionThresholdConfig>('/settings/thresholds', {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(thresholds)
       });
     }

@@ -576,3 +576,10 @@ Retry regenerates the selected reply in place and retains its earlier content
 in the message's previous_response tool records. Stop saves partial generated
 content with a stopped marker. If the connection ends prematurely, chat reports
 the interruption and permits a retry.
+
+## Vercel frontend
+
+Vercel deployment settings and SPA routing are included in vercel.json.
+Follow [the Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) before deploying.
+A public HTTPS FastAPI backend origin is required in VITE_API_BASE_URL.
+The build validates this setting and stops early when it is missing or invalid.

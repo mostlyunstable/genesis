@@ -1,0 +1,15 @@
+backend/
+data/
+tests/
+docs/
+scratch/
+work/
+outputs/
+node_modules/
+dist/
+.venv/
+*.db
+*.sqlite3
+dump.rdb
+.env*
+!.env.vercel.example
